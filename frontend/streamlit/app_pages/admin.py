@@ -58,6 +58,7 @@ def create_user(reference_user_names: pd.Series,
     # Compare lower case
     reference_user_names = reference_user_names.str.lower()
     reference_user_names = reference_user_names.tolist()
+    number_users = len(reference_user_names)
     
     # Check for general issues
     if len(reference_owner_group_names) == 0:
@@ -92,6 +93,9 @@ def create_user(reference_user_names: pd.Series,
     with col2c:
         if st.button('Confirm', type ='primary', key='ok_create_user', disabled = confirm_disabled, use_container_width=True):
             
+            valid_license = datamanager.valid_license(st.session_state['jwt_auth_header'])
+            number_seats = datamanager.get_license_seats(st.session_state['jwt_auth_header'])
+            
             # Make username and password case sensitive
             username = username.lower()
             email = email.lower()
@@ -112,6 +116,10 @@ def create_user(reference_user_names: pd.Series,
                 st.error('Email: Only 0-9 a-z A-Z. @ - _ characters allowed')
             elif email != '' and not extensions.validate_email(email):
                 st.error('Email: Invalid Email Format')
+            elif not valid_license:
+                st.error('License Key Invalid')
+            elif number_users > number_seats: # Take account for admin user
+                st.error('License Key Seats Full and Maximum Users Reached')
             else:
                 datamanager.create_user(st.session_state['jwt_auth_header'],
                                         username,
