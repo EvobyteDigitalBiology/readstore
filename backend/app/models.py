@@ -36,8 +36,9 @@ def generate_short_uuid() -> str:
                                     ALNUM_CHARS[random.randint(0, len(ALNUM_CHARS) - 1)])
     short_uuid = short_uuid.replace('-',
                                     ALNUM_CHARS[random.randint(0, len(ALNUM_CHARS) - 1)])
-    
+
     return short_uuid
+
 
 # Extend User class for project
 class AppUser(models.Model):
@@ -46,7 +47,7 @@ class AppUser(models.Model):
     """
     
     user = models.OneToOneField(User, related_name='appuser', on_delete=models.CASCADE, null=True, blank=True)
-    token = models.CharField(max_length=200, default=generate_short_uuid())
+    token = models.CharField(max_length=200, default=generate_short_uuid)
     owner_group = models.ForeignKey('OwnerGroup', on_delete=models.PROTECT, null=True)
     
     def __str__(self):
@@ -253,3 +254,18 @@ class FqAttachment(BinaryFileModel):
     class Meta:
         db_table = 'fq_attachment'
         unique_together = ('name', 'fq_dataset')
+        
+class LicenseKey(BasicModel):
+    
+    """
+        LicenseKeys Model
+    """
+    
+    key = models.TextField()
+    seats = models.IntegerField()
+    expiration_date = models.DateTimeField()
+    
+    class Meta:
+        db_table = 'license_keys'
+        
+    
