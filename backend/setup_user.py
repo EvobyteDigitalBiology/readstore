@@ -173,6 +173,7 @@ if __name__ == '__main__':
     fq_attachment_permissions = ViewPermissions('fqattachment')
     project_permissions = ViewPermissions('project')
     project_attachment_permissions = ViewPermissions('projectattachment')
+    license_key_permissions = ViewPermissions('licensekey')
 
     view_permissions_manager = ViewPermissionManager([user_permissions,
                                                     app_user_permissions,
@@ -182,7 +183,8 @@ if __name__ == '__main__':
                                                     project_permissions,
                                                     project_attachment_permissions,
                                                     fq_dataset_permissions,
-                                                    fq_attachment_permissions])
+                                                    fq_attachment_permissions,
+                                                    license_key_permissions])
 
     print("Setup user groups....")
 
