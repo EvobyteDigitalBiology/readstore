@@ -177,3 +177,14 @@ class FqAttachmentPost(BaseModel):
     
 class URL(BaseModel):
     url: str
+    
+class LicenseKey(BaseModel):
+    id: Optional[int] = None
+    key: str
+    seats: int
+    expiration_date: datetime.datetime
+    created: Optional[datetime.datetime] = None
+    updated: Optional[datetime.datetime] = None
+    valid_from: Optional[datetime.datetime] = None
+    valid_to: Optional[datetime.datetime] = None
+    owner: Optional[int] = None
