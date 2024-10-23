@@ -89,4 +89,5 @@ ENDPOINT_CONFIG = {
     'fq_file' : '/'.join([BACKEND_API_ENDPOINT, 'fq_file/']),
     'fq_dataset' : '/'.join([BACKEND_API_ENDPOINT, 'fq_dataset/']),
     'fq_attachment' : '/'.join([BACKEND_API_ENDPOINT, 'fq_attachment/']),
+    'license_key' : '/'.join([BACKEND_API_ENDPOINT, 'license_key/']),
 }
