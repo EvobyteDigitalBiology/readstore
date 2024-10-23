@@ -11,20 +11,6 @@ import logging
 
 RS_CONFIG_PATH = 'rs_config.yaml'
     
-file_handler = logging.FileHandler(filename='readstore_server.log')
-stdout_handler = logging.StreamHandler(stream=sys.stdout)
-#stderr_handler = logging.StreamHandler(stream=sys.stderr)
-handlers = [file_handler, stdout_handler]
-
-file_handler.setFormatter(logging.Formatter(fmt="%(asctime)s [%(levelname)s] %(message)s"))
-stdout_handler.setFormatter(logging.Formatter(fmt="%(message)s"))
-#stderr_handler.setFormatter(logging.Formatter(fmt="%(message)s"))
-
-logging.basicConfig(
-    level=logging.DEBUG, 
-    handlers=handlers
-)
-
 parser = argparse.ArgumentParser(
     prog='readstore_server',
     usage='%(prog)s <command> [options]',
@@ -36,6 +22,8 @@ parser.add_argument(
 parser.add_argument(
     '--db-backup-directory', type=str, help='Directory for Storing ReadStore Database Backups', metavar='', required=True)
 parser.add_argument(
+    '--log-directory', type=str, help='Directory for Storing ReadStore Logs', metavar='', required=True)
+parser.add_argument(
     '--django-port', type=int, default=8000, help='Port of Django Backend', metavar='')
 parser.add_argument(
     '--streamlit-port', type=int, default=8501, help='Port of Streamlit Frontend', metavar='')
@@ -44,15 +32,30 @@ parser.add_argument(
 
 def run_rs_server(db_directory: str,
                   db_backup_directory: str,
+                  log_directory: str,
                   django_port: int,
                   streamlit_port: int,
                   debug: bool,
-                  rs_config_path: str,
-                  logger: logging.Logger):
+                  rs_config_path: str):
     """
         Run ReadStore Server
     """
 
+    rs_log_path = os.path.join(log_directory, 'readstore_server.log')
+    
+    file_handler = logging.FileHandler(filename=rs_log_path)
+    stdout_handler = logging.StreamHandler(stream=sys.stdout)
+    handlers = [file_handler, stdout_handler]
+
+    file_handler.setFormatter(logging.Formatter(fmt="%(asctime)s [%(levelname)s] %(message)s"))
+    stdout_handler.setFormatter(logging.Formatter(fmt="%(message)s"))
+    
+    logging.basicConfig(
+        level=logging.DEBUG, 
+        handlers=handlers
+    )
+    logger = logging.getLogger('readstore_logger')
+    
     logger.info('Start ReadStore Server\n')
     
     with open(rs_config_path, "r") as f:
@@ -62,16 +65,23 @@ def run_rs_server(db_directory: str,
     
     db_directory = os.path.abspath(db_directory)
     db_backup_directory = os.path.abspath(db_backup_directory)
+    log_directory = os.path.abspath(log_directory)
     
     # Check permissions for db_directory and db_backup_directory
     assert os.path.isdir(db_directory), f'ERROR: db_directory {db_directory} does not exist!'
     assert os.path.isdir(db_backup_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
+    assert os.path.isdir(log_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
     
     assert os.access(db_directory, os.W_OK), f'ERROR: db_directory {db_directory} is not writable!'
     assert os.access(db_backup_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
+    assert os.access(log_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
     
     assert os.access(db_directory, os.R_OK), f'ERROR: db_directory {db_directory} is not readable!'
     assert os.access(db_backup_directory, os.R_OK), f'ERROR: db_backup_directory {db_backup_directory} is not readable!'
+    
+    rs_config['django']['gunicorn_access_logfile'] = os.path.join(log_directory, 'readstore_gunicorn_access.log')
+    rs_config['django']['gunicorn_error_logfile'] = os.path.join(log_directory, 'readstore_gunicorn_error.log')
+    rs_config['django']['logger_path'] = os.path.join(log_directory, 'readstore_django.log')
     
     logger.info('Set SECRET_KEY')
     logger.info('NOTE: SECRET_KEY must be kept secretly stored by the end user at all times since loss of the key will result in loss of data!')
@@ -93,6 +103,8 @@ def run_rs_server(db_directory: str,
     
     rs_config['django']['port'] = django_port
     rs_config['streamlit']['port'] = streamlit_port
+    
+    # Define 
     
     if debug:
         rs_config['django']['django_settings_module'] = 'settings.development'
@@ -156,8 +168,6 @@ def run_rs_server(db_directory: str,
 
 if __name__ == '__main__':
 
-    logger = logging.getLogger('readstore_logger')
-    
     if not os.path.exists(RS_CONFIG_PATH):
         logger.error(f'ERROR: rs_config.yaml not found at {RS_CONFIG_PATH}')
         sys.exit(1)
@@ -165,14 +175,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
     db_directory = args.db_directory
     db_backup_directory = args.db_backup_directory
+    log_directory = args.log_directory
     django_port = args.django_port
     streamlit_port = args.streamlit_port
     debug = args.debug
     
+    # Define logger    
     run_rs_server(db_directory,
                   db_backup_directory,
+                  log_directory,
                   django_port,
                   streamlit_port,
                   debug,
-                  RS_CONFIG_PATH,
-                  logger)
+                  RS_CONFIG_PATH)
