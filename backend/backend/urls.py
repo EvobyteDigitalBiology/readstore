@@ -36,6 +36,8 @@ router.register(r'fq_dataset', views.FqDatasetViewSet, basename='FqDataset')
 router.register(r'fq_attachment', views.FqAttachmentViewSet, basename='FqAttachment')
 router.register(r'project', views.ProjectViewSet, basename='Project')
 router.register(r'project_attachment', views.ProjectAttachmentViewSet, basename='ProjectAttachment')
+router.register(r'license_key', views.LicenseKeyViewSet, basename='LicenseKey')
+
 
 urlpatterns = [
     path('api_v1/', include(router.urls)),
