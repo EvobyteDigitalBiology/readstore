@@ -14,6 +14,7 @@ from .models import FqDataset
 from .models import FqAttachment
 from .models import Project
 from .models import ProjectAttachment
+from .models import LicenseKey
 
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
@@ -369,3 +370,13 @@ class FqUploadSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, required=True, trim_whitespace=True)
     token = serializers.CharField(max_length=200,required=True, trim_whitespace=True)
     fq_file_path = serializers.CharField(max_length=1000,required=True, trim_whitespace=True)
+    
+class LicenseKeySerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = LicenseKey
+        fields = '__all__'
+        
+        extra_kwargs = {
+                "owner": {"read_only": True},
+            }
