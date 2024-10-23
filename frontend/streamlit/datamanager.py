@@ -11,6 +11,7 @@ to the app app_pages.
 
 from typing import List, Tuple
 import time
+import datetime
 
 import streamlit as st
 import pandas as pd
@@ -32,6 +33,7 @@ from uidataclasses import FqDataset
 from uidataclasses import FqAttachment
 from uidataclasses import FqAttachmentPost
 from uidataclasses import URL
+from uidataclasses import LicenseKey
 
 
 def user_cache(username: str):
@@ -254,6 +256,40 @@ def get_fq_dataset_detail(headers: dict, fq_dataset_id: int) -> Tuple[pd.DataFra
         FqDataset,
         headers=headers
     )
+
+def get_license_key(headers: dict) -> pd.DataFrame:
+    
+    endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['license_key'],'latest/')
+    df = extensions.get_request_to_df(endpoint, LicenseKey, headers=headers)
+    
+    return df
+
+def valid_license(headers: dict) -> bool:
+    
+    license_key = get_license_key(headers)
+    
+    if len(license_key) == 1:
+        expiration_date = license_key['expiration_date'].values[0]
+        expiration_date = pd.to_datetime(expiration_date).date()
+    
+        if expiration_date >= datetime.datetime.now().date():
+            return True
+        else:
+            return False
+    else:
+        return False
+
+def get_license_seats(headers: dict) -> int:
+    
+    license_key = get_license_key(headers)
+    
+    if len(license_key) == 1:
+        seats = license_key['seats'].values[0]
+    else:
+        seats = 0
+    
+    return seats
+
 
 #region COMBINED
 
@@ -725,6 +761,22 @@ def create_fq_attachment(filename: str,
         method='data'
     )
     
+
+def create_license_key(headers: dict, key: str, seats: int, expiration_date: datetime.datetime):
+    
+    license_key = LicenseKey(
+        key = key,
+        seats = seats,
+        expiration_date = expiration_date
+    )
+    
+    endpoint = uiconfig.ENDPOINT_CONFIG['license_key']
+    extensions.model_to_post_request(
+        endpoint = endpoint,
+        base_model=license_key,
+        headers=headers,
+        method='data'
+    )
 
 #region UPDATE
 
