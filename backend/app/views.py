@@ -17,6 +17,7 @@ import re
 from collections import defaultdict
 import os
 import sys
+import datetime
 
 #from django.contrib.auth.models import User
 from rest_framework import viewsets
@@ -45,6 +46,7 @@ from .serializers import ProjectCLIDetailSerializer
 from .serializers import TokenAuthSerializer
 from .serializers import PwdSerializer
 from .serializers import FqUploadSerializer
+from .serializers import LicenseKeySerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
@@ -59,6 +61,8 @@ from .models import FqDataset
 from .models import FqAttachment
 from .models import Project
 from .models import ProjectAttachment
+from .models import LicenseKey
+
 
 from settings.base import VALID_FASTQ_EXTENSIONS
 from settings.base import VALID_READ1_SUFFIX
@@ -1243,3 +1247,31 @@ class ProjectAttachmentViewSet(viewsets.ModelViewSet):
             
         else:
             return Response(serializer.errors, status=400)
+        
+class LicenseKeyViewSet(viewsets.ModelViewSet):
+    
+    permission_classes = [permissions.IsAuthenticated,
+                        permissions.DjangoModelPermissions]
+    
+    queryset = LicenseKey.objects.all().order_by("-created")
+    
+    serializer_class = LicenseKeySerializer
+    
+    def perform_create(self, serializer):
+        # Invalidate previous license keys
+        qset = LicenseKey.objects.filter(valid_to__isnull=True).all()
+        
+        if qset:
+            for q in qset:
+                q.valid_to = datetime.datetime.now()
+                q.save()
+        
+        serializer.save(owner=self.request.user)
+    
+    @action(detail=False, methods=['get'])
+    def latest(self, request):
+        
+        qset = LicenseKey.objects.filter(valid_to__isnull=True).all()
+        
+        serializer = self.get_serializer(qset, many=True)        
+        return Response(serializer.data)
