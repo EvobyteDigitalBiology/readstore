@@ -74,24 +74,3 @@ if login_form.form_submit_button("Login", type='primary'):
             
         except exceptions.UIAppError:
             st.error("Username/password is incorrect")
-
-
-footer = """<style>
-.footer {
-position: fixed;
-left: 0;
-bottom: 0;
-width: 100%;
-background-color: white;
-color: black;
-text-align: center;
-}
-</style>
-<div class="footer">
-<p><strong>EVO</strong>BYTE Digital Biology</br>ReadStore Version insert_version</p>
-</div>
-"""
-
-footer = footer.replace("insert_version", uiconfig.__version__)
-
-st.markdown(footer,unsafe_allow_html=True)
