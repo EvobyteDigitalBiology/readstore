@@ -83,9 +83,14 @@ user_groups = datamanager.get_user_groups(st.session_state["jwt_auth_header"])['
 
 latest_license_key = datamanager.get_license_key(st.session_state["jwt_auth_header"])
 
+if not datamanager.valid_license(st.session_state["jwt_auth_header"]):
+        st.warning('License Key invalid or expired. Please get in touch with support.')
+    
 col1, _ = st.columns([4,8])
 
 with col1:
+    
+    
     st.write('**Username**', user_data.username)
         
     # Build page for appuser
