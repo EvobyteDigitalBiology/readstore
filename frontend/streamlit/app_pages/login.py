@@ -37,28 +37,21 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# stAppViewBlockContainer / Define format for Login Page
 
-_, col1, _ = st.columns([3, 6, 3])
-
-# stTextInputRootElement
-
-with col1:  
-    st.image(os.path.join(uiconfig.STATIC_PATH_PREFIX, "static/BannerLarge.png"), caption = "", use_column_width = True)
-
-_, col2, _ = st.columns([4, 4, 4])
-
+col2a, col2, _ = st.columns([4, 4, 4], vertical_alignment="center")
 
 with col2:
     
+    st.image(os.path.join(uiconfig.STATIC_PATH_PREFIX, "static/BannerLargeLightBlueBackground.png"), use_column_width = True)
+    
     login_form = st.form("Login")
-    login_form.subheader("Login")
+    #login_form.subheader("")
 
 
-username = login_form.text_input("Username").lower()
-password = login_form.text_input("Password", type="password")
+username = login_form.text_input("**Username**").lower()
+password = login_form.text_input("**Password**", type="password")
 
-if login_form.form_submit_button("Login"):
+if login_form.form_submit_button("Login", type='primary'):
     
     # Run JWT authentication after login submit
 
