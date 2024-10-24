@@ -34,6 +34,7 @@ from uidataclasses import FqAttachment
 from uidataclasses import FqAttachmentPost
 from uidataclasses import URL
 from uidataclasses import LicenseKey
+from uidataclasses import FqQueue
 
 
 def user_cache(username: str):
@@ -290,6 +291,14 @@ def get_license_seats(headers: dict) -> int:
     
     return seats
 
+def get_fq_queue_jobs(headers: dict) -> int:
+    
+    endpoint = os.path.join(uiconfig.BACKEND_API_ENDPOINT, 'fq_queue/')
+    fq_queue_model = extensions.detail_request_to_model(endpoint, FqQueue, headers=headers)
+    
+    num_jobs = fq_queue_model.num_jobs
+    
+    return num_jobs
 
 #region COMBINED
 
