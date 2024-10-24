@@ -188,3 +188,6 @@ class LicenseKey(BaseModel):
     valid_from: Optional[datetime.datetime] = None
     valid_to: Optional[datetime.datetime] = None
     owner: Optional[int] = None
+    
+class FqQueue(BaseModel):
+    num_jobs: int
