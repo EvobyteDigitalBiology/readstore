@@ -183,3 +183,6 @@ pipeline/*/.local/*
 .bash_history
 
 backend/app/migrations/*
+
+#venv
+rs/*
