@@ -395,9 +395,10 @@ else:
 fq_dataset_names_owner_group = datamanager.get_fq_dataset_owner_group(st.session_state["jwt_auth_header"])['name']
 projects_owner_group = datamanager.get_project_owner_group(st.session_state["jwt_auth_header"])[['id', 'name', 'dataset_metadata_keys']]
 
-#region UI
-st.write(" ")
+# Get number of running jobs in QC queue
+num_jobs = datamanager.get_fq_queue_jobs(st.session_state["jwt_auth_header"])
 
+#region UI
     
 col_config = {
         'id' : None,
@@ -424,17 +425,23 @@ do_rerun = False
 
 if fq_files_staging.shape[0] > 0:
 
-    col1s, col2s, col3s, col4s = st.columns([5, 5, 1.25, 0.75], vertical_alignment='center')
+    #     with col1f:
+    #     st.success("No FASTQ Files to Check In.", icon=":material/check:")
+    
+    # with col2f:
+    #     with st.container(border=True):
+    #         st.write('Jobs in QC Queue:', str(num_jobs))
+
+    # col1f, col2f, col3f = st.columns([8.25, 3, 0.75], vertical_alignment='center')
+
+    col1s, col2s, col3s, col4s = st.columns([6, 4, 1.25, 0.75], vertical_alignment='center')
     
     with col1s:
         st.info(f"{len(fq_files_staging)} FASTQ files waiting for Check In.")
     
     with col2s:
-        search_value_fastq = st.text_input("Search FASTQ",
-                            help = 'Search FASTQ Files and Datasets',
-                            placeholder='Search FASTQ',
-                            key = 'search_fastq',
-                            label_visibility = 'collapsed')
+        with st.container(border=True):
+             st.write(str(num_jobs), ' Jobs in QC Queue')
     
     with col3s:
         with st.popover(':material/help:'):
@@ -452,7 +459,17 @@ if fq_files_staging.shape[0] > 0:
             if 'fq_data_staging' in st.session_state:
                 del st.session_state['fq_data_staging']
             extensions.refresh_page()
+    
+    coln, _ = st.columns([10, 2])
+    
+    with coln:
+        search_value_fastq = st.text_input("Search FASTQ",
+                                help = 'Search FASTQ Files and Datasets',
+                                placeholder='Search FASTQ',
+                                key = 'search_fastq',
+                                label_visibility = 'collapsed')
         
+    
     dataset_check = fq_files_staging['dataset'].str.contains(search_value_fastq, case=False, na=False) 
     fastq_check = fq_files_staging['name'].str.contains(search_value_fastq, case=False, na=False)
     
@@ -532,12 +549,16 @@ if fq_files_staging.shape[0] > 0:
                     st.rerun()
 
 else:
-    col1f, col2f = st.columns([11.25, 0.75], vertical_alignment='center')
+    col1f, col2f, col3f = st.columns([7.25, 4, 0.75], vertical_alignment='center')
     
     with col1f:
         st.success("No FASTQ Files to Check In.", icon=":material/check:")
     
     with col2f:
+        with st.container(border=True):
+            st.write(str(num_jobs), ' Jobs in QC Queue')
+        
+    with col3f:
         if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
             if 'fq_data_staging' in st.session_state:
                 del st.session_state['fq_data_staging']
