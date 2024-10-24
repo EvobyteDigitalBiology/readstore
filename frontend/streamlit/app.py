@@ -20,6 +20,12 @@ __copyright__ = "Copyright 2024"
 im = Image.open(os.path.join(uiconfig.STATIC_PATH_PREFIX, "static/favicon.ico"))
 st.set_page_config(layout="wide", page_title="ReadStore", page_icon=im)
 
+st.logo(
+        "static/BannerStackedLightBlueBackground2.png",
+        size='large',
+        link = 'https://www.evo-byte.com/readstore'
+)
+
 auth_status = extensions.user_auth_status()
 
 # PAGES
@@ -79,7 +85,7 @@ if auth_status:
             st.session_state['owner_group'] = datamanager.get_my_owner_group(st.session_state["jwt_auth_header"])['name'].tolist()[0]
         
         if not datamanager.valid_license(st.session_state["jwt_auth_header"]):
-            st.error('License Key Invalid. Enter valid license key in Admin settings.')
+            st.error('License Key invalid. Enter valid license key in Admin settings.')
             pages = [settings_page, logout_page]
         else:            
             pages = [project_page, dataset_page]
