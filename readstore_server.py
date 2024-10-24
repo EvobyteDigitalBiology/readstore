@@ -142,10 +142,10 @@ def run_rs_server(db_directory: str,
                     'app.py',
                     '--server.port', str(streamlit_port),
                     '--server.address', streamlist_host,
-                    '--ui.hideTopBar', 'True',
-                    '--browser.gatherUsageStats', 'False',
-                    '--client.toolbarMode', 'viewer',
-                    '--client.showErrorDetails', 'False']
+                    '--ui.hideTopBar', 'true',
+                    '--browser.gatherUsageStats', 'false',
+                    '--client.toolbarMode', 'minimal',
+                    '--client.showErrorDetails', 'false']
     
     st_process = subprocess.Popen(streamlit_cmd)
     
