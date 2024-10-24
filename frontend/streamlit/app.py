@@ -100,3 +100,24 @@ else:
     pg = st.navigation([login_page])
 
 pg.run()
+
+
+footer = """<style>
+.footer {
+position: fixed;
+left: 0;
+bottom: 0;
+width: 100%;
+background-color: white;
+color: #1D959B;
+text-align: center;
+}
+</style>
+<div class="footer">
+<p>ReadStore Basic insert_version <br><b>EVO</b>BYTE Digital Biology Jonathan Alles (c) 2024</p>
+</div>
+"""
+
+footer = footer.replace("insert_version", uiconfig.__version__)
+
+st.markdown(footer,unsafe_allow_html=True)
