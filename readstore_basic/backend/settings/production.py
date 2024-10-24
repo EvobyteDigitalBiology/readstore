@@ -1,35 +1,49 @@
-# readstore-basic/backend/settings/development.py
-
-"""
-
-Django dev settings for the backend.
-
-"""
+# readstore-basic/backend/settings/production.py
 
 from datetime import timedelta
 import os
 
 from .base import *
 
-if os.getenv("RS_SECRET_KEY"):
-    SECRET_KEY = os.getenv("RS_SECRET_KEY")
+
+# Load SECRET KEY
+if not 'RS_KEY_PATH' in os.environ:
+    raise ValueError("RS_KEY_PATH not found in environment variables")
 else:
-    raise Exception("RS_SECRET_KEY not found in environment")
+    RS_KEY_PATH = os.environ['RS_KEY_PATH']
+
+assert os.path.exists(RS_KEY_PATH), f"rs_config.yaml not found at {RS_KEY_PATH}"
+
+with open(RS_KEY_PATH, "r") as f:
+    SECRET_KEY = f.read()
+
+
+# Load config
+if not 'RS_CONFIG_PATH' in os.environ:
+    raise ValueError("RS_CONFIG_PATH not found in environment variables")
+else:
+    RS_CONFIG_PATH = os.environ['RS_CONFIG_PATH']
+
+assert os.path.exists(RS_CONFIG_PATH), f"rs_config.yaml not found at {RS_CONFIG_PATH}"
+
+with open(RS_CONFIG_PATH, "r") as f:
+    rs_config = yaml.safe_load(f)
+
+
     
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = RS_CONFIG['django']['allowed_hosts'].split(",")
+DEBUG = False
+ALLOWED_HOSTS = rs_config['django']['allowed_hosts'].split(",")
 
 # Can be used to switch production and test databases
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": RS_CONFIG["django"]["db_path"],
+        "NAME": rs_config["django"]["db_path"],
     },
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=RS_CONFIG["django"]["access_token_lifetime"]),
+    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=rs_config["django"]["access_token_lifetime"]),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,

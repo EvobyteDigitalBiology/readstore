@@ -17,10 +17,13 @@ from itertools import chain
 from getpass import getpass
 import string
 import sys
+from settings import development as default_settings
 
-#Set up the Django environment
-os.environ.setdefault("DJANGO_SETTINGS_MODULE",
-                      os.getenv("DJANGO_SETTINGS_MODULE"))
+# #Set up the Django environment
+# os.environ.setdefault("DJANGO_SETTINGS_MODULE",
+#                       os.getenv("DJANGO_SETTINGS_MODULE"))
+
+assert os.getenv("DJANGO_SETTINGS_MODULE"), "DJANGO_SETTINGS_MODULE not set"
 
 #settings.configure(default_settings=default_settings)
 
@@ -213,22 +216,10 @@ if __name__ == '__main__':
     else:
         print('\n')
 
-        print('Set ReadStore ADMIN Password')
-        print('NOTE: The ADMIN Password is used to access the ReadStore Admin Panel and create Users.')
-        print('NOTE: Keep the ADMIN password in a secure location and do not share it with anyone!')
-        print('NOTE: ADMIN Password should be at least 8 characters long and contain a digits, letters, and _-.@ characters.\n')
-
-        admin_password = getpass('Enter ADMIN Password:')
-
-        if not validate_charset(admin_password):
-            print('ERROR: ADMIN Password must only contain 0-9 a-z A-Z . @ - _ characters!')
-            sys.exit(1)
-        if len(admin_password) < 8:
-            print('ERROR: ADMIN Password must be at least 8 characters long!')
-            sys.exit(1)
+        print('Set ReadStore ADMIN Account')
         
         admin = User.objects.create(username='admin',
-                                    password=make_password(admin_password),
+                                    password=make_password('readstore'),
                                     is_staff=True)
                 
         admin.groups.set([admin_group])

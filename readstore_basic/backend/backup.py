@@ -8,20 +8,21 @@ import yaml
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-RS_CONFIG_PATH = BASE_DIR / "rs_config.yaml"
-assert RS_CONFIG_PATH.exists(), f"rs_config.yaml not found at {RS_CONFIG_PATH}"
 
-def load_rs_config():
-    with open(RS_CONFIG_PATH, "r") as f:
-        return yaml.safe_load(f)
+if not 'RS_CONFIG_PATH' in os.environ:
+    raise ValueError("RS_CONFIG_PATH not found in environment variables")
+else:
+    RS_CONFIG_PATH = os.environ['RS_CONFIG_PATH']
 
-RS_CONFIG = load_rs_config()
+assert os.path.exists(RS_CONFIG_PATH), f"rs_config.yaml not found at {RS_CONFIG_PATH}"
 
-DB_PATH = RS_CONFIG['django']['db_path']
-BACKUP_INTERVAL_HOURS = RS_CONFIG['django']['backup_interval_hours']
-BACKUP_MAX_FILES = RS_CONFIG['django']['backup_max_files']
-BACKUP_DIR = RS_CONFIG['django']['db_backup_dir']
+with open(RS_CONFIG_PATH, "r") as f:
+    rs_config = yaml.safe_load(f)
+
+DB_PATH = rs_config['django']['db_path']
+BACKUP_INTERVAL_HOURS = rs_config['django']['backup_interval_hours']
+BACKUP_MAX_FILES = rs_config['django']['backup_max_files']
+BACKUP_DIR = rs_config['django']['db_backup_dir']
 
 def backup_db(source_db_path: str, backup_db_path: str):
     try:

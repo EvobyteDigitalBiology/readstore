@@ -9,20 +9,21 @@ Django basic settings for the backend.
 from pathlib import Path
 from typing import List
 import yaml
+import os
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-RS_CONFIG_PATH = BASE_DIR / "rs_config.yaml"
-assert RS_CONFIG_PATH.exists(), f"rs_config.yaml not found at {RS_CONFIG_PATH}"
+# Load config
+if not 'RS_CONFIG_PATH' in os.environ:
+    raise ValueError("RS_CONFIG_PATH not found in environment variables")
+else:
+    RS_CONFIG_PATH = os.environ['RS_CONFIG_PATH']
 
-def load_rs_config():
-    with open(RS_CONFIG_PATH, "r") as f:
-        return yaml.safe_load(f)
+assert os.path.exists(RS_CONFIG_PATH), f"rs_config.yaml not found at {RS_CONFIG_PATH}"
 
-RS_CONFIG = load_rs_config()
+with open(RS_CONFIG_PATH, "r") as f:
+    rs_config = yaml.safe_load(f)
 
 # Defines production or dev mode
-DJANGO_SETTINGS_MODULE=RS_CONFIG['django']['django_settings_module']
+DJANGO_SETTINGS_MODULE=rs_config['django']['django_settings_module']
 
 # Application definition
 
@@ -143,7 +144,7 @@ LOGGING = {
         "file": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
-            "filename": RS_CONFIG['django']['logger_path'],
+            "filename": rs_config['django']['logger_path'],
         },
     },
     "loggers": {
@@ -157,11 +158,11 @@ LOGGING = {
 
 
 # Non Django related config
-VALID_FASTQ_EXTENSIONS = RS_CONFIG['global']['valid_fastq_extensions'].split(',')
-VALID_READ1_SUFFIX = RS_CONFIG['global']['valid_read1_suffix'].split(',')
-VALID_READ2_SUFFIX = RS_CONFIG['global']['valid_read2_suffix'].split(',')
-VALID_INDEX1_SUFFIX = RS_CONFIG['global']['valid_index1_suffix'].split(',')
-VALID_INDEX2_SUFFIX = RS_CONFIG['global']['valid_index2_suffix'].split(',')
+VALID_FASTQ_EXTENSIONS = rs_config['global']['valid_fastq_extensions'].split(',')
+VALID_READ1_SUFFIX = rs_config['global']['valid_read1_suffix'].split(',')
+VALID_READ2_SUFFIX = rs_config['global']['valid_read2_suffix'].split(',')
+VALID_INDEX1_SUFFIX = rs_config['global']['valid_index1_suffix'].split(',')
+VALID_INDEX2_SUFFIX = rs_config['global']['valid_index2_suffix'].split(',')
 
-FQ_QUEUE_NUM_WORKERS = RS_CONFIG['django']['fq_queue_num_workers']
-FQ_QUEUE_MAX_SIZE = RS_CONFIG['django']['fq_queue_maxsize']
+FQ_QUEUE_NUM_WORKERS = rs_config['django']['fq_queue_num_workers']
+FQ_QUEUE_MAX_SIZE = rs_config['django']['fq_queue_maxsize']

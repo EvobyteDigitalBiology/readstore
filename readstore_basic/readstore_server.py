@@ -8,8 +8,14 @@ from getpass import getpass
 import yaml
 import subprocess
 import logging
+import time
+import shutil
+import random
+import pathlib
+import socket
 
-RS_CONFIG_PATH = 'rs_config.yaml'
+
+RS_CONFIG_PATH = 'readstore_server_config.yaml'
     
 parser = argparse.ArgumentParser(
     prog='readstore_server',
@@ -19,10 +25,16 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument(
     '--db-directory', type=str, help='Directory for Storing ReadStore Database.', metavar='', required=True)
+
 parser.add_argument(
     '--db-backup-directory', type=str, help='Directory for Storing ReadStore Database Backups', metavar='', required=True)
+
 parser.add_argument(
     '--log-directory', type=str, help='Directory for Storing ReadStore Logs', metavar='', required=True)
+
+parser.add_argument(
+    '--config-directory', type=str, help='Directory for storing readstore_server_config.yaml', metavar='', default='~/.readstore')
+
 parser.add_argument(
     '--django-port', type=int, default=8000, help='Port of Django Backend', metavar='')
 parser.add_argument(
@@ -30,17 +42,26 @@ parser.add_argument(
 parser.add_argument(
     '--debug', action='store_true', help='Run In Debug Mode')
 
+def _get_path(path: str):
+    if '~' in path:
+        return os.path.expanduser(path)
+    return os.path.abspath(path)
+
+def _is_port_in_use(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
+
 def run_rs_server(db_directory: str,
                   db_backup_directory: str,
                   log_directory: str,
+                  config_directory: str,
                   django_port: int,
                   streamlit_port: int,
-                  debug: bool,
-                  rs_config_path: str):
+                  debug: bool):
     """
         Run ReadStore Server
     """
-
+    
     rs_log_path = os.path.join(log_directory, 'readstore_server.log')
     
     file_handler = logging.FileHandler(filename=rs_log_path)
@@ -58,78 +79,98 @@ def run_rs_server(db_directory: str,
     
     logger.info('Start ReadStore Server\n')
     
-    with open(rs_config_path, "r") as f:
-        rs_config = yaml.safe_load(f)
+    
+    logger.info('Check Available Ports\n')
+    
+    if _is_port_in_use(django_port):
+        logger.error(f'ERROR: Port {django_port} is already in use!')
+        return
+    if _is_port_in_use(streamlit_port):
+        logger.error(f'ERROR: Port {streamlit_port} is already in use!')
+        return
+    
+    # Check streamlit availability
+    try:
+        subprocess.check_call(['streamlit', 'version'])
+    except:
+        logger.error(f'ERROR: Streamlit not found in PATH!')
+        return
     
     init_wd = os.getcwd()
     
-    db_directory = os.path.abspath(db_directory)
-    db_backup_directory = os.path.abspath(db_backup_directory)
-    log_directory = os.path.abspath(log_directory)
+    db_directory = _get_path(db_directory)
+    db_backup_directory = _get_path(db_backup_directory)
+    log_directory = _get_path(log_directory)
+    config_directory = _get_path(config_directory)
     
     # Check permissions for db_directory and db_backup_directory
     assert os.path.isdir(db_directory), f'ERROR: db_directory {db_directory} does not exist!'
     assert os.path.isdir(db_backup_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
     assert os.path.isdir(log_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
+    assert os.path.isdir(config_directory), f'ERROR: config_directory {config_directory} does not exist!'
     
     assert os.access(db_directory, os.W_OK), f'ERROR: db_directory {db_directory} is not writable!'
     assert os.access(db_backup_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
     assert os.access(log_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
+    assert os.access(config_directory, os.W_OK), f'ERROR: config_directory {config_directory} is not writable!'
     
     assert os.access(db_directory, os.R_OK), f'ERROR: db_directory {db_directory} is not readable!'
     assert os.access(db_backup_directory, os.R_OK), f'ERROR: db_backup_directory {db_backup_directory} is not readable!'
+    assert os.access(config_directory, os.R_OK), f'ERROR: config_directory {config_directory} is not writable!'
+    
+    logger.info(f'Prepare ReadStore Server Config')
+    
+    config_path = os.path.join(config_directory, 'readstore_server_config.yaml')
+            
+    # Check if config file exists
+    if not os.path.exists(config_path):    
+        # Copy over config file
+        logger.info(f'Copy config file to {config_path}')
+        shutil.copy(RS_CONFIG_PATH, os.path.join(config_directory, 'readstore_server_config.yaml'))
+        os.chmod(config_path, 0o600)
+    else:
+        logger.info(f'Config file already exists at {config_path}')
+    
+    # Open and edit config file
+    with open(config_path, "r") as f:
+        rs_config = yaml.safe_load(f)
     
     rs_config['django']['gunicorn_access_logfile'] = os.path.join(log_directory, 'readstore_gunicorn_access.log')
     rs_config['django']['gunicorn_error_logfile'] = os.path.join(log_directory, 'readstore_gunicorn_error.log')
     rs_config['django']['logger_path'] = os.path.join(log_directory, 'readstore_django.log')
-    
-    logger.info('Set SECRET_KEY')
-    logger.info('NOTE: SECRET_KEY must be kept secretly stored by the end user at all times since loss of the key will result in loss of data!')
-    logger.info('NOTE: Keep the SECRET_KEY in a secure location and do not share it with anyone!')
-    logger.info('NOTE: SECRET_KEY should be at least 50 characters long and contain a mix of letters, numbers, and special characters.\n')
-    
-    secret_key = getpass('Enter SECRET_KEY:')
-    
-    if len(secret_key) < 50:
-        logger.error('ERROR: SECRET_KEY must be at least 50 characters long!')
-        return
-    
-    os.environ['RS_SECRET_KEY'] = secret_key
-    
-    print('\n')
     
     rs_config['django']['db_path'] = os.path.join(db_directory, 'readstore_db.sqlite3')
     rs_config['django']['db_backup_dir'] = db_backup_directory
     
     rs_config['django']['port'] = django_port
     rs_config['streamlit']['port'] = streamlit_port
-    
+
     # Define 
-    
     if debug:
         rs_config['django']['django_settings_module'] = 'settings.development'
     else:
         rs_config['django']['django_settings_module'] = 'settings.production'
     
-    with open(rs_config_path, "w") as f:
+    with open(config_path, "w") as f:
         yaml.dump(rs_config, f)
 
-    # Start Django Backend
-    logger.info('Start Django Backend')
-        
+    logger.info(f'Prepare Secret Key')
+
+    secret_key_path = os.path.join(config_directory, 'server_key')
+    if not os.path.exists(secret_key_path):
+        logger.info(f'Create Secret Key')
+        key = ''.join(random.sample(string.ascii_letters + string.digits, 50))
+        with open(secret_key_path, 'w') as f:
+            f.write(key)
+        os.chmod(secret_key_path, 0o600)
+    else:
+        logger.info(f'Secret Key already exists at {secret_key_path}')
+    
+    
     # Export DJANGO_SETTINGS_MODULE
     os.environ['DJANGO_SETTINGS_MODULE'] = rs_config['django']['django_settings_module']
-    
-    logger.info('Start Django Backend')
-    os.chdir('backend')
-    django_cmd = ["python3",os.path.join('launch_backend.py')]
-    dj_server_process = subprocess.Popen(django_cmd, )
-    
-    logger.info('Start Backup Process')
-    backup_cmd = ["python3",os.path.join('backup.py')]
-    backup_process = subprocess.Popen(backup_cmd)
-    
-    os.chdir(init_wd)
+    os.environ['RS_CONFIG_PATH'] = config_path
+    os.environ['RS_KEY_PATH'] = secret_key_path
     
     logger.info('Start Streamlit Frontend')
     
@@ -151,19 +192,40 @@ def run_rs_server(db_directory: str,
     
     os.chdir(init_wd)
     
+    logger.info('Start Backup Process')
+    
+    os.chdir('backend')    
+    # Start Django Backend
+    logger.info('Start Django Backend')
+
+    logger.info('Start Django Backend')
+    django_cmd = ["python3",os.path.join('launch_backend.py')]
+    dj_server_process = subprocess.Popen(django_cmd, )
+    
+    time.sleep(5)
+            
+    backup_cmd = ["python3",os.path.join('backup.py')]
+    backup_process = subprocess.Popen(backup_cmd)
+    
+    os.chdir(init_wd)
+    
     try:
         dj_server_process.wait()
         backup_process.wait()
         st_process.wait()
         
-        os.environ['RS_SECRET_KEY'] = ''
+        os.environ['RS_CONFIG_PATH'] = ''
+        os.environ['RS_KEY_PATH'] = ''
+        
         
     except KeyboardInterrupt:
+        st_process.terminate()
         dj_server_process.terminate()
         backup_process.terminate()
-        st_process.terminate()
         
-        os.environ['RS_SECRET_KEY'] = ''
+        os.environ['RS_CONFIG_PATH'] = ''
+        os.environ['RS_KEY_PATH'] = ''
+        
         
 
 if __name__ == '__main__':
@@ -176,6 +238,8 @@ if __name__ == '__main__':
     db_directory = args.db_directory
     db_backup_directory = args.db_backup_directory
     log_directory = args.log_directory
+    config_directory = args.config_directory
+    
     django_port = args.django_port
     streamlit_port = args.streamlit_port
     debug = args.debug
@@ -184,7 +248,7 @@ if __name__ == '__main__':
     run_rs_server(db_directory,
                   db_backup_directory,
                   log_directory,
+                  config_directory,
                   django_port,
                   streamlit_port,
-                  debug,
-                  RS_CONFIG_PATH)
+                  debug)

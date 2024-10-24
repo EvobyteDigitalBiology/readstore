@@ -12,27 +12,28 @@ import yaml
 import subprocess
 import sys
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-RS_CONFIG_PATH = BASE_DIR / "rs_config.yaml"
-assert RS_CONFIG_PATH.exists(), f"rs_config.yaml not found at {RS_CONFIG_PATH}"
+# Load config
+if not 'RS_CONFIG_PATH' in os.environ:
+    raise ValueError("RS_CONFIG_PATH not found in environment variables")
+else:
+    RS_CONFIG_PATH = os.environ['RS_CONFIG_PATH']
 
-def load_rs_config():
-    with open(RS_CONFIG_PATH, "r") as f:
-        return yaml.safe_load(f)
+assert os.path.exists(RS_CONFIG_PATH), f"rs_config.yaml not found at {RS_CONFIG_PATH}"
 
-RS_CONFIG = load_rs_config()
+with open(RS_CONFIG_PATH, "r") as f:
+    rs_config = yaml.safe_load(f)
+
 
 # Define variables for setup of custom init protocol for DB
-GUNICORN_NUM_WORKERS = RS_CONFIG['django']['gunicorn_num_workers']
-RUN_GUNICORN_LAUNCH = RS_CONFIG['django']['gunicorn_run']
+GUNICORN_NUM_WORKERS = rs_config['django']['gunicorn_num_workers']
+RUN_GUNICORN_LAUNCH = rs_config['django']['gunicorn_run']
 
-DB_PATH = RS_CONFIG['django']['db_path']
-HOST = RS_CONFIG['django']['host']
-PORT = str(RS_CONFIG['django']['port'])
+DB_PATH = rs_config['django']['db_path']
+HOST = rs_config['django']['host']
+PORT = str(rs_config['django']['port'])
 
-GUNICORN_ACCESS_LOG = RS_CONFIG['django']['gunicorn_access_logfile']
-GUNICORN_ERROR_LOG = RS_CONFIG['django']['gunicorn_error_logfile']
+GUNICORN_ACCESS_LOG = rs_config['django']['gunicorn_access_logfile']
+GUNICORN_ERROR_LOG = rs_config['django']['gunicorn_error_logfile']
 
 # Set up the Django environment
 print('Run Migrations')

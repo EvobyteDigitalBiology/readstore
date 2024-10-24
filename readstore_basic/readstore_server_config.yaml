@@ -1,20 +1,20 @@
 django:
   access_token_lifetime: 660
-  allowed_hosts: localhost,127.0.0.1
+  allowed_hosts: localhost,127.0.0.1,*
   api_version: api_v1
-  backup_interval_hours: 0.01
-  backup_max_files: 10
-  db_backup_dir: /home/nonroot/backup
-  db_path: /home/nonroot/readstore_db.sqlite3
+  backup_interval_hours: 24
+  backup_max_files: 3
+  db_backup_dir: /home/jona/projects/evobyte/readstore-basic/test
+  db_path: /home/jona/projects/evobyte/readstore-basic/test/readstore_db.sqlite3
   django_settings_module: settings.production
   fq_queue_maxsize: 250
   fq_queue_num_workers: 2
-  gunicorn_access_logfile: gunicorn_access.log
-  gunicorn_error_logfile: gunicorn_error.log
+  gunicorn_access_logfile: /home/jona/projects/evobyte/readstore-basic/test/readstore_gunicorn_access.log
+  gunicorn_error_logfile: /home/jona/projects/evobyte/readstore-basic/test/readstore_gunicorn_error.log
   gunicorn_num_workers: 1
   gunicorn_run: true
-  host: localhost
-  logger_path: rs_django.log
+  host: 0.0.0.0
+  logger_path: /home/jona/projects/evobyte/readstore-basic/test/readstore_django.log
   port: 8000
 global:
   valid_fastq_extensions: .fastq.gz,.fq.gz,.fastq,.fq
