@@ -33,7 +33,7 @@ parser.add_argument(
     '--log-directory', type=str, help='Directory for Storing ReadStore Logs', metavar='', required=True)
 
 parser.add_argument(
-    '--config-directory', type=str, help='Directory for storing readstore_server_config.yaml', metavar='', default='~/.readstore')
+    '--config-directory', type=str, help='Directory for storing readstore_server_config.yaml (~/.readstore)', metavar='', default='~/.readstore')
 
 parser.add_argument(
     '--django-port', type=int, default=8000, help='Port of Django Backend', metavar='')
@@ -79,7 +79,10 @@ def run_rs_server(db_directory: str,
     
     logger.info('Start ReadStore Server\n')
     
-    
+    if not os.path.exists(RS_CONFIG_PATH):
+        logger.error(f'ERROR: rs_config.yaml not found at {RS_CONFIG_PATH}')
+        return
+        
     logger.info('Check Available Ports\n')
     
     if _is_port_in_use(django_port):
@@ -226,13 +229,7 @@ def run_rs_server(db_directory: str,
         os.environ['RS_CONFIG_PATH'] = ''
         os.environ['RS_KEY_PATH'] = ''
         
-        
-
-if __name__ == '__main__':
-
-    if not os.path.exists(RS_CONFIG_PATH):
-        logger.error(f'ERROR: rs_config.yaml not found at {RS_CONFIG_PATH}')
-        sys.exit(1)
+def main():
     
     args = parser.parse_args()
     db_directory = args.db_directory
@@ -252,3 +249,7 @@ if __name__ == '__main__':
                   django_port,
                   streamlit_port,
                   debug)
+
+
+if __name__ == '__main__':
+    main()
