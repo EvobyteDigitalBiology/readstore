@@ -48,7 +48,7 @@ st.markdown(
 
 # Methods
 
-# region create user
+# region Create User
 
 # USERS
 @st.dialog('Create User')
@@ -130,6 +130,8 @@ def create_user(reference_user_names: pd.Series,
                 st.cache_data.clear()
                 st.rerun()
 
+# region Update User
+
 @st.dialog('Update User')
 def update_user(row_ix: int,
                  appusers_df: pd.DataFrame,
@@ -206,9 +208,10 @@ def update_user(row_ix: int,
                                         token)            
                 st.cache_data.clear()
                 st.rerun()
+
+# region Delete User
     
-    
-@st.dialog('Delete Users')
+@st.dialog('Delete User(s)')
 def delete_users(row_ixes: List[int], 
                   appusers_df: pd.DataFrame):
     
@@ -226,7 +229,7 @@ def delete_users(row_ixes: List[int],
                  column_config = {
                      'id_user' : st.column_config.Column('ID'),
                      'username' : st.column_config.Column('Username'),
-                    'name' : st.column_config.Column('Group')
+                    'name' : None
                 }, 
                  use_container_width = True)
     
