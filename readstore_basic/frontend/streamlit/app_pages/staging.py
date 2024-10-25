@@ -24,6 +24,16 @@ if not extensions.user_auth_status():
     st.session_state.clear()
     st.rerun()
 
+
+
+
+def show_updated(ix):
+    
+    change = st.session_state[f"fq_sd_{ix}"]
+    edited = change['edited_rows']
+    st.session_state['update_field_state'] = (ix, edited)
+    
+    
 # Print Info about User
 colh1, colh2 = st.columns([11,1], vertical_alignment='top')
 
@@ -76,7 +86,7 @@ def checkin_df(fq_file_df: pd.DataFrame,
     if 'NA' in read_types:
         st.error("Please set Read type (R1, R2, I1, I2) of ALL FASTQ files.")
     elif fq_file_df['read_type'].duplicated().any():
-        st.error("Read types must be unique for each dataset. Do not use duplicate R1 entries.")
+        st.error("Read types must be unique for each dataset. Do not use duplicate R1 or R2 entries.")
     else:
         name_old = fq_file_df['dataset'].iloc[0]
         
@@ -424,7 +434,6 @@ fq_files_staging_update = []
 do_rerun = False
 
 if fq_files_staging.shape[0] > 0:
-
     #     with col1f:
     #     st.success("No FASTQ Files to Check In.", icon=":material/check:")
     
@@ -485,7 +494,7 @@ if fq_files_staging.shape[0] > 0:
     fq_staging_filter_pos = fq_staging_filter_pos.merge(dataset_counts, on='dataset')
     fq_staging_filter_pos = fq_staging_filter_pos.sort_values(by=['num_files', 'dataset'])
 
-    fq_files_staging_split = [v for k, v in fq_staging_filter_pos.groupby('dataset')]
+    fq_files_staging_split = [v for k, v in fq_staging_filter_pos.groupby(['num_files','dataset'])]
 
     fq_files_staging_split_show = fq_files_staging_split[:num_fq_data_staging_staging]
     fq_files_staging_split_left = fq_files_staging_split[num_fq_data_staging_staging:]
@@ -509,17 +518,25 @@ if fq_files_staging.shape[0] > 0:
                         fq_file_ids = fq_file_df['id'].tolist()
                         delete_fastq_files(fq_file_ids)
         with col2:
+            if 'update_field_state' in st.session_state:
+                field_ix, edited = st.session_state['update_field_state']
+                if field_ix == ix:
+                    df_ix = list(edited.keys())[0]
+                    col = list(edited[df_ix].keys())[0]
+                    val = edited[df_ix][col]
+                    
+                    fq_file_df[col].iloc[df_ix] = val
+                    do_rerun = True
+                          
+                    del st.session_state['update_field_state']
+            
             df_set = st.data_editor(fq_file_df,
                             hide_index=True,
                             key=f"fq_sd_{ix}",
-                            column_config=col_config)
-            
-            change_cols = ['dataset', 'name', 'read_type']
-            
-            # If dataset change in staging area
-            if not (df_set[change_cols] == fq_file_df[change_cols]).all().all():                
-                do_rerun = True
-            
+                            column_config=col_config,
+                            on_change=show_updated,
+                            args=(ix,))
+                        
             # List of (displayed) datasets
             fq_files_staging_update.append(df_set)
 
@@ -545,7 +562,7 @@ if fq_files_staging.shape[0] > 0:
             _, col_more, _ = st.columns([5, 2, 5])
             with col_more:    
                 if st.button('More', key='more_fq_data_staging', help='Show More FASTQ Files', use_container_width=True, type='primary'):
-                    st.session_state['num_fq_data_staging_staging'] = num_fq_data_staging_staging + 10
+                    st.session_state['num_fq_data_staging_staging'] = num_fq_data_staging_staging + 10                    
                     st.rerun()
 
 else:
@@ -563,4 +580,3 @@ else:
             if 'fq_data_staging' in st.session_state:
                 del st.session_state['fq_data_staging']
             extensions.refresh_page()
-    
