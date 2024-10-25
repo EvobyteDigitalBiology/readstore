@@ -12,7 +12,7 @@
 # future.
 
 # Default: true PRODUCTION SET FALSE
-showErrorDetails = true
+showErrorDetails = false
 
 # Change the visibility of items in the toolbar, options menu,
 # and settings dialog (top right of the app).
@@ -28,7 +28,7 @@ showErrorDetails = true
 # If there are no options left, hide the menu.
 
 # Default: "auto" PRODUCTION SET viewer/minimal
-toolbarMode = "auto"
+toolbarMode = "minimal"
 
 # Controls whether the default sidebar page navigation in a multi-page app is displayed.
 
@@ -38,8 +38,8 @@ showSidebarNavigation = false
 [server]
 port=8501 # change port number. By default streamlit uses 8501 port
 headless=true # This will eliminate automatically open browser
-enableCORS=false 
-enableXsrfProtection=false 
+enableCORS=true 
+enableXsrfProtection=true 
 enableWebsocketCompression=false
 maxUploadSize = 10
 
