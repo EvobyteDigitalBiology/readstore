@@ -24,16 +24,7 @@ with open(RS_CONFIG_PATH, "r") as f:
     rs_config = yaml.safe_load(f)
 
 
-# Define variables for setup of custom init protocol for DB
-GUNICORN_NUM_WORKERS = rs_config['django']['gunicorn_num_workers']
-RUN_GUNICORN_LAUNCH = rs_config['django']['gunicorn_run']
-
 DB_PATH = rs_config['django']['db_path']
-HOST = rs_config['django']['host']
-PORT = str(rs_config['django']['port'])
-
-GUNICORN_ACCESS_LOG = rs_config['django']['gunicorn_access_logfile']
-GUNICORN_ERROR_LOG = rs_config['django']['gunicorn_error_logfile']
 
 # Set up the Django environment
 print('Run Migrations')
@@ -50,23 +41,3 @@ if res != 0:
 
 # Change wr permission to the database owner only
 os.chmod(DB_PATH, 0o600)
-
-# Run custom init script locally
-if RUN_GUNICORN_LAUNCH:
-    print('Run Django Backend Gunicorn Launch')
-    django_cmd = ["gunicorn",
-                    "backend.wsgi:application",
-                    "--bind",
-                    HOST+":"+str(PORT),
-                    "--workers",
-                    str(GUNICORN_NUM_WORKERS),
-                    "--access-logfile",GUNICORN_ACCESS_LOG,
-                    "--error-logfile",GUNICORN_ERROR_LOG]
-else:
-    print('Run Django Backend in Debug Mode')
-    django_cmd = ["python3",
-                'manage.py',
-                "runserver",
-                HOST+":"+str(PORT)]
-    
-subprocess.run(django_cmd)
