@@ -38,6 +38,17 @@ import exceptions
 
 APP_NAME = "app.py"
 
+def df_not_empty(val) -> bool:
+    if val is None:
+        return False
+    elif pd.isna(val):
+        return False
+    elif val == "":
+        return False
+    else:
+        return True
+
+
 def validate_charset(query_str: str):
     
     allowed = string.digits + string.ascii_lowercase + string.ascii_uppercase + '_-.@'
