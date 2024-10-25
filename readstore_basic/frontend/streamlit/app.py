@@ -114,7 +114,7 @@ text-align: center;
 }
 </style>
 <div class="footer">
-<p>ReadStore Basic insert_version <br><b>EVO</b>BYTE Digital Biology Jonathan Alles (c) 2024</p>
+<p>ReadStore Basic insert_version (c) 2024</p>
 </div>
 """
 
