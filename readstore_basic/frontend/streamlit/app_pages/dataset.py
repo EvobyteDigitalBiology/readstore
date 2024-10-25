@@ -69,7 +69,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                     reference_project_names_df: pd.DataFrame):
     
     fq_dataset_input = selected_fq_dataset.copy()
-    
+        
     read_long_map = {
         'R1' : 'Read 1',
         'R2' : 'Read 2',
@@ -85,13 +85,13 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
     fq_dataset_project_names = fq_dataset_input['project_names']
 
     # Map fq file ids to read types
-    if fq_dataset_input['fq_file_r1']:
+    if extensions.df_not_empty(fq_dataset_input['fq_file_r1']):
         read_file_file_map['R1'] = fq_dataset_input['fq_file_r1']
-    if fq_dataset_input['fq_file_r2']:
+    if extensions.df_not_empty(fq_dataset_input['fq_file_r2']):
         read_file_file_map['R2'] = fq_dataset_input['fq_file_r2']
-    if fq_dataset_input['fq_file_i1']:
+    if extensions.df_not_empty(fq_dataset_input['fq_file_i1']):        
         read_file_file_map['I1'] = fq_dataset_input['fq_file_i1']
-    if fq_dataset_input['fq_file_i2']:
+    if extensions.df_not_empty(fq_dataset_input['fq_file_i2']):
         read_file_file_map['I2'] = fq_dataset_input['fq_file_i2']
 
     # Remove current name from reference names
@@ -480,15 +480,15 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
                 fq_file_i2 = fq['fq_file_i2']
                 
                 dataset_fq_files = []
-                if fq_file_r1:
+                if extensions.df_not_empty(fq_file_r1):
                     dataset_fq_files.append(fq_file_r1)
-                if fq_file_r2:
+                if extensions.df_not_empty(fq_file_r2):
                     dataset_fq_files.append(fq_file_r2)
-                if fq_file_i1:
+                if extensions.df_not_empty(fq_file_i1):
                     dataset_fq_files.append(fq_file_i1)
-                if fq_file_i2:
+                if extensions.df_not_empty(fq_file_i2):
                     dataset_fq_files.append(fq_file_i2)
-                
+                                
                 for fq_file in dataset_fq_files:
                     fq_file_detail = datamanager.get_fq_file_detail(st.session_state["jwt_auth_header"], fq_file)
                     df = pd.DataFrame(fq_file_detail.dict(), index=[0])
@@ -809,19 +809,19 @@ if show_project_details:
                 fq_file_r2_id = fq_dataset_detail_format.pop('fq_file_r2')
                 fq_file_i1_id = fq_dataset_detail_format.pop('fq_file_i1')
                 fq_file_i2_id = fq_dataset_detail_format.pop('fq_file_i2')
-
+                
                 read1_but_disabled = True
                 read2_but_disabled = True
                 index1_but_disabled = True
                 index2_but_disabled = True
                 
-                if fq_file_r1_id:
+                if extensions.df_not_empty(fq_file_r1_id):
                     read1_but_disabled = False
-                if fq_file_r2_id:
+                if extensions.df_not_empty(fq_file_r2_id):
                     read2_but_disabled = False
-                if fq_file_i1_id:
+                if extensions.df_not_empty(fq_file_i1_id):
                     index1_but_disabled = False
-                if fq_file_i2_id:
+                if extensions.df_not_empty(fq_file_i2_id):
                     index2_but_disabled = False
                                 
                 fq_dataset_detail_format = fq_dataset_detail_format[['name', 'description', 'created', 'owner_username']]
