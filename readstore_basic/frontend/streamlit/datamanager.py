@@ -37,14 +37,6 @@ from uidataclasses import LicenseKey
 from uidataclasses import FqQueue
 
 
-def user_cache(username: str):
-    def user_cache_decorator(func):
-        def wrapper(*args, **kwargs):
-            print(username)
-            return func(*args, **kwargs)
-        return wrapper
-    return user_cache_decorator
-
 #region basic functions
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
 def get_my_user(headers: dict) -> pd.DataFrame:
