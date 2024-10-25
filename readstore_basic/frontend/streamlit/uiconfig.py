@@ -24,6 +24,9 @@ assert os.path.exists(RS_CONFIG_PATH), f"rs_config.yaml not found at {RS_CONFIG_
 with open(RS_CONFIG_PATH, "r") as f:
     rs_config = yaml.safe_load(f)
 
+if rs_config['django']['django_settings_module'] == 'settings.production':
+    import sys
+    sys.tracebacklimit = 0
 
 # Define config constants
 BACKEND_API_ENDPOINT_HOST = rs_config['django']['host']
@@ -77,15 +80,11 @@ METADATA_RESERVED_KEYS = ['id',
 # URLs must end with a slash
 ENDPOINT_CONFIG = {
     'user' : '/'.join([BACKEND_API_ENDPOINT, 'user/']),
-    #'my_owner_group': '/'.join([BACKEND_API_ENDPOINT, 'user/my_owner_group/']),
     'group' : '/'.join([BACKEND_API_ENDPOINT, 'group/']),
     'owner_group' : '/'.join([BACKEND_API_ENDPOINT, 'owner_group/']),
     'get_user_groups' : '/'.join([BACKEND_API_ENDPOINT, 'get_user_groups/']),
     'project' : '/'.join([BACKEND_API_ENDPOINT, 'project/']),
-    #'project_collab' : '/'.join([BACKEND_API_ENDPOINT, 'project/collab/']),
-    #'project_owner_group' : '/'.join([BACKEND_API_ENDPOINT, 'project/owner_group/']),
     'project_attachment' : '/'.join([BACKEND_API_ENDPOINT, 'project_attachment/']),
-    #'project_attachment_project' : '/'.join([BACKEND_API_ENDPOINT, 'project_attachment/project/1/']) # TODO Check how to deal with mandatory PKs
     'fq_file' : '/'.join([BACKEND_API_ENDPOINT, 'fq_file/']),
     'fq_dataset' : '/'.join([BACKEND_API_ENDPOINT, 'fq_dataset/']),
     'fq_attachment' : '/'.join([BACKEND_API_ENDPOINT, 'fq_attachment/']),
