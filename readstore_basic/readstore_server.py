@@ -199,23 +199,56 @@ def run_rs_server(db_directory: str,
     
     os.chdir('backend')    
     # Start Django Backend
-    logger.info('Start Django Backend')
-
-    logger.info('Start Django Backend')
-    django_cmd = ["python3",os.path.join('launch_backend.py')]
-    dj_server_process = subprocess.Popen(django_cmd, )
     
-    time.sleep(5)
+    logger.info('Setup Django Backend')
+    launch_backend_cmd = ["python3",os.path.join('launch_backend.py')]
+    launch_backend_process = subprocess.Popen(launch_backend_cmd, )
+    
+    launch_backend_process.wait()
+    
+    
+    logger.info('Setup Backup')
             
     backup_cmd = ["python3",os.path.join('backup.py')]
     backup_process = subprocess.Popen(backup_cmd)
     
+    logger.info('Start Django Backend Server')
+    
+    # Define variables for setup of custom init protocol for DB
+    GUNICORN_NUM_WORKERS = rs_config['django']['gunicorn_num_workers']
+    RUN_GUNICORN_LAUNCH = rs_config['django']['gunicorn_run']
+    HOST = rs_config['django']['host']
+    PORT = str(rs_config['django']['port'])
+    GUNICORN_ACCESS_LOG = rs_config['django']['gunicorn_access_logfile']
+    GUNICORN_ERROR_LOG = rs_config['django']['gunicorn_error_logfile']
+    
+    # Run custom init script locally
+    if RUN_GUNICORN_LAUNCH:
+        print('Run Django Backend Gunicorn Launch')
+        django_cmd = ["gunicorn",
+                        "backend.wsgi:application",
+                        "--bind",
+                        HOST+":"+str(PORT),
+                        "--workers",
+                        str(GUNICORN_NUM_WORKERS),
+                        "--access-logfile",GUNICORN_ACCESS_LOG,
+                        "--error-logfile",GUNICORN_ERROR_LOG]
+    else:
+        print('Run Django Backend in Debug Mode')
+        django_cmd = ["python3",
+                    'manage.py',
+                    "runserver",
+                    HOST+":"+str(PORT)]
+        
+    django_process = subprocess.Popen(django_cmd)
+
+    
     os.chdir(init_wd)
     
     try:
-        dj_server_process.wait()
         backup_process.wait()
         st_process.wait()
+        django_process.wait()
         
         os.environ['RS_CONFIG_PATH'] = ''
         os.environ['RS_KEY_PATH'] = ''
@@ -223,8 +256,8 @@ def run_rs_server(db_directory: str,
         
     except KeyboardInterrupt:
         st_process.terminate()
-        dj_server_process.terminate()
         backup_process.terminate()
+        django_process.terminate()
         
         os.environ['RS_CONFIG_PATH'] = ''
         os.environ['RS_KEY_PATH'] = ''
