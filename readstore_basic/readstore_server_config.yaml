@@ -22,6 +22,7 @@ global:
   valid_index2_suffix: I2_001,I2,Index2,i2_001,i2,index2
   valid_read1_suffix: R1_001,R1,Read1,r1_001,r1,read1
   valid_read2_suffix: R2_001,R2,Read2,r2_001,r2,read2
+  readstore_version: 0.0.11
 streamlit:
   access_token_refresh_seconds: 600
   cache_ttl_seconds: 900
