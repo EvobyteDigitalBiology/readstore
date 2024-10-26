@@ -77,16 +77,16 @@ if auth_status:
     # Define group to select pages to display
     user_groups = datamanager.get_user_groups(st.session_state["jwt_auth_header"])['name'].tolist()
 
-    if 'admin' in user_groups:
+    if not datamanager.valid_license(st.session_state["jwt_auth_header"]):
+        st.error('No valid license found. Please enter a valid license key in the Admin Settings.')
+        pages = [settings_page, logout_page]
+    elif 'admin' in user_groups:
         pages = [admin_page, settings_page, logout_page]
-    if 'appuser' in user_groups:
-
+    elif 'appuser' in user_groups:
+        
         if not 'owner_group' in st.session_state:
             st.session_state['owner_group'] = datamanager.get_my_owner_group(st.session_state["jwt_auth_header"])['name'].tolist()[0]
-        
-        if not datamanager.valid_license(st.session_state["jwt_auth_header"]):
-            st.error('License Key invalid. Enter valid license key in Admin settings.')
-            pages = [settings_page, logout_page]
+    
         else:            
             pages = [project_page, dataset_page]
         
