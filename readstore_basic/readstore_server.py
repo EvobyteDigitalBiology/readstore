@@ -177,7 +177,7 @@ def run_rs_server(db_directory: str,
     
     logger.info('Start Streamlit Frontend')
     
-    os.chdir('frontend/streamlit')
+    os.chdir(os.path.join(init_wd, 'frontend/streamlit'))
     
     streamlist_host = rs_config['streamlit']['host']
     
@@ -197,7 +197,7 @@ def run_rs_server(db_directory: str,
     
     logger.info('Start Backup Process')
     
-    os.chdir('backend')    
+    os.chdir(os.path.join(init_wd, 'backend')) 
     # Start Django Backend
     
     logger.info('Setup Django Backend')
