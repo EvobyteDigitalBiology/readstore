@@ -25,15 +25,16 @@ with open(RS_CONFIG_PATH, "r") as f:
 
 
 DB_PATH = rs_config['django']['db_path']
+PYTHON_EXEC = rs_config['django']['python_exec']
 
 # Set up the Django environment
 print('Run Migrations')
 
-subprocess.run(["python3","manage.py","makemigrations","app"])
-subprocess.run(["python3","manage.py","migrate","--fake-initial"])
+subprocess.run([PYTHON_EXEC,"manage.py","makemigrations","app"])
+subprocess.run([PYTHON_EXEC,"manage.py","migrate","--fake-initial"])
 
 print('Configure Permissions and Groups')
-res = subprocess.call(["python3",os.path.join('setup_user.py')])
+res = subprocess.call([PYTHON_EXEC,os.path.join('setup_user.py')])
 
 if res != 0:
     print('ERROR: Failed to setup user permissions and groups!')
