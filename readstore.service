@@ -1,0 +1,20 @@
+[Unit]
+Description=ReadStore Basic Server
+After=network.target
+
+[Service]
+User=jona
+WorkingDirectory=/home/jona/projects/evobyte/readstore-basic/readstore_basic
+ExecStart=/home/jona/anaconda3/envs/rs_test_1/bin/python /home/jona/projects/evobyte/readstore-basic/readstore_basic/readstore_server.py \
+    --db-directory /home/jona/rs_test \
+    --db-backup-directory /home/jona/rs_test \
+    --log-directory /home/jona/rs_test
+Restart=always
+RestartSec=15
+Environment=PYTHONUNBUFFERED=1
+Environment=RS_STREAMLIT=/home/jona/.local/bin/streamlit
+Environment=RS_PYTHON=/home/jona/anaconda3/envs/rs_test_1/bin/python
+Environment=RS_GUNICORN=/home/jona/.local/bin/gunicorn
+
+[Install]
+WantedBy=multi-user.target
