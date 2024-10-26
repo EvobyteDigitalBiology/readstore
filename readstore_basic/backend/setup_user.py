@@ -11,21 +11,13 @@ Test datasets can be added as well to django DB
 
 import os
 import django
-from django.conf import settings
 from typing import List
 from itertools import chain
-from getpass import getpass
 import string
-import sys
-from settings import development as default_settings
 
-# #Set up the Django environment
-# os.environ.setdefault("DJANGO_SETTINGS_MODULE",
-#                       os.getenv("DJANGO_SETTINGS_MODULE"))
+
 
 assert os.getenv("DJANGO_SETTINGS_MODULE"), "DJANGO_SETTINGS_MODULE not set"
-
-#settings.configure(default_settings=default_settings)
 
 django.setup()
 
