@@ -6,9 +6,6 @@ from pathlib import Path
 import yaml
 import os
 
-# TODO Needs UPdate
-from __version__ import __version__
-
 # List possible authentication methods
 class AuthMethod(Enum):
     BASIC = "BASIC"
@@ -24,6 +21,9 @@ assert os.path.exists(RS_CONFIG_PATH), f"rs_config.yaml not found at {RS_CONFIG_
 with open(RS_CONFIG_PATH, "r") as f:
     rs_config = yaml.safe_load(f)
 
+__version__ = rs_config['global']['readstore_version']
+
+# TODO: Update once ST fixed config setting
 if rs_config['django']['django_settings_module'] == 'settings.production':
     import sys
     sys.tracebacklimit = 0
