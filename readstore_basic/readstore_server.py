@@ -14,6 +14,8 @@ import random
 import pathlib
 import socket
 
+from __version__ import __version__
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RS_CONFIG_PATH = os.path.join(BASE_DIR, 'readstore_server_config.yaml')
 
@@ -24,13 +26,13 @@ parser = argparse.ArgumentParser(
     epilog='For help on a specific command, type "readstore <command> <subcommand> -h"')
 
 parser.add_argument(
-    '--db-directory', type=str, help='Directory for Storing ReadStore Database.', metavar='', required=True)
+    '--db-directory', type=str, help='Directory for Storing ReadStore Database (required)', metavar='')
 
 parser.add_argument(
-    '--db-backup-directory', type=str, help='Directory for Storing ReadStore Database Backups', metavar='', required=True)
+    '--db-backup-directory', type=str, help='Directory for Storing ReadStore Database Backups (required)', metavar='')
 
 parser.add_argument(
-    '--log-directory', type=str, help='Directory for Storing ReadStore Logs', metavar='', required=True)
+    '--log-directory', type=str, help='Directory for Storing ReadStore Logs (required)', metavar='')
 
 parser.add_argument(
     '--config-directory', type=str, help='Directory for storing readstore_server_config.yaml (~/.readstore)', metavar='', default='~/.readstore')
@@ -41,6 +43,9 @@ parser.add_argument(
     '--streamlit-port', type=int, default=8501, help='Port of Streamlit Frontend', metavar='')
 parser.add_argument(
     '--debug', action='store_true', help='Run In Debug Mode')
+
+parser.add_argument(
+    '-v', '--version', action='store_true', help='Show Version Information')
 
 def _get_path(path: str):
     if '~' in path:
@@ -98,9 +103,7 @@ def run_rs_server(db_directory: str,
     except:
         logger.error(f'ERROR: Streamlit not found in PATH!')
         return
-    
-    init_wd = os.getcwd()
-    
+        
     db_directory = _get_path(db_directory)
     db_backup_directory = _get_path(db_backup_directory)
     log_directory = _get_path(log_directory)
@@ -177,7 +180,7 @@ def run_rs_server(db_directory: str,
     
     logger.info('Start Streamlit Frontend')
     
-    os.chdir(os.path.join(init_wd, 'frontend/streamlit'))
+    os.chdir(os.path.join(BASE_DIR, 'frontend/streamlit'))
     
     streamlist_host = rs_config['streamlit']['host']
     
@@ -193,11 +196,11 @@ def run_rs_server(db_directory: str,
     
     st_process = subprocess.Popen(streamlit_cmd)
     
-    os.chdir(init_wd)
+    os.chdir(BASE_DIR)
     
     logger.info('Start Backup Process')
     
-    os.chdir(os.path.join(init_wd, 'backend')) 
+    os.chdir(os.path.join(BASE_DIR, 'backend')) 
     # Start Django Backend
     
     logger.info('Setup Django Backend')
@@ -242,8 +245,7 @@ def run_rs_server(db_directory: str,
         
     django_process = subprocess.Popen(django_cmd)
 
-    
-    os.chdir(init_wd)
+    os.chdir(BASE_DIR)
     
     try:
         backup_process.wait()
@@ -273,6 +275,26 @@ def main():
     django_port = args.django_port
     streamlit_port = args.streamlit_port
     debug = args.debug
+    
+    version = args.version
+    
+    if version:
+        print(f'ReadStore Basic Version: {__version__}')
+        return
+    
+    else:
+        if db_directory is None:
+            parser.print_help()
+            print('ERROR: --db-directory is required')
+            return
+        if db_backup_directory is None:
+            parser.print_help()
+            print('ERROR: --db_backup_directory is required')
+            return
+        if log_directory is None:
+            parser.print_help()
+            print('ERROR: --log_directory is required')
+            return
     
     # Define logger    
     run_rs_server(db_directory,
