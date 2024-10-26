@@ -106,6 +106,7 @@ def run_rs_server(db_directory: str,
         level=logging.DEBUG, 
         handlers=handlers
     )
+    
     logger = logging.getLogger('readstore_logger')
     
     logger.info('Start ReadStore Server\n')
@@ -123,12 +124,48 @@ def run_rs_server(db_directory: str,
         logger.error(f'ERROR: Port {streamlit_port} is already in use!')
         return
     
+        # Check if st is set as ENV variable
+    if 'RS_STREAMLIT' in os.environ:
+        print('Found RS_STREAMLIT in Environment Variables')
+        streamlist_exec = os.environ['RS_STREAMLIT']
+    else:
+        streamlist_exec = 'streamlit'
+    
+    if 'RS_PYTHON' in os.environ:
+        print('Found RS_PYTHON in Environment Variables')
+        python_exec = os.environ['RS_PYTHON']
+    else:
+        python_exec = 'python3'
+    
+    if 'RS_GUNICORN' in os.environ:
+        print('Found RS_GUNICORN in Environment Variables')
+        gunicorn_exec = os.environ['RS_GUNICORN']
+    else:
+        gunicorn_exec = 'gunicorn'
+    
     # Check streamlit availability
     try:
-        subprocess.check_call(['streamlit', 'version'])
+        subprocess.check_call([streamlist_exec, 'version'])
     except:
         logger.error(f'ERROR: Streamlit not found in PATH!')
         return
+    
+    # Check python availability
+    try:
+        subprocess.check_call([python_exec, '--version'])
+    except:
+        logger.error(f'ERROR: Python not found in PATH!')
+        return
+    
+    if not debug:
+        # Check gunicorn availability
+        try:
+            subprocess.check_call([gunicorn_exec, '--version'])
+        except:
+            logger.error(f'ERROR: Gunicorn not found in PATH!')
+            return
+    
+    
     
     logger.info(f'Prepare ReadStore Server Config')
     
@@ -159,6 +196,9 @@ def run_rs_server(db_directory: str,
     
     rs_config['global']['readstore_version'] = __version__
 
+    rs_config['django']['python_exec'] = python_exec
+    
+
     # Define 
     if debug:
         rs_config['django']['django_settings_module'] = 'settings.development'
@@ -180,6 +220,7 @@ def run_rs_server(db_directory: str,
     else:
         logger.info(f'Secret Key already exists at {secret_key_path}')
     
+    # TODO If set already
     
     # Export DJANGO_SETTINGS_MODULE
     os.environ['DJANGO_SETTINGS_MODULE'] = rs_config['django']['django_settings_module']
@@ -192,7 +233,8 @@ def run_rs_server(db_directory: str,
     
     streamlist_host = rs_config['streamlit']['host']
     
-    streamlit_cmd = ['streamlit',
+    
+    streamlit_cmd = [streamlist_exec,
                     'run',
                     'app.py',
                     '--server.port', str(streamlit_port),
@@ -212,15 +254,14 @@ def run_rs_server(db_directory: str,
     # Start Django Backend
     
     logger.info('Setup Django Backend')
-    launch_backend_cmd = ["python3",os.path.join('launch_backend.py')]
+    launch_backend_cmd = [python_exec,os.path.join('launch_backend.py')]
     launch_backend_process = subprocess.Popen(launch_backend_cmd, )
     
     launch_backend_process.wait()
     
-    
     logger.info('Setup Backup')
             
-    backup_cmd = ["python3",os.path.join('backup.py')]
+    backup_cmd = [python_exec,os.path.join('backup.py')]
     backup_process = subprocess.Popen(backup_cmd)
     
     logger.info('Start Django Backend Server')
@@ -236,7 +277,7 @@ def run_rs_server(db_directory: str,
     # Run custom init script locally
     if RUN_GUNICORN_LAUNCH:
         print('Run Django Backend Gunicorn Launch')
-        django_cmd = ["gunicorn",
+        django_cmd = [gunicorn_exec,
                         "backend.wsgi:application",
                         "--bind",
                         HOST+":"+str(PORT),
@@ -246,11 +287,11 @@ def run_rs_server(db_directory: str,
                         "--error-logfile",GUNICORN_ERROR_LOG]
     else:
         print('Run Django Backend in Debug Mode')
-        django_cmd = ["python3",
+        django_cmd = [python_exec,
                     'manage.py',
                     "runserver",
                     HOST+":"+str(PORT)]
-        
+    
     django_process = subprocess.Popen(django_cmd)
 
     os.chdir(BASE_DIR)
@@ -290,19 +331,31 @@ def main():
         print(f'ReadStore Basic Version: {__version__}')
         return
     
-    else:
-        if db_directory is None:
-            parser.print_help()
-            print('ERROR: --db-directory is required')
-            return
-        if db_backup_directory is None:
-            parser.print_help()
-            print('ERROR: --db_backup_directory is required')
-            return
-        if log_directory is None:
-            parser.print_help()
-            print('ERROR: --log_directory is required')
-            return
+    
+    # Try to set from environment variables
+    if 'RS_DB_DIRECTORY' in os.environ:
+        print('Found RS_DB_DIRECTORY in Environment Variables')
+        db_directory = os.environ['RS_DB_DIRECTORY']
+    if 'RS_DB_BACKUP_DIRECTORY' in os.environ:
+        db_backup_directory = os.environ['RS_DB_BACKUP_DIRECTORY']
+        print('Found RS_DB_BACKUP_DIRECTORY in Environment Variables')
+    if 'RS_LOG_DIRECTORY' in os.environ:        
+        log_directory = os.environ['RS_LOG_DIRECTORY']
+        print('Found RS_LOG_DIRECTORY in Environment Variables')
+        
+    if db_directory is None:
+        parser.print_help()
+        print('ERROR: --db-directory is required')
+        return
+    if db_backup_directory is None:
+        parser.print_help()
+        print('ERROR: --db_backup_directory is required')
+        return
+    if log_directory is None:
+        parser.print_help()
+        print('ERROR: --log_directory is required')
+        return
+    
     
     # Define logger    
     run_rs_server(db_directory,
