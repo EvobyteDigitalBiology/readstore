@@ -14,9 +14,9 @@ import random
 import pathlib
 import socket
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+RS_CONFIG_PATH = os.path.join(BASE_DIR, 'readstore_server_config.yaml')
 
-RS_CONFIG_PATH = 'readstore_server_config.yaml'
-    
 parser = argparse.ArgumentParser(
     prog='readstore_server',
     usage='%(prog)s <command> [options]',
@@ -80,7 +80,7 @@ def run_rs_server(db_directory: str,
     logger.info('Start ReadStore Server\n')
     
     if not os.path.exists(RS_CONFIG_PATH):
-        logger.error(f'ERROR: rs_config.yaml not found at {RS_CONFIG_PATH}')
+        logger.error(f'ERROR: readstore_server_config.yaml not found at {RS_CONFIG_PATH}')
         return
         
     logger.info('Check Available Ports\n')
