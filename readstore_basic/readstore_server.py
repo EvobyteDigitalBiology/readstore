@@ -14,7 +14,12 @@ import random
 import pathlib
 import socket
 
-from __version__ import __version__
+# Define version, check case if readstore is installed as package or run from source
+try:
+    from readstore_basic.__version__ import __version__
+except ModuleNotFoundError:
+    from __version__ import __version__
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RS_CONFIG_PATH = os.path.join(BASE_DIR, 'readstore_server_config.yaml')
@@ -67,6 +72,27 @@ def run_rs_server(db_directory: str,
         Run ReadStore Server
     """
     
+    # Validate paths
+    db_directory = _get_path(db_directory)
+    db_backup_directory = _get_path(db_backup_directory)
+    log_directory = _get_path(log_directory)
+    config_directory = _get_path(config_directory)
+    
+    # Check permissions for db_directory and db_backup_directory
+    assert os.path.isdir(db_directory), f'ERROR: db_directory {db_directory} does not exist!'
+    assert os.path.isdir(db_backup_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
+    assert os.path.isdir(log_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
+    assert os.path.isdir(config_directory), f'ERROR: config_directory {config_directory} does not exist!'
+    
+    assert os.access(db_directory, os.W_OK), f'ERROR: db_directory {db_directory} is not writable!'
+    assert os.access(db_backup_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
+    assert os.access(log_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
+    assert os.access(config_directory, os.W_OK), f'ERROR: config_directory {config_directory} is not writable!'
+    
+    assert os.access(db_directory, os.R_OK), f'ERROR: db_directory {db_directory} is not readable!'
+    assert os.access(db_backup_directory, os.R_OK), f'ERROR: db_backup_directory {db_backup_directory} is not readable!'
+    assert os.access(config_directory, os.R_OK), f'ERROR: config_directory {config_directory} is not writable!'
+    
     rs_log_path = os.path.join(log_directory, 'readstore_server.log')
     
     file_handler = logging.FileHandler(filename=rs_log_path)
@@ -103,26 +129,6 @@ def run_rs_server(db_directory: str,
     except:
         logger.error(f'ERROR: Streamlit not found in PATH!')
         return
-        
-    db_directory = _get_path(db_directory)
-    db_backup_directory = _get_path(db_backup_directory)
-    log_directory = _get_path(log_directory)
-    config_directory = _get_path(config_directory)
-    
-    # Check permissions for db_directory and db_backup_directory
-    assert os.path.isdir(db_directory), f'ERROR: db_directory {db_directory} does not exist!'
-    assert os.path.isdir(db_backup_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
-    assert os.path.isdir(log_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
-    assert os.path.isdir(config_directory), f'ERROR: config_directory {config_directory} does not exist!'
-    
-    assert os.access(db_directory, os.W_OK), f'ERROR: db_directory {db_directory} is not writable!'
-    assert os.access(db_backup_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
-    assert os.access(log_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
-    assert os.access(config_directory, os.W_OK), f'ERROR: config_directory {config_directory} is not writable!'
-    
-    assert os.access(db_directory, os.R_OK), f'ERROR: db_directory {db_directory} is not readable!'
-    assert os.access(db_backup_directory, os.R_OK), f'ERROR: db_backup_directory {db_backup_directory} is not readable!'
-    assert os.access(config_directory, os.R_OK), f'ERROR: config_directory {config_directory} is not writable!'
     
     logger.info(f'Prepare ReadStore Server Config')
     
