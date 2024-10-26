@@ -156,6 +156,8 @@ def run_rs_server(db_directory: str,
     
     rs_config['django']['port'] = django_port
     rs_config['streamlit']['port'] = streamlit_port
+    
+    rs_config['global']['readstore_version'] = __version__
 
     # Define 
     if debug:
