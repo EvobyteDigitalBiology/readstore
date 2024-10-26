@@ -141,8 +141,8 @@ def create_project(reference_project_names: pd.Series,
                     use_container_width=True,
                     hide_index=True,
                     column_config = {
-                        'key' : st.column_config.Column('Key'),
-                        'value' : st.column_config.Column('Value')
+                        'key' : st.column_config.TextColumn('Key'),
+                        'value' : st.column_config.TextColumn('Value')
                     },
                     num_rows ='dynamic',
                     key = 'create_metadata_df'
@@ -418,13 +418,15 @@ def update_project(project_select_df: pd.DataFrame,
                 
                 st.write('Key-value pairs to describe and group project metadata')
                 
+                metadata_select_df = metadata_select_df.astype(str)
+                
                 metadata_df = st.data_editor(
                     metadata_select_df,
                     use_container_width=True,
                     hide_index=True,
                     column_config = {
-                        'key' : st.column_config.Column('Key', width='medium'),
-                        'value' : st.column_config.Column('Value', width='medium')
+                        'key' : st.column_config.TextColumn('Key', width='medium'),
+                        'value' : st.column_config.TextColumn('Value', width='medium')
                     },
                     num_rows ='dynamic',
                     key = 'create_metadata_df'
