@@ -87,13 +87,12 @@ if auth_status:
         if not 'owner_group' in st.session_state:
             st.session_state['owner_group'] = datamanager.get_my_owner_group(st.session_state["jwt_auth_header"])['name'].tolist()[0]
     
-        else:            
-            pages = [project_page, dataset_page]
+        pages = [project_page, dataset_page]
+    
+        if 'staging' in user_groups:
+            pages = pages + [staging_page]
         
-            if 'staging' in user_groups:
-                pages = pages + [staging_page]
-            
-            pages = pages + [settings_page, logout_page]
+        pages = pages + [settings_page, logout_page]
 
     pg = st.navigation(pages)
 else:
