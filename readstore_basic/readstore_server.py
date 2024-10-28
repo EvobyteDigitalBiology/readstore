@@ -210,7 +210,7 @@ def run_rs_server(db_directory: str,
 
     logger.info(f'Prepare Secret Key')
 
-    secret_key_path = os.path.join(config_directory, 'server_key')
+    secret_key_path = os.path.join(config_directory, 'secret_key')
     if not os.path.exists(secret_key_path):
         logger.info(f'Create Secret Key')
         key = ''.join(random.sample(string.ascii_letters + string.digits, 50))
@@ -342,7 +342,17 @@ def main():
     if 'RS_LOG_DIRECTORY' in os.environ:        
         log_directory = os.environ['RS_LOG_DIRECTORY']
         print('Found RS_LOG_DIRECTORY in Environment Variables')
+    if 'RS_CONFIG_DIRECTORY' in os.environ:
+        config_directory = os.environ['RS_CONFIG_DIRECTORY']
+        print('Found RS_CONFIG_DIRECTORY in Environment Variables')
+    if 'RS_DJANGO_PORT' in os.environ:
+        django_port = int(os.environ['RS_DJANGO_PORT'])
+        print('Found RS_DJANGO_PORT in Environment Variables')
+    if 'RS_STREAMLIT_PORT' in os.environ:
+        streamlit_port = int(os.environ['RS_STREAMLIT_PORT'])
+        print('Found RS_STREAMLIT_PORT in Environment Variables')
         
+    
     if db_directory is None:
         parser.print_help()
         print('ERROR: --db-directory is required')
