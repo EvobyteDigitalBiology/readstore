@@ -1,0 +1,7 @@
+include README.md LICENSE requirements.txt
+include readstore_basic/readstore_server_config.yaml
+
+include readstore_basic/frontend/streamlit/.streamlit/config.toml
+include readstore_basic/frontend/streamlit/static/*
+
+global-exclude *test*.py
