@@ -311,7 +311,7 @@ def create_project(reference_project_names: pd.Series,
             values = metadata_df['value'].tolist()
             
             key_templates = dataset_meta_keys_df['key'].tolist()
-            key_templates = [k.lower() for k in key_templates]
+            key_templates = [k.lower() for k in key_templates if not k is None]
             
             # Validate uploaded files
             file_names = [file.name for file in uploaded_files]
@@ -669,7 +669,7 @@ def update_project(project_select_df: pd.DataFrame,
             values = metadata_df['value'].tolist()
                     
             key_templates = dataset_meta_keys_df['key'].tolist()
-            key_templates = [k.lower() for k in key_templates]
+            key_templates = [k.lower() for k in key_templates if not k is None]
             
             # Attachment Data
             file_names = [file.name for file in uploaded_files]
