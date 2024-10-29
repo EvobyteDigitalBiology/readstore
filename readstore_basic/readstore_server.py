@@ -40,7 +40,7 @@ parser.add_argument(
     '--log-directory', type=str, help='Directory for Storing ReadStore Logs (required)', metavar='')
 
 parser.add_argument(
-    '--config-directory', type=str, help='Directory for storing readstore_server_config.yaml (~/.readstore)', metavar='', default='~/.readstore')
+    '--config-directory', type=str, help='Directory for storing readstore_server_config.yaml (~/.rs-server)', metavar='', default='~/.rs-server')
 
 parser.add_argument(
     '--django-port', type=int, default=8000, help='Port of Django Backend', metavar='')
@@ -55,7 +55,7 @@ parser.add_argument(
 def _get_path(path: str):
     if '~' in path:
         return os.path.expanduser(path)
-    return os.path.abspath(path)
+    return os.path.abspath(path)    
 
 def _is_port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -78,11 +78,13 @@ def run_rs_server(db_directory: str,
     log_directory = _get_path(log_directory)
     config_directory = _get_path(config_directory)
     
+    if not os.path.isdir(config_directory):
+        os.makedirs(config_directory, exist_ok=True)
+    
     # Check permissions for db_directory and db_backup_directory
     assert os.path.isdir(db_directory), f'ERROR: db_directory {db_directory} does not exist!'
     assert os.path.isdir(db_backup_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
     assert os.path.isdir(log_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
-    assert os.path.isdir(config_directory), f'ERROR: config_directory {config_directory} does not exist!'
     
     assert os.access(db_directory, os.W_OK), f'ERROR: db_directory {db_directory} is not writable!'
     assert os.access(db_backup_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
@@ -304,7 +306,6 @@ def run_rs_server(db_directory: str,
         os.environ['RS_CONFIG_PATH'] = ''
         os.environ['RS_KEY_PATH'] = ''
         
-        
     except KeyboardInterrupt:
         st_process.terminate()
         backup_process.terminate()
@@ -331,7 +332,6 @@ def main():
         print(f'ReadStore Basic Version: {__version__}')
         return
     
-    
     # Try to set from environment variables
     if 'RS_DB_DIRECTORY' in os.environ:
         print('Found RS_DB_DIRECTORY in Environment Variables')
@@ -352,7 +352,6 @@ def main():
         streamlit_port = int(os.environ['RS_STREAMLIT_PORT'])
         print('Found RS_STREAMLIT_PORT in Environment Variables')
         
-    
     if db_directory is None:
         parser.print_help()
         print('ERROR: --db-directory is required')
@@ -365,7 +364,6 @@ def main():
         parser.print_help()
         print('ERROR: --log_directory is required')
         return
-    
     
     # Define logger    
     run_rs_server(db_directory,
