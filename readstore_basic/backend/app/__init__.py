@@ -1,1 +1,0 @@
-# readstore-basic/backend/app/__init__.py
