@@ -182,7 +182,9 @@ pipeline/*/.local/*
 .python_history
 .bash_history
 
-backend/app/migrations/*
+readstore_basic/backend/app/migrations/*
 
 #venv
 rs/*
+
+run*.sh
