@@ -41,5 +41,6 @@ RUN pip3 install --user -r requirements.txt
 ENV PATH="${WORKDIR}/.local/bin:${PATH}"
 
 EXPOSE 8501
+EXPOSE 8000
 
 #ENTRYPOINT [ "python3", "launch_backend.py" ]

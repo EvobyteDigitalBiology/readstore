@@ -184,4 +184,7 @@ pipeline/*/.local/*
 
 readstore_basic/backend/app/migrations/*
 
-run_*.sh
+#venv
+rs/*
+
+run*.sh

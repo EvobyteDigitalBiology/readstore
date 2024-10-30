@@ -1,0 +1,31 @@
+django:
+  access_token_lifetime: 660
+  allowed_hosts: localhost,127.0.0.1,*
+  api_version: api_v1
+  backup_interval_hours: 24
+  backup_max_files: 3
+  db_backup_dir: /home/jona/projects/evobyte/readstore-basic/test
+  db_path: /home/jona/projects/evobyte/readstore-basic/test/readstore_db.sqlite3
+  django_settings_module: settings.production
+  fq_queue_maxsize: 250
+  fq_queue_num_workers: 2
+  gunicorn_access_logfile: /home/jona/projects/evobyte/readstore-basic/test/readstore_gunicorn_access.log
+  gunicorn_error_logfile: /home/jona/projects/evobyte/readstore-basic/test/readstore_gunicorn_error.log
+  gunicorn_num_workers: 1
+  gunicorn_run: true
+  host: 0.0.0.0
+  logger_path: /home/jona/projects/evobyte/readstore-basic/test/readstore_django.log
+  port: 8000
+global:
+  valid_fastq_extensions: .fastq.gz,.fq.gz,.fastq,.fq
+  valid_index1_suffix: I1_001,I1,Index1,i1_001,i1,index1
+  valid_index2_suffix: I2_001,I2,Index2,i2_001,i2,index2
+  valid_read1_suffix: R1_001,R1,Read1,r1_001,r1,read1
+  valid_read2_suffix: R2_001,R2,Read2,r2_001,r2,read2
+  readstore_version: 0.0.11
+streamlit:
+  access_token_refresh_seconds: 600
+  cache_ttl_seconds: 900
+  host: 0.0.0.0
+  port: 8501
+  static_path_prefix: ''
