@@ -736,6 +736,7 @@ if len(fq_select.selection['rows']) == 1:
     else:
         show_project_details = False
     
+    update_disabled = False
     
 else:
     show_project_details = False
@@ -758,7 +759,7 @@ with col5a:
                  type ='primary',
                  key='update_dataset',
                  use_container_width=True,
-#                 disabled = update_disabled,
+                 disabled = update_disabled,
                  help = 'Update the selected Dataset'):
         
         update_dataset(fq_dataset_update,
