@@ -693,14 +693,20 @@ class FqDatasetViewSet(viewsets.ModelViewSet):
                                 .order_by("-created")    
                         
                         # Get all attachments
-                        fq_attach = FqAttachment.objects.filter(fq_dataset__in=qset).all().order_by("-created")
-                                                
+                        fq_attach = FqAttachment.objects \
+                            .defer('body') \
+                            .filter(fq_dataset__in=qset) \
+                            .all() \
+                            .order_by("-created")
+                        
                         # Convert to dict of list
                         attach_dict = defaultdict(list)
-                        for attach in fq_attach.values():
+                        
+                        for attach in fq_attach.values('fq_dataset_id','name'):
                             attach_dict[attach['fq_dataset_id']].append(attach['name'])
                         
                         # add attachments to fq datasets
+                        
                         for p in qset:
                             p.attachments = attach_dict[p.id]
 
@@ -748,11 +754,15 @@ class FqDatasetViewSet(viewsets.ModelViewSet):
                             .order_by("-created")
                         
                         # Get all attachments
-                        fq_attach = FqAttachment.objects.filter(fq_dataset__in=qset).all().order_by("-created")
-                                                
+                        fq_attach = FqAttachment.objects \
+                            .only('fq_dataset_id','name') \
+                            .filter(fq_dataset__in=qset) \
+                            .all() \
+                            .order_by("-created")
+                        
                         # Convert to dict of list
                         attach_dict = defaultdict(list)
-                        for attach in fq_attach.values():
+                        for attach in fq_attach.values('fq_dataset_id','name'):
                             attach_dict[attach['fq_dataset_id']].append(attach['name'])
                         
                         # add attachments to project
@@ -772,7 +782,6 @@ class FqDatasetViewSet(viewsets.ModelViewSet):
                     return Response({'message' : 'token invalid'}, status=400)
             else:
                 return Response({'message' : 'username not found'}, status=400)    
-            
         else:
             return Response(serializer.errors, status=400)
         
@@ -789,7 +798,7 @@ class FqAttachmentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated,
                         permissions.DjangoModelPermissions]
 
-    queryset = FqAttachment.objects.all().order_by("-created")
+    queryset = FqAttachment.objects.defer('body').all().order_by("-created")
     
     def get_serializer_class(self):
         """Get Serializer Class
@@ -830,8 +839,16 @@ class FqAttachmentViewSet(viewsets.ModelViewSet):
         
         if hasattr(request.user, 'appuser'):
             owner_group = request.user.appuser.owner_group
-            qset = FqAttachment.objects.filter(fq_dataset__owner_group=owner_group).all().distinct().order_by("-created")
-            serializer = self.get_serializer(qset, many=True)        
+            
+            qset = FqAttachment.objects \
+                    .defer('body') \
+                    .filter(fq_dataset__owner_group=owner_group) \
+                    .all() \
+                    .distinct() \
+                    .order_by("-created")
+            
+            serializer = FqAttachmentListSerializer(qset, many=True)        
+            
             return Response(serializer.data)
         else:
             return Response({'message' : 'User is not an appuser'}, status=400)
@@ -851,8 +868,15 @@ class FqAttachmentViewSet(viewsets.ModelViewSet):
         
         if hasattr(request.user, 'appuser'):
             username = request.user.username
-            qset = FqAttachment.objects.filter(fq_dataset__project__collaborators__username=username).all().distinct().order_by("-created")
-            serializer = self.get_serializer(qset, many=True)        
+            
+            qset = FqAttachment.objects \
+                .defer('body') \
+                .filter(fq_dataset__project__collaborators__username=username) \
+                .all() \
+                .distinct() \
+                .order_by("-created")
+            
+            serializer = FqAttachmentListSerializer(qset, many=True)        
             return Response(serializer.data)
         else:
             return Response({'message' : 'User is not an appuser'}, status=400)
@@ -879,14 +903,14 @@ class FqAttachmentViewSet(viewsets.ModelViewSet):
             
             # In this case user is part of owner group
             if FqDataset.objects.filter(owner_group=owner_group, pk=pk).exists():
-                qset = FqAttachment.objects.filter(fq_dataset_id=pk).all().order_by("-created")
-                serializer = self.get_serializer(qset, many=True)        
+                qset = FqAttachment.objects.defer('body').filter(fq_dataset_id=pk).all().order_by("-created")
+                serializer = FqAttachmentListSerializer(qset, many=True)        
                 return Response(serializer.data)
             
             # Check of FqDataset is part of project where user has collaborator access
             elif FqDataset.objects.filter(project__collaborators__username=request.user.username, pk=pk).exists():
-                qset = FqAttachment.objects.filter(fq_dataset_id=pk).all().order_by("-created")
-                serializer = self.get_serializer(qset, many=True)        
+                qset = FqAttachment.objects.defer('body').filter(fq_dataset_id=pk).all().order_by("-created")
+                serializer = FqAttachmentListSerializer(qset, many=True)        
                 return Response(serializer.data)
             else:
                 return Response({'message' : 'User does not have permission to access project'}, status=400)
@@ -994,7 +1018,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def collab(self, request):
         
         username = request.user.username
-        qset = Project.objects.filter(collaborators__username=username).all().distinct().order_by("-created")
+        qset = Project.objects \
+            .filter(collaborators__username=username) \
+            .all() \
+            .distinct() \
+            .order_by("-created")
         
         serializer = self.get_serializer(qset, many=True)        
         return Response(serializer.data)
@@ -1007,6 +1035,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             owner_group = request.user.appuser.owner_group
             
             qset = Project.objects.filter(owner_group=owner_group).all().distinct().order_by("-created")
+            
             serializer = self.get_serializer(qset, many=True)        
             return Response(serializer.data)
         else:
@@ -1062,11 +1091,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             .order_by("-created")
 
                         # Get all attachments for projects
-                        project_attach = ProjectAttachment.objects.filter(project__in=qset).all().order_by("-created")
+                        project_attach = ProjectAttachment.objects \
+                            .defer('body') \
+                            .filter(project__in=qset) \
+                            .all() \
+                            .order_by("-created")
                                                 
                         # Convert to dict of list
                         attach_dict = defaultdict(list)
-                        for attach in project_attach.values():
+                        for attach in project_attach.values('project_id','name'):
                             attach_dict[attach['project_id']].append(attach['name'])
                         
                         # add attachments to project
@@ -1096,13 +1129,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             .all() \
                             .distinct() \
                             .order_by("-created")
-                        
+                                                
                         # Get all attachments for projects
-                        project_attach = ProjectAttachment.objects.filter(project__in=qset).all().order_by("-created")
+                        project_attach = ProjectAttachment.objects \
+                            .defer('body') \
+                            .filter(project__in=qset) \
+                            .all() \
+                            .order_by("-created")
                                                 
                         # Convert to dict of list
                         attach_dict = defaultdict(list)
-                        for attach in project_attach.values():
+                        for attach in project_attach.values('project_id','name'):
                             attach_dict[attach['project_id']].append(attach['name'])
                         
                         # add attachments to project
@@ -1128,7 +1165,7 @@ class ProjectAttachmentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated,
                         permissions.DjangoModelPermissions]
 
-    queryset = ProjectAttachment.objects.all().order_by("-created")
+    queryset = ProjectAttachment.objects.defer('body').all().order_by("-created")
     
     def get_serializer_class(self):
         if self.action in ['list', 'project']:
@@ -1145,8 +1182,14 @@ class ProjectAttachmentViewSet(viewsets.ModelViewSet):
         if hasattr(request.user, 'appuser'):
             owner_group = request.user.appuser.owner_group
             
-            qset = ProjectAttachment.objects.filter(project__owner_group=owner_group).all().distinct().order_by("-created")
-            serializer = self.get_serializer(qset, many=True)        
+            qset = ProjectAttachment.objects \
+                .defer('body') \
+                .filter(project__owner_group=owner_group) \
+                .all() \
+                .distinct() \
+                .order_by("-created")
+            
+            serializer = ProjectAttachmentListSerializer(qset, many=True)        
             return Response(serializer.data)
         else:
             return Response({'message' : 'User is not an appuser'}, status=400)
@@ -1156,10 +1199,18 @@ class ProjectAttachmentViewSet(viewsets.ModelViewSet):
             
         if hasattr(request.user, 'appuser'):
             username = request.user.username
-            qset = ProjectAttachment.objects.filter(project__collaborators__username=username).all().distinct().order_by("-created")
+            qset = ProjectAttachment.objects \
+                .defer('body') \
+                .filter(project__collaborators__username=username) \
+                .all() \
+                .distinct() \
+                .order_by("-created")
             
-            serializer = self.get_serializer(qset, many=True)        
+            serializer = ProjectAttachmentListSerializer(qset, many=True)        
             return Response(serializer.data)
+        else:
+            return Response({'message' : 'User is not an appuser'}, status=400)
+        
     
     @action(detail=False, methods=['get'])
     def project(self, request, pk):
@@ -1170,13 +1221,24 @@ class ProjectAttachmentViewSet(viewsets.ModelViewSet):
             
             # In this case user is part of owner group
             if Project.objects.filter(owner_group=owner_group, pk=pk).exists():
-                qset = ProjectAttachment.objects.filter(project_id=pk).all().order_by("-created")
-                serializer = self.get_serializer(qset, many=True)        
+                qset = ProjectAttachment.objects \
+                    .defer('body') \
+                    .filter(project_id=pk) \
+                    .all() \
+                    .order_by("-created")
+                
+                serializer = ProjectAttachmentListSerializer(qset, many=True)        
                 return Response(serializer.data)
+            
             # In this case user is collaborator
             elif Project.objects.filter(collaborators__username=request.user.username, pk=pk).exists():
-                qset = ProjectAttachment.objects.filter(project_id=pk).all().order_by("-created")
-                serializer = self.get_serializer(qset, many=True)        
+                qset = ProjectAttachment.objects \
+                    .defer('body') \
+                    .filter(project_id=pk) \
+                    .all() \
+                    .order_by("-created")
+                
+                serializer = ProjectAttachmentListSerializer(qset, many=True)        
                 return Response(serializer.data)
             else:
                 return Response({'message' : 'User does not have permission to access project'}, status=400)
