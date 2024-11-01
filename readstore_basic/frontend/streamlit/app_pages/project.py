@@ -66,7 +66,14 @@ if 'available_collab' in st.session_state:
 if 'selected_collab' in st.session_state:
     del st.session_state['selected_collab']
 
-# Methods
+# Set sesstion state for downloaing attachments
+if not 'project_select_id' in st.session_state:
+    st.session_state['project_select_id'] = None
+    
+def update_attachment_select():
+    if st.session_state['project_select_id']:
+        pid = st.session_state['project_select_id']
+        st.session_state[f'download_attachments_select_{pid}'] = st.session_state['attachment_details_df']
 
 # Assign and remove datasets to project
 def add_selected_datasets(fq_datasets, selected_rows):
@@ -928,6 +935,9 @@ if len(projects_select.selection['rows']) == 1:
         project_attachments['project_id'] == select_project_id,:
     ]
     
+    # For download attachments
+    st.session_state['project_select_id'] = select_project_id
+    
 else:
     update_disabled = True
     show_project_details = False
@@ -983,7 +993,7 @@ if show_project_details:
         col1d, col2d = st.columns([7,5])
         
         with col1d:
-            with st.container(border = True, height = 300):
+            with st.container(border = True, height = 400):
                 
                 project_detail = selected_project.copy()
                 project_detail_og = project_detail['name_og']
@@ -1015,7 +1025,7 @@ if show_project_details:
                 st.write(' ')
             
         with col2d:
-            with st.container(border = True, height = 300):
+            with st.container(border = True, height = 400):
                 
                 st.write('**Metadata**')
                 
@@ -1031,10 +1041,16 @@ if show_project_details:
     #region Detail Datasets
     with detail_tabs[1]:
         
-        with st.container(border = True, height = 300):
+        with st.container(border = True, height = 400):
                 
             st.write('**Datasets**')
             
+            # Limit Max Height of Dataframe
+            if select_project_attached_fq_datasets.shape[0] > 7:
+                max_df_height = 315
+            else:
+                max_df_height = None
+      
             st.dataframe(select_project_attached_fq_datasets[['id','name', 'description']],
                         use_container_width = True,
                         hide_index = True,
@@ -1043,39 +1059,63 @@ if show_project_details:
                             'name' : st.column_config.TextColumn('Name'),
                             'description' : st.column_config.TextColumn('Description', width = 'medium'),
                         },
-                        key='select_project_fq_datasets_df')
+                        key='select_project_fq_datasets_df',
+                        height = max_df_height)
     
     #region Detail Attachments   
     with detail_tabs[2]:
         
-        with st.container(border = True, height = 300):
-        
-            st.write('**Attachments**')
-            attach_select = st.dataframe(select_project_attachments,
-                                        hide_index = True,
-                                        use_container_width = True,
-                                        column_config = {
-                                            'id' : None,
-                                            'name' : st.column_config.Column('Name'),
-                                            'description' : None,
-                                            'project_id' : None
-                                        },
-                                        on_select = 'rerun',
-                                        selection_mode='single-row',
-                                        key='attachment_details_df')
+        with st.container(border = True, height = 400):
             
-            if len(attach_select.selection['rows']) == 1:
-                select_ix = attach_select.selection['rows'][0]
-                select_attachment = select_project_attachments.loc[select_ix,:]
-                select_attachment_id = int(select_attachment['id'])
-                select_attachment_name = select_attachment['name']
-                
-                st.download_button('Download',
-                                data=datamanager.get_project_attachment_file_download(select_attachment_id),
-                                file_name = select_attachment_name,
-                                key='download_attachment')
+            select_project_id = st.session_state['project_select_id']
+            
+            # Value is none if not run
+            download_attach_key_name = f'download_attachments_select_{select_project_id}'
+            
+            if download_attach_key_name in st.session_state:
+                attach_select = st.session_state[download_attach_key_name]
             else:
-                disable_download = True
-                select_attachment_id = 0
+                attach_select = None
+            
+            col1atta, col2atta = st.columns([1.5,10.5])
+            with col1atta:
+                st.write('**Attachments**')
+            
+            with col2atta:
+                
+                if attach_select and len(attach_select.selection['rows']) == 1:
+                    
+                    select_ix = attach_select.selection['rows'][0]
+                    select_attachment = select_project_attachments.loc[select_ix,:]
+                    select_attachment_id = int(select_attachment['id'])
+                    select_attachment_name = select_attachment['name']
+                    
+                    st.download_button('Download',
+                                    data=datamanager.get_project_attachment_file_download(select_attachment_id),
+                                    file_name = select_attachment_name,
+                                    key='download_attachment')
+                else:
+                    disable_download = True
+                    select_attachment_id = 0
 
-                st.button('Download', disabled = True, help = 'Select attachment to download')
+                    st.button('Download', disabled = True, help = 'Select attachment to download')
+            
+            # Limit Max Height of Dataframe
+            if select_project_attachments.shape[0] > 7:
+                max_df_height = 315
+            else:
+                max_df_height = None
+            
+            st.dataframe(select_project_attachments,
+                            hide_index = True,
+                            use_container_width = True,
+                            column_config = {
+                                'id' : None,
+                                'name' : st.column_config.Column('Name'),
+                                'description' : None,
+                                'project_id' : None
+                            },
+                            on_select = update_attachment_select,
+                            selection_mode='single-row',
+                            key='attachment_details_df',
+                            height = max_df_height)
