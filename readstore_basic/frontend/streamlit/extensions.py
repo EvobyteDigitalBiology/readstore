@@ -288,9 +288,13 @@ def validate_endpoints(endpoints: dict,
         AssertionError: If the endpoint is invalid.
     """
     
-    for k, v in endpoints.items():
-        assert check_rest_api_endpoint(v, auth, headers), f"Invalid endpoint: {v}"
+    registered_urls = requests.get(uiconfig.BACKEND_API_ENDPOINT, auth=auth, headers=headers).json()
     
+    for k, v in endpoints.items():
+        if v not in registered_urls.values():
+            # Try head request
+            if not check_rest_api_endpoint(v, auth=auth, headers=headers):    
+                raise exceptions.UIAppError(f"Endpoint {v} not found in registered endpoints.")
 
 #region CRUD functions
 
