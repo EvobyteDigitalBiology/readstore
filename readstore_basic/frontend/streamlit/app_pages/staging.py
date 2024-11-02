@@ -271,7 +271,7 @@ def checkin_df(fq_file_df: pd.DataFrame,
                 # TODO Automate
                 # 1) First check for dataset name
                 if name == '':
-                    st.error("Please enter a Dataset name.")
+                    st.error("Please enter a Dataset Name.")
                 elif name.lower() in reference_fq_dataset_names:
                     st.error("Dataset name already exists in Group. Please choose another name.")
                 elif not extensions.validate_charset(name):
@@ -284,7 +284,7 @@ def checkin_df(fq_file_df: pd.DataFrame,
                             st.error('FASTQ Name: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
                             break
                         if v['name'] == '':
-                            st.error("Please enter a name for FASTQ entry")
+                            st.error("Please enter a FASTQ File Name")
                             break
                     else:
                         
