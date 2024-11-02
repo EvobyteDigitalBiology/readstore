@@ -27,6 +27,9 @@ __version__ = rs_config['global']['readstore_version']
 if rs_config['django']['django_settings_module'] == 'settings.production':
     import sys
     sys.tracebacklimit = 0
+    
+    import warnings
+    warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Define config constants
 BACKEND_API_ENDPOINT_HOST = rs_config['django']['host']
