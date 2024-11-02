@@ -270,6 +270,7 @@ def create_project(reference_project_names: pd.Series,
                                                     'id' : st.column_config.TextColumn('ID'),
                                                     'name' : st.column_config.TextColumn('Name'),
                                                     'owner_group_name' : None,
+                                                    'id_str' : None
                                                 },
                                                 key='create_collab_datasets_select_df',
                                                 on_select = 'rerun',
@@ -331,7 +332,7 @@ def create_project(reference_project_names: pd.Series,
                     st.error(f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces')
                     break
                 if k in uiconfig.METADATA_RESERVED_KEYS:
-                    st.error(f'Metadata Key {k}: Reserved keyword, please choose another key')
+                    st.error(f'Metadata Key **{k}**: Reserved keyword, please choose another key')
                     break
             else:
                 # Validate dataset key formats
@@ -340,7 +341,7 @@ def create_project(reference_project_names: pd.Series,
                         st.error(f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces')
                         break
                     if k in uiconfig.METADATA_RESERVED_KEYS:
-                        st.error(f'Metadata key {k}: Reserved keyword, please choose another key')
+                        st.error(f'Metadata key **{k}**: Reserved keyword, please choose another key')
                         break
                 
                 # If no error occured validate name
@@ -641,6 +642,9 @@ def update_project(project_select_df: pd.DataFrame,
                         datamanager.delete_project_attachment(attach_id)
                     else:
                         st.cache_data.clear()
+                        
+                        # Reset attachment select for project id
+                        st.session_state[f'download_attachments_select_{project_id}'] = None
                         st.rerun()
     
     _ , col_conf = st.columns([9,3])
@@ -934,7 +938,7 @@ if len(projects_select.selection['rows']) == 1:
     select_project_attachments = project_attachments.loc[
         project_attachments['project_id'] == select_project_id,:
     ]
-    
+        
     # For download attachments
     st.session_state['project_select_id'] = select_project_id
     
@@ -945,6 +949,8 @@ else:
     select_row = None
     selected_project = None
     selected_metadata = None
+    
+    st.session_state['project_select_id'] = None
 
 col5a, col6a, col7a, col7b, _, col8a = st.columns([1.75,1.75,1.75, 1.75, 2,3], vertical_alignment='center')
 
@@ -1068,7 +1074,7 @@ if show_project_details:
         with st.container(border = True, height = 400):
             
             select_project_id = st.session_state['project_select_id']
-            
+                        
             # Value is none if not run
             download_attach_key_name = f'download_attachments_select_{select_project_id}'
             
@@ -1086,7 +1092,7 @@ if show_project_details:
                 if attach_select and len(attach_select.selection['rows']) == 1:
                     
                     select_ix = attach_select.selection['rows'][0]
-                    select_attachment = select_project_attachments.loc[select_ix,:]
+                    select_attachment = select_project_attachments.iloc[select_ix,:]
                     select_attachment_id = int(select_attachment['id'])
                     select_attachment_name = select_attachment['name']
                     
@@ -1099,7 +1105,7 @@ if show_project_details:
                     select_attachment_id = 0
 
                     st.button('Download', disabled = True, help = 'Select attachment to download')
-            
+
             # Limit Max Height of Dataframe
             if select_project_attachments.shape[0] > 7:
                 max_df_height = 315
