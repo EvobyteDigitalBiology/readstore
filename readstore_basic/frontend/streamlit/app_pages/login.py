@@ -45,32 +45,30 @@ with col2:
     st.image(os.path.join(uiconfig.STATIC_PATH_PREFIX, "static/BannerLargeLightBlueBackground.png"), use_column_width = True)
     
     login_form = st.form("Login")
-    #login_form.subheader("")
 
+    username = login_form.text_input("**Username**").lower()
+    password = login_form.text_input("**Password**", type="password")
 
-username = login_form.text_input("**Username**").lower()
-password = login_form.text_input("**Password**", type="password")
+    if login_form.form_submit_button("Login", type='primary'):
+        
+        # Run JWT authentication after login submit
 
-if login_form.form_submit_button("Login", type='primary'):
-    
-    # Run JWT authentication after login submit
+        if uiconfig.AUTH_METHOD == uiconfig.AUTH_METHOD.JWT:
+            try:
+                access_token, refresh_token = extensions.get_jwt_token(username, password)
 
-    if uiconfig.AUTH_METHOD == uiconfig.AUTH_METHOD.JWT:
-        try:
-            access_token, refresh_token = extensions.get_jwt_token(username, password)
-
-            st.session_state["access_token"] = access_token
-            st.session_state["refresh_token"] = refresh_token
-            st.session_state["jwt_auth_header"] = {"Authorization": "JWT " + access_token}
-            
-            st.write()
-               
-            extensions.validate_endpoints(uiconfig.ENDPOINT_CONFIG,
-                            headers = st.session_state["jwt_auth_header"])
-            
-            extensions.start_token_refresh_thread()
-            
-            st.rerun()
-            
-        except exceptions.UIAppError:
-            st.error("Username/password is incorrect")
+                st.session_state["access_token"] = access_token
+                st.session_state["refresh_token"] = refresh_token
+                st.session_state["jwt_auth_header"] = {"Authorization": "JWT " + access_token}
+                
+                st.write()
+                
+                extensions.validate_endpoints(uiconfig.ENDPOINT_CONFIG,
+                                headers = st.session_state["jwt_auth_header"])
+                
+                extensions.start_token_refresh_thread()
+                
+                st.rerun()
+                
+            except exceptions.UIAppError:
+                st.error("Username/password is incorrect")
