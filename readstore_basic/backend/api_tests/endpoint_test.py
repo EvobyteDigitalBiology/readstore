@@ -6,7 +6,7 @@ from enum import Enum
 import requests
 import requests.auth as requests_auth
 
-#from zihelper import restapis
+from zihelper import restapis
 
 class HTTPOperations(Enum):
     GET = 'get'
