@@ -398,6 +398,7 @@ Check the LICENSE file for a full list of attributions and third-party license i
 - streamlit (https://streamlit.io/)
 - pydantic (https://docs.pydantic.dev/latest/)
 - pandas (https://pandas.pydata.org/)
+- python (https://www.python.org/)
 
 
 
