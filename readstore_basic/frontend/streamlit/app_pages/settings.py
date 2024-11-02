@@ -101,11 +101,11 @@ with col1:
         st.write('**Email**', user_data.email)
 
         if 'staging' in user_groups:
-            st.checkbox('Staging', value=True, key='staging', disabled=True)
+            st.checkbox('Staging', value=True, key='staging', disabled=True, help='User has Staging Permissions (e.g. for FASTQ Upload)')
         else:
-            st.checkbox('Staging', value=False, key='staging', disabled=True)   
+            st.checkbox('Staging', value=False, key='staging', disabled=True, help='Staging Permissions disabled (e.g. for FASTQ Upload)')
 
-        with st.popover('Token', use_container_width=True):
+        with st.popover('Token', icon=":material/token:", use_container_width=True):
             with st.container(border=True):
                 st.write(token)
             if st.button("Reset", type='primary'):
@@ -115,7 +115,7 @@ with col1:
     
     if 'admin' in user_groups:
         
-        with st.popover('License Key', use_container_width=True):
+        with st.popover('License Key', icon=":material/key:", use_container_width=True):
                     
             if len(latest_license_key) == 0:
                 st.warning('No License Key Found. Enter New Key.')
