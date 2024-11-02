@@ -249,6 +249,8 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                             datamanager.delete_fq_attachment(attach_id)
                         else:
                             st.cache_data.clear()
+                            # Reset attachment select for project id
+                            st.session_state[f'download_fq_attachments_select_{fq_dataset_id}'] = None
                             st.rerun()
             
     for ix, rt in enumerate(read_file_file_map.keys()):
@@ -370,7 +372,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                             st.error(f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces.')
                             break
                         if k in uiconfig.METADATA_RESERVED_KEYS:
-                            st.error(f'Metadata key {k}: Reserved keyword, please choose another key')
+                            st.error(f'Metadata key **{k}**: Reserved keyword, please choose another key')
                             break
                             
                         # Check if attachment names are valid
@@ -765,6 +767,8 @@ else:
     
     fq_dataset_update = None
     fq_metadata_update = None
+    
+    st.session_state['dataset_select_id'] = None
 
 col5a, col5b,_, col6a = st.columns([1.75, 1.75,5.5,3], vertical_alignment = 'center')
 
@@ -936,7 +940,7 @@ if show_project_details:
             else:
                 fq_attach_select = None
             
-            col1atta, col2atta = st.columns([2.5,9.5])
+            col1atta, col2atta = st.columns([2,10])
             
             with col1atta:
                 st.write('**Attachments**')
@@ -946,7 +950,7 @@ if show_project_details:
                 if fq_attach_select and len(fq_attach_select.selection['rows']) == 1:
                     
                     select_ix = fq_attach_select.selection['rows'][0]
-                    select_attachment = select_fq_dataset_attachments.loc[select_ix,:]
+                    select_attachment = select_fq_dataset_attachments.iloc[select_ix,:]
                     select_attachment_id = int(select_attachment['id'])
                     select_attachment_name = select_attachment['name']
                     
