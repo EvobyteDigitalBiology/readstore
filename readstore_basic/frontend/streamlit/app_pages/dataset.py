@@ -473,79 +473,96 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
     
     st.write('Save Datasets and Metadata or Dataset FASTQ stats as .csv file')
     
-    export_fq = st.toggle('Export FASTQ Files',
-                            help='Export FASTQ Files associated with each Dataset')
-    
-    if export_fq:
-        
-        fq_files = []
-        
-        with st.spinner('Exporting Datasets...'):
-            
-            for _, fq in fq_dataset_view.iterrows():
-                
-                fq_id = fq['id']
-                fq_name = fq['name']
-                fq_file_r1 = fq['fq_file_r1']
-                fq_file_r2 = fq['fq_file_r2']
-                fq_file_i1 = fq['fq_file_i1']
-                fq_file_i2 = fq['fq_file_i2']
-                
-                dataset_fq_files = []
-                if extensions.df_not_empty(fq_file_r1):
-                    dataset_fq_files.append(fq_file_r1)
-                if extensions.df_not_empty(fq_file_r2):
-                    dataset_fq_files.append(fq_file_r2)
-                if extensions.df_not_empty(fq_file_i1):
-                    dataset_fq_files.append(fq_file_i1)
-                if extensions.df_not_empty(fq_file_i2):
-                    dataset_fq_files.append(fq_file_i2)
-                
-                # TODO Needs Extra API Call to get all details         
-                for fq_file in dataset_fq_files:
-                    fq_file_detail = datamanager.get_fq_file_detail(st.session_state["jwt_auth_header"], fq_file)
-                    df = pd.DataFrame(fq_file_detail.dict(), index=[0])
-                    df['dataset_id'] = fq_id
-                    df['dataset_name'] = fq_name
-                    df['creator'] = fq['owner_username'] # TODO: this would not work if stager is not creator of dataset
-                    
-                    fq_files.append(df)
-        
-        fq_files = pd.concat(fq_files, axis=0)
-        fq_files = fq_files.drop(columns=['qc_phred', 'staging', 'pipeline_version', 'updated', 'valid_from', 'valid_to', 'owner', 'bucket', 'key'])
-        
-        fq_files = fq_files[['dataset_id', 'dataset_name','id', 'name', 'read_type', 'qc_passed','read_length', 'num_reads', 'size_mb', 'qc_phred_mean', 'created', 'creator', 'upload_path', 'md5_checksum']]
-        
-        fq_files = fq_files.rename(columns={'upload_path' : 'upload_path',
-                                            'id' : 'fastq_id',
-                                            'name' : 'fastq_name'})
-        
-        st.download_button('Download .csv',
-                        fq_files.to_csv(index=False).encode("utf-8"),
-                        'fastq_files.csv',
-                        'text/csv')
-        
+    if fq_dataset_view.empty:
+        st.warning('No Datasets selected for export')
     else:
-        # project_names to projects
-        fq_dataset_view = fq_dataset_view.drop(columns=['fq_file_r1',
-                                                        'fq_file_r2',
-                                                        'fq_file_i1',
-                                                        'fq_file_i2',
-                                                        'id_str',
-                                                        'fq_dataset_id',
-                                                        'owner_group_name'])
+        export_fq = st.toggle('Export FASTQ Files',
+                                help='Export FASTQ Files associated with each Dataset')
         
-        fq_dataset_view = fq_dataset_view.rename(columns={'project' : 'project_ids',
-                                                        'project_names' : 'project_names',
-                                                        'owner_username' : 'creator'})
-        
-        st.download_button('Download .csv',
-                        fq_dataset_view.to_csv(index=False).encode("utf-8"),
-                        'datasets.csv',
-                        'text/csv')
+        if export_fq:
+            
+            # Reduce number of required API calls
+            
+            with st.spinner('Exporting Datasets...'):
+                            
+                fq_dataset_file_ids = []
+                
+                for _, fq in fq_dataset_view.iterrows():
+                    
+                    fq_id = fq['id']
+                    fq_name = fq['name']
+                    creator = fq['owner_username']
+                    fq_file_r1 = fq['fq_file_r1']
+                    fq_file_r2 = fq['fq_file_r2']
+                    fq_file_i1 = fq['fq_file_i1']
+                    fq_file_i2 = fq['fq_file_i2']
+                    
+                    dataset_fq_files = []
+                    if extensions.df_not_empty(fq_file_r1):
+                        dataset_fq_files.append(fq_file_r1)
+                    if extensions.df_not_empty(fq_file_r2):
+                        dataset_fq_files.append(fq_file_r2)
+                    if extensions.df_not_empty(fq_file_i1):
+                        dataset_fq_files.append(fq_file_i1)
+                    if extensions.df_not_empty(fq_file_i2):
+                        dataset_fq_files.append(fq_file_i2)
+                    
+                    fq_file_ids = pd.DataFrame(dataset_fq_files, columns=['id'])
+                    fq_file_ids['dataset_id'] = fq_id
+                    fq_file_ids['dataset_name'] = fq_name
+                    fq_file_ids['creator'] = creator
+                
+                    fq_dataset_file_ids.append(fq_file_ids)
+                
+                fq_dataset_file_ids = pd.concat(fq_dataset_file_ids, axis=0)
+                            
+                # # Map in fq_files
+                fq_files_og = datamanager.get_fq_file_owner_group(st.session_state["jwt_auth_header"])
+                
+                fq_files = fq_dataset_file_ids.merge(fq_files_og, on='id', how='left')
+                
+                fq_files = fq_files[['dataset_id',
+                                    'dataset_name',
+                                    'id',
+                                    'name',
+                                    'read_type',
+                                    'qc_passed',
+                                    'read_length',
+                                    'num_reads',
+                                    'size_mb',
+                                    'qc_phred_mean',
+                                    'created',
+                                    'creator',
+                                    'upload_path',
+                                    'md5_checksum']]
 
+                fq_files = fq_files.rename(columns={'id' : 'fq_file_id', 'name' : 'fq_file_name'}) 
+                fq_files = fq_files.sort_values(by=['dataset_id', 'read_type'], ascending=[True, True])
+                
+            st.download_button('Download .csv',
+                            fq_files.to_csv(index=False).encode("utf-8"),
+                            'fastq_files.csv',
+                            'text/csv')
+            
+        else:
+            # project_names to projects
+            fq_dataset_view = fq_dataset_view.drop(columns=['fq_file_r1',
+                                                            'fq_file_r2',
+                                                            'fq_file_i1',
+                                                            'fq_file_i2',
+                                                            'id_str',
+                                                            'fq_dataset_id',
+                                                            'owner_group_name'])
+            
+            fq_dataset_view = fq_dataset_view.rename(columns={'project' : 'project_ids',
+                                                            'project_names' : 'project_names',
+                                                            'owner_username' : 'creator'})
+            
+            st.download_button('Download .csv',
+                            fq_dataset_view.to_csv(index=False).encode("utf-8"),
+                            'datasets.csv',
+                            'text/csv')
 
-        
 #region DATA
 
 # Get overfiew of all fastq datasets
