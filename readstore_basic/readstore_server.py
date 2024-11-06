@@ -25,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RS_CONFIG_PATH = os.path.join(BASE_DIR, 'readstore_server_config.yaml')
 
 parser = argparse.ArgumentParser(
-    prog='readstore_server',
+    prog='readstore-server',
     usage='%(prog)s <command> [options]',
     description="ReadStore Server",
     epilog='For help on a specific command, type "readstore <command> <subcommand> -h"')
