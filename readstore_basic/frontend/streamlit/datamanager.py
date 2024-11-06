@@ -145,14 +145,12 @@ def get_project_attachments(headers: dict, project_id: int | None = None) -> pd.
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
 def get_fq_file_staging(headers: dict) -> pd.DataFrame:
     
-    
     endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['fq_file'], 'staging/')
     df = extensions.get_request_to_df(endpoint,
                                     FqFile,
                                     headers=headers)
     
     return df
-
 
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
 def get_fq_file_owner(headers: dict, owner: int) -> pd.DataFrame:
@@ -163,6 +161,17 @@ def get_fq_file_owner(headers: dict, owner: int) -> pd.DataFrame:
                                     FqFile,
                                     headers=headers,
                                     query_params=query_params)
+    
+    return df
+
+
+@st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
+def get_fq_file_owner_group(headers: dict) -> pd.DataFrame:
+    
+    endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['fq_file'], 'owner_group/')
+    df = extensions.get_request_to_df(endpoint,
+                                      FqFile,
+                                      headers=headers)
     
     return df
 
