@@ -307,19 +307,65 @@ class FqFileViewSet(viewsets.ModelViewSet):
             
         return queryset
 
-    
     @action(detail=False, methods=['get'])
-    def my_fq_file(self, request):
-        """FqFile for authenticated user
+    def owner_group(self, request):
+        """Get FqFiles for owner_group
 
-        Return FqFile objects for authenticated user
+        Return FqFile where user is part of owner_group
         
         Args:
             request
 
         Returns:
-            Response serialized queryset
+            Response
         """
+        
+        if hasattr(request.user, 'appuser'):
+            owner_group = request.user.appuser.owner_group
+            fq_datasets = FqDataset.objects.filter(owner_group=owner_group).all()
+            
+            Q_comb = Q(fq_file_r1__in=fq_datasets) | \
+                     Q(fq_file_r2__in=fq_datasets) | \
+                     Q(fq_file_i1__in=fq_datasets) | \
+                     Q(fq_file_i2__in=fq_datasets)
+            
+            qset = FqFile.objects.filter(Q_comb).all()
+            
+            serializer = self.get_serializer(qset, many=True)        
+            return Response(serializer.data)
+        else:
+            return Response({'message' : 'User is not an appuser'}, status=400)
+    
+    @action(detail=False, methods=['get'])
+    def collab(self, request):
+        """Get FqFiles for owner_group
+
+        Return FqFile where user is part of owner_group
+        
+        Args:
+            request
+
+        Returns:
+            Response
+        """
+        
+        if hasattr(request.user, 'appuser'):    
+            username = request.user.username
+            fq_datasets = FqDataset.objects.filter(project__collaborators__username=username).all()
+            
+            Q_comb = Q(fq_file_r1__in=fq_datasets) | \
+                     Q(fq_file_r2__in=fq_datasets) | \
+                     Q(fq_file_i1__in=fq_datasets) | \
+                     Q(fq_file_i2__in=fq_datasets)
+            
+            qset = FqFile.objects.filter(Q_comb).all()
+            
+            serializer = self.get_serializer(qset, many=True)        
+            return Response(serializer.data)
+        
+        else:
+            return Response({'message' : 'User is not an appuser'}, status=400)
+        
         
         pk = request.user.pk
         owner_check = Q(owner=pk)
@@ -611,11 +657,15 @@ class FqDatasetViewSet(viewsets.ModelViewSet):
             Response
         """
         
-        username = request.user.username
-        qset = FqDataset.objects.filter(project__collaborators__username=username).all().distinct().order_by("-created")
+        if hasattr(request.user, 'appuser'):    
+            username = request.user.username
+            qset = FqDataset.objects.filter(project__collaborators__username=username).all().distinct().order_by("-created")
+            
+            serializer = self.get_serializer(qset, many=True)        
+            return Response(serializer.data)
         
-        serializer = self.get_serializer(qset, many=True)        
-        return Response(serializer.data)
+        else:
+            return Response({'message' : 'User is not an appuser'}, status=400)
 
     @action(detail=False, methods=['get'])
     def my_fq_dataset(self, request):
