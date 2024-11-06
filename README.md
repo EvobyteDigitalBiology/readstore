@@ -4,7 +4,7 @@ This README introduces ReadStore Data Platform, the lean solution for managing F
 
 **Please read and follow the instructions carefully**. In particular the [Security, Permissions and Backup](#backup) section contains important information related to data security and backup.
 
-You need a license key for using ReadStore Basic, please check the [ReadStore website](https://https://evo-byte.com/readstore/) for more information or reach out to license@evo-byte.com
+You need a license key for using ReadStore Basic, please check the [ReadStore website](https://evo-byte.com/readstore-get-started/) for more information or reach out to license@evo-byte.com
 
 Tutorials and Intro Videos: https://www.youtube.com/@evobytedigitalbio
 
@@ -80,7 +80,7 @@ See [Installation](#installation) for instructions how to setup Users
 
 ### Backups
 
-ReadStore automatically performs regular backups. The backup directory (see Installation) should be different from the database directory. ReadStore logs are also saved to a predefined folder. Each folder should have sufficient space to store database, backup, and log files.
+ReadStore automatically performs regular backups. The backup directory (see [Installation](#installation)) should be different from the database directory. ReadStore log files are also saved to a predefined folder. Each folder should have sufficient space to store database, backup, and log files.
 
 ### Deployment and Server Configurations
 
@@ -91,6 +91,8 @@ If you need a ReadStore version with more advanced permission and group manageme
 ## Installation
 
 ### 1. Install the ReadStore Basic Server
+
+You need Python version 3.10 or higher to install ReadStore
 
 `pip3 install readstore-basic`
 
@@ -148,11 +150,13 @@ After the launch of the webserver you should to be able to connect to the ReadSt
 
 The ReadStore web app should be available via your browser under localhost port 8501 (`http://127.0.0.1:8501` or `http://localhost:8501/`). You should see a login screen.
 
-**NOTE** The port can change depending on your server settings (s. [below](#advancedconfig)).
+If you you want to connect to the ReadStore Web App from a remote connection, e.g. from you local PC via the browser, you may need to open the corresponing server ports or setup a SSH tunnel (s. below)
+
+**NOTE** The port can change depending on your server settings (s. [Advanced Configuration](#advancedconfig)).
 
 #### Access ReadStore Web App via SSH Tunnel
 
-If you run ReadStore Basic on a Linux server that you connect to via SSH, consider using SSH tunneling / port forwarding to access the server port 8501 from your local machine's browser (Tutorial: https://linuxize.com/post/how-to-setup-ssh-tunneling/). Tools like PuTTY help Windows users to easily set up SSH tunnels (https://www.putty.org/).
+If you run ReadStore Basic on a Linux server that you connect to via SSH, consider using SSH tunneling / port forwarding to access the server port 8501 from your local machine's browser (Check this [Tutorial](#https://linuxize.com/post/how-to-setup-ssh-tunneling/)). Tools like [PuTTY](#https://www.putty.org/) help Windows users to easily set up SSH tunnels.
 
 In any case make sure that server connections are established *in agreement with your organizations IT security guidelines* or ask your IT admins for support. 
 
