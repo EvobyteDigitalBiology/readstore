@@ -17,7 +17,7 @@ setup(
         "License :: Other/Proprietary License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.11',
+    python_requires='>=3.10',
     install_requires=[
         'Django>=5.1',
         'djangorestframework>=3.15',
