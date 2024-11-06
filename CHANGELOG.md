@@ -1,5 +1,16 @@
 # Changelog
 
+### v1.0.3  - 2024-11-06
+
+### Added
+
+### Changed
+
+- Fix: Python version in setup
+- Doc: Minor documentatation
+
+### Removed
+
 ### v1.0.2
 
 ### Added
