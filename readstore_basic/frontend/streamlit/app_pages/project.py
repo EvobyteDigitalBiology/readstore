@@ -283,7 +283,6 @@ def create_project(reference_project_names: pd.Series,
                 st.button(':material/arrow_forward:', use_container_width=True, type='primary', on_click=add_selected_datasets, args = (fq_datasets_show, fq_avail_df.selection['rows']))
                 st.button(':material/arrow_back:', use_container_width=True, type='primary', on_click=remove_selected_datasets, args = (fq_datasets_select_show, fq_select_df.selection['rows']))
 
-            
         select_form_fq_datasets()
     
     
@@ -396,8 +395,12 @@ def update_project(project_select_df: pd.DataFrame,
     reference_project_names = reference_project_names.str.lower()
     reference_project_names = reference_project_names.tolist()
     
-    select_project_attachments = datamanager.get_project_attachments(st.session_state["jwt_auth_header"], project_id)
+    select_project_attachments = datamanager.get_project_attachments(st.session_state["jwt_auth_header"],
+                                                                     project_id)
+    
+    
     attachment_ref_names = select_project_attachments['name'].tolist()
+    
     
     reference_fq_datasets = reference_fq_datasets.sort_values(by='name')
     
@@ -603,6 +606,7 @@ def update_project(project_select_df: pd.DataFrame,
     
     #region TAB3 Attachments
     with tab3:
+        
         select_attach_update = st.dataframe(
             select_project_attachments,
             hide_index = True,
@@ -770,7 +774,6 @@ def export_project(project_view: pd.DataFrame):
     
 #region Data
 
-    
 # Data
 
 reference_og_project_names = datamanager.get_project_owner_group(st.session_state["jwt_auth_header"])['name']
@@ -778,15 +781,14 @@ reference_og_project_names = datamanager.get_project_owner_group(st.session_stat
 projects, metadata = datamanager.get_project_metadata_overview(st.session_state["jwt_auth_header"])
 
 # Map in attachment names
-project_attachments = datamanager.get_project_attachments(st.session_state["jwt_auth_header"])
-# Combine attachments to lists
+# project_attachments = datamanager.get_project_attachments(st.session_state["jwt_auth_header"])
+# # Combine attachments to lists
 
-# Map in attachment names to projects
-project_attachments_list = project_attachments.groupby('project_id')['name'].apply(list)
-projects = projects.merge(project_attachments_list, left_on = 'id_project', right_on='project_id', how='left')
-projects['name'] = projects['name'].apply(lambda x: [] if x is np.nan else x)
+# # Map in attachment names to projects
+# project_attachments_list = project_attachments.groupby('project_id')['name'].apply(list)
+# projects = projects.merge(project_attachments_list, left_on = 'id_project', right_on='project_id', how='left')
+# projects['name'] = projects['name'].apply(lambda x: [] if x is np.nan else x)
 
-reference_owner_group_names = sorted(projects['name_og'].unique().tolist())
 my_owner_group_name = datamanager.get_my_owner_group(st.session_state["jwt_auth_header"])['name'].values[0]
 
 # Ignore metadata for fastq
@@ -830,7 +832,7 @@ col_config_user = {
         'collaborators' : None,
         'dataset_metadata_keys' : None,
         'id_str' : None,
-        'name' : None,
+#        'name' : None,
     }
 
 col_config_meta = {
@@ -917,11 +919,9 @@ if len(projects_select.selection['rows']) == 1:
     
     # Check if the selected project is shared by user from different group
     if selected_project['name_og'] == my_owner_group_name:
-        #is_shared = False
         update_ref_fq_datasets = fq_dataset_og
         update_disabled = False
     else:
-        #is_shared = True
         update_ref_fq_datasets = fq_dataset_collab
         update_disabled = True
     
@@ -935,9 +935,9 @@ if len(projects_select.selection['rows']) == 1:
         update_ref_fq_datasets['project'].apply(lambda x: any((e == select_project_id) for e in x)),:
     ]
     
-    select_project_attachments = project_attachments.loc[
-        project_attachments['project_id'] == select_project_id,:
-    ]
+    # Get attachments for selected project from backend
+    select_project_attachments = datamanager.get_project_attachments(st.session_state["jwt_auth_header"],
+                                                                     select_project_id)
         
     # For download attachments
     st.session_state['project_select_id'] = select_project_id
@@ -1009,7 +1009,7 @@ if show_project_details:
                 project_id = project_detail.pop('id_str')
                 project_detail.pop('collaborators')
                 project_detail.pop('dataset_metadata_keys')
-                project_detail.pop('name')                
+                #project_detail.pop('name')                
                 project_detail.pop('name_og')
                 
                 project_detail = project_detail.reset_index()
@@ -1088,8 +1088,10 @@ if show_project_details:
                 st.write('**Attachments**')
             
             with col2atta:
+            
                 
                 if attach_select and len(attach_select.selection['rows']) == 1:
+                    
                     
                     select_ix = attach_select.selection['rows'][0]
                     select_attachment = select_project_attachments.iloc[select_ix,:]
@@ -1111,7 +1113,7 @@ if show_project_details:
                 max_df_height = 315
             else:
                 max_df_height = None
-            
+                        
             st.dataframe(select_project_attachments,
                             hide_index = True,
                             use_container_width = True,
