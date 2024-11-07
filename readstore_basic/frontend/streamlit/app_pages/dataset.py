@@ -78,6 +78,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                     reference_fq_dataset_names: pd.Series,
                     reference_project_names_df: pd.DataFrame):
     
+    
     fq_dataset_input = selected_fq_dataset.copy()
         
     read_long_map = {
@@ -128,7 +129,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
     
     # Add Metadata and Attachments Tabs
     tabs = st.tabs(tab_names_format)
-    
+        
     # region Projects Tab
     with tabs[0]:
         
@@ -162,6 +163,8 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
             
     # region Metadata Tab        
     with tabs[1]:
+        
+        
         
         with st.container(border=True, height=460):
             
@@ -577,15 +580,6 @@ my_project_names = my_projects['name'] # All Project the User has access to
 # Get all fq_datasets that user is collaborator or member of owner group
 fq_datasets, fq_metadata = datamanager.get_fq_dataset_meta_overview(st.session_state["jwt_auth_header"])
 
-# Get attachments for all datasets
-fq_attachments = datamanager.get_fq_dataset_attachments(st.session_state["jwt_auth_header"])
-fq_attachments_list = fq_attachments.groupby('fq_dataset_id')['name'].apply(list)
-fq_attachments_list = fq_attachments_list.reset_index()
-fq_attachments_list.columns = ['fq_dataset_id', 'attachments']
-fq_datasets = fq_datasets.merge(fq_attachments_list, left_on = 'id', right_on='fq_dataset_id', how='left')
-fq_datasets['attachments'] = fq_datasets['attachments'].apply(lambda x: [] if x is np.nan else x)
-
-
 # Prepare Project Filter
 # Subset project names form fq_datasets overview, filter empty projects columns
 # Transform to pandas series and filter out all projects that are empty
@@ -660,7 +654,6 @@ col_config_user = {
     'fq_file_i2' : None,
     'id_str' : None,
     'fq_dataset_id' : None,
-    'attachments' : None
 }
 
 col_config_meta = {
