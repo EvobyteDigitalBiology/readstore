@@ -58,7 +58,6 @@ st.markdown(
 # Change Button Height
 styles.adjust_button_height(25)
 
-
 # Set sesstion state for downloaing attachments
 if not 'dataset_select_id' in st.session_state:
     st.session_state['dataset_select_id'] = None
@@ -138,7 +137,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
             st.subheader('Projects')
 
             project_options = sorted(reference_project_names_df['name'])
-            st.write('Attach the Dataset to Group Projects.')
+            st.write('Attach the Dataset to one or more Projects')
             
             projects_default = fq_dataset_project_names
             
@@ -163,8 +162,6 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
             
     # region Metadata Tab        
     with tabs[1]:
-        
-        
         
         with st.container(border=True, height=460):
             
@@ -403,8 +400,87 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                         st.cache_data.clear()
                         st.rerun()
 
+@st.dialog('Update Datasets', width='large')
+def update_many_datasets(selected_fq_dataset: pd.DataFrame,
+                         selected_fq_metadata: pd.DataFrame,
+                        reference_project_names_df: pd.DataFrame):
+        
+    # Add Metadata and Attachments Tabs
+    tabs = st.tabs([":blue-background[**Projects**]"])
+    
+    with tabs[0]:
+        
+        with st.container(border=True):
+            
+            st.subheader('Projects')
 
+            project_options = sorted(reference_project_names_df['name'])
+            st.write('Attach the selected Datasets to one or more Projects')
+                        
+            project_names_select = st.multiselect("Select Projects",
+                    project_options,
+                    help = 'Attach the dataset to project(s).')
+        
+        coldel, _ = st.columns([4,8])
+        
+        with coldel:
+            with st.expander('Delete all Datasets', icon=":material/delete_forever:"):
+                if st.button('Confirm', key='delete_fq_dataset'):
+                    
+                    fq_file_ids_r1 = selected_fq_dataset['fq_file_r1'].tolist()
+                    fq_file_ids_r2 = selected_fq_dataset['fq_file_r2'].tolist()
+                    fq_file_ids_i1 = selected_fq_dataset['fq_file_i1'].tolist()
+                    fq_file_ids_i2 = selected_fq_dataset['fq_file_i2'].tolist()
+                    
+                    fq_file_ids = fq_file_ids_r1 + fq_file_ids_r2 + fq_file_ids_i1 + fq_file_ids_i2
+                    fq_file_ids = [f for f in fq_file_ids if f]
+                    
+                    # Delete Fq Files attached to Dataset
+                    # Dataset will automatically be deleted through cascade
+                    for file_id in fq_file_ids:
+                        datamanager.delete_fq_file(file_id)
+                    
+                    st.cache_data.clear()
+                    st.rerun()
 
+        _, col1d = st.columns([9,3])
+    
+    with col1d:
+        
+        # region Confirm Button     
+        if st.button('Confirm', key='confirm_ds_update_many', type = 'primary', use_container_width=True):
+            
+            # Get project ids for selected project names
+            project_ids = reference_project_names_df.loc[
+                reference_project_names_df['name'].isin(project_names_select),'id'].tolist()
+
+            # Update selected FqDatasets with new project ids
+            for ix, (_, fq_dataset) in enumerate(selected_fq_dataset.iterrows()):
+                
+                metadata = selected_fq_metadata.iloc[ix,:]
+                metadata = metadata.dropna().reset_index()
+                metadata.columns = ['key', 'value']
+                metadata_dict = {k:v for k,v in zip(metadata['key'],metadata['value'])}
+
+                fq_dataset_id = fq_dataset['id']                
+                name = fq_dataset['name']
+                description = fq_dataset['description']
+                project_ids_old = fq_dataset['project']
+                project_ids_update = list(set(project_ids + project_ids_old))
+                
+                datamanager.update_fq_dataset(fq_dataset_id,
+                                              name,
+                                              description,
+                                              metadata_dict,
+                                              project_ids_update)
+            
+            st.cache_data.clear()
+            st.rerun()
+            
+            
+            
+    
+    
 #region Detail Fastq File
 def start_fq_file_download(fq_file_id:int):
     
@@ -548,14 +624,27 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
                             'text/csv')
             
         else:
+            # Get fq_attachments
+            fq_attachments = datamanager.get_fq_dataset_attachments(st.session_state["jwt_auth_header"])
+            fq_attachments_list = fq_attachments.groupby('fq_dataset_id')['name'].apply(list)
+            fq_attachments_list = fq_attachments_list.reset_index()
+            fq_attachments_list.columns = ['fq_dataset_id', 'attachments']
+
+            fq_dataset_view = fq_dataset_view.merge(fq_attachments_list,
+                                                    left_on='id',
+                                                    right_on='fq_dataset_id',
+                                                    how='left')
+            fq_dataset_view['attachments'] = fq_dataset_view['attachments'
+                                                             ].apply(lambda x: [] if x is np.nan else x)
+            
             # project_names to projects
             fq_dataset_view = fq_dataset_view.drop(columns=['fq_file_r1',
                                                             'fq_file_r2',
                                                             'fq_file_i1',
                                                             'fq_file_i2',
                                                             'id_str',
-                                                            'fq_dataset_id',
-                                                            'owner_group_name'])
+                                                            'owner_group_name',
+                                                            'fq_dataset_id'])
             
             fq_dataset_view = fq_dataset_view.rename(columns={'project' : 'project_ids',
                                                             'project_names' : 'project_names',
@@ -601,8 +690,6 @@ reference_dataset_names = fq_datasets.loc[
 
 # Add id string for search
 fq_datasets['id_str'] = fq_datasets['id'].astype(str)
-
-
 
 # UI
 
@@ -723,7 +810,7 @@ fq_datasets_show = fq_datasets_show.fillna('')
 
 fq_select = st.dataframe(fq_datasets_show[show_cols],
                         column_config = col_config,
-                        selection_mode='single-row',
+                        selection_mode='multi-row',
                         hide_index = True,
                         on_select = 'rerun',
                         use_container_width=True,
@@ -762,12 +849,38 @@ if len(fq_select.selection['rows']) == 1:
         show_project_details = False
     
     update_disabled = False
+    update_one = True
+    
+    fq_export_select = fq_datasets_show.loc[[selected_fq_dataset_ix],:]
     
     st.session_state['dataset_select_id'] = fq_dataset_detail_id
+
+elif len(fq_select.selection['rows']) > 1:
+
+    select_row = fq_select.selection['rows']
+    
+    # Get original index from projects overview before subset
+    selected_fq_dataset_ix = fq_datasets_show.iloc[select_row,:].index # Refers to original index
+    
+    fq_dataset_detail = fq_datasets.loc[selected_fq_dataset_ix,:]
+    
+    fq_metadata_detail_many = fq_metadata.loc[selected_fq_dataset_ix,:]
+    
+    fq_dataset_update = fq_dataset_detail.copy()
+    fq_metadata_update_many = fq_metadata_detail_many.copy()
+    
+    show_project_details = False
+    update_disabled = False
+    update_one = False
+    
+    fq_export_select = fq_dataset_detail
+    
+    st.session_state['dataset_select_id'] = None
     
 else:
     show_project_details = False
     update_disabled = True
+    update_one = False
     
     select_row = None
     selected_fq_dataset_ix = None
@@ -777,6 +890,8 @@ else:
     
     fq_dataset_update = None
     fq_metadata_update = None
+    
+    fq_export_select = fq_datasets_show
     
     st.session_state['dataset_select_id'] = None
 
@@ -791,12 +906,18 @@ with col5a:
                  disabled = update_disabled,
                  help = 'Update the selected Dataset'):
         
-        update_dataset(fq_dataset_update,
-                       fq_metadata_update,
-                       select_fq_dataset_attachments,
-                       reference_dataset_names,
-                       reference_project_names_df)
+        if update_one:
+            update_dataset(fq_dataset_update,
+                        fq_metadata_update,
+                        select_fq_dataset_attachments,
+                        reference_dataset_names,
+                        reference_project_names_df)
 
+        else:
+            update_many_datasets(fq_dataset_update,
+                                 fq_metadata_update_many,
+                                 reference_project_names_df)
+        
 with col5b:
     
     if st.button('Export',
@@ -804,7 +925,8 @@ with col5b:
                  use_container_width=True,
                  help = 'Export and download Dataset overview'):
         
-        export_datasets(fq_datasets_show)
+        # Prepare input for export
+        export_datasets(fq_export_select)
 
 with col6a:    
    
