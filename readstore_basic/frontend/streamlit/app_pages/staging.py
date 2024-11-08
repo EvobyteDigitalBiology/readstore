@@ -25,8 +25,6 @@ if not extensions.user_auth_status():
     st.rerun()
 
 
-
-
 def show_updated(ix):
     
     change = st.session_state[f"fq_sd_{ix}"]
@@ -60,6 +58,52 @@ st.markdown(
     </style>
     """,
     unsafe_allow_html=True)
+
+# Reset session state for selecting datasets for projects
+if 'available_staging' in st.session_state:
+    del st.session_state['available_staging']
+if 'selected_staging' in st.session_state:
+    del st.session_state['selected_staging']
+# if 'selected_input' in st.session_state:
+#     del st.session_state['selected_input']
+# if 'available_input' in st.session_state:
+#     del st.session_state['available_input']
+
+# Assign and remove datasets to project
+def add_selected_datasets(fq_datasets, selected_rows):
+                
+    if len(selected_rows) == 0:
+        return
+    else:    
+        # Get ID of selected dataset
+        select_dataset_r = fq_datasets.iloc[selected_rows,:]
+        # Append to selected datasets
+        st.session_state['selected_staging'] = pd.concat([
+            st.session_state['selected_staging'],
+            select_dataset_r
+        ], axis=0)
+
+        # Filter out prev selected ID
+        st.session_state['available_staging'] = st.session_state['available_staging'].loc[
+            ~st.session_state['available_staging']['name'].isin(select_dataset_r['name']),:]
+               
+def remove_selected_datasets(fq_datasets, selected_rows):
+    
+    if len(selected_rows) == 0:
+        return
+    else:    
+        # Get ID of selected dataset
+        select_dataset_r = fq_datasets.iloc[selected_rows,:]
+        # Append to selected datasets
+        st.session_state['available_staging'] = pd.concat([
+            st.session_state['available_staging'],
+            select_dataset_r
+        ], axis=0)
+
+        # Filter out prev selected ID
+        st.session_state['selected_staging'] = st.session_state['selected_staging'].loc[
+            ~st.session_state['selected_staging']['name'].isin(select_dataset_r['name']),:]
+
 
 @st.dialog('Check In Dataset', width='large')
 def checkin_df(fq_file_df: pd.DataFrame,
@@ -249,7 +293,7 @@ def checkin_df(fq_file_df: pd.DataFrame,
         with col:
             if st.button('Confirm', key='confirm_checkin', type = 'primary', use_container_width=True):
                 
-                 # Remove na values from metadata key column
+                # Remove na values from metadata key column
                 metadata_df = metadata_df.loc[~metadata_df['key'].isna(),:]
                 # Replace all None values with empty string
                 metadata_df = metadata_df.fillna('')
@@ -287,7 +331,6 @@ def checkin_df(fq_file_df: pd.DataFrame,
                             st.error("Please enter a FASTQ File Name")
                             break
                     else:
-                        
                         # 3) Third check for metadata
                         for k, v in zip(keys, values):
                             if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
@@ -349,8 +392,7 @@ def checkin_df(fq_file_df: pd.DataFrame,
                                 index_read = True
                             else:
                                 index_read = False
-                            
-                                                
+                                      
                             fq_pk = datamanager.create_fq_dataset(
                                 st.session_state["jwt_auth_header"],
                                 name = name,
@@ -376,7 +418,267 @@ def checkin_df(fq_file_df: pd.DataFrame,
                             st.cache_data.clear()
                             st.rerun()
         
+# region Bulk Check In
+@st.dialog('Bulk Check In Datasets', width='large')
+def bulk_checkin_df(fq_files_staging_df: pd.DataFrame,
+                    projects_owner_group: pd.DataFrame,
+                    reference_fq_dataset_names: pd.Series):
+    
+    reference_fq_dataset_names = reference_fq_dataset_names.str.lower()
+    reference_fq_dataset_names = reference_fq_dataset_names.tolist()
+    
+    # Group by datasets and check in each dataset if fastq files are valid
+    fq_files_staging_df = fq_files_staging_df.copy()    
+    fq_files_staging_datasets = fq_files_staging_df.groupby('dataset')
 
+    total_input_datasets = len(fq_files_staging_datasets)
+    valid_datasets = {}
+    
+    na_in_read_types_warning = False
+    duplicated_read_types_warning = False
+    dataset_exists_warning = False
+    empty_dataset_name_warning = False
+    invalid_dataset_chars_warning = False
+    invalid_fq_file_name_warning = False
+    empty_fq_file_name_warning = False
+    
+    for dataset, fq_files in fq_files_staging_datasets:
+        
+        read_types = fq_files['read_type'].unique()
+        read_types = sorted(read_types)
+        
+        # Check if NA is in read types
+        if 'NA' in read_types:
+            if not na_in_read_types_warning:
+                st.warning('Datasets Excluded: NA in read types')
+                na_in_read_types_warning = True
+            continue # consider warning
+        # Check if read types are unique
+        elif fq_files['read_type'].duplicated().any():
+            if not duplicated_read_types_warning:
+                st.warning('Datasets Excluded: Duplicated read types')
+                duplicated_read_types_warning = True
+            continue
+        # Check if dataset name is no yet used and adreres to naming conventions
+        elif dataset.lower() in reference_fq_dataset_names:
+            if not dataset_exists_warning:
+                st.warning('Datasets Excluded: Dataset with identical name exists')
+                dataset_exists_warning = True
+            continue
+        # Empty dataset name
+        elif dataset == '':
+            if not empty_dataset_name_warning:
+                st.warning('Datasets Excluded: Dataset Name Empty')
+                empty_dataset_name_warning = True    
+            continue
+        elif not extensions.validate_charset(dataset):
+            if not invalid_dataset_chars_warning:
+                st.warning('Datasets Excluded: Invalid Dataset Name')
+                invalid_dataset_chars_warning = True
+            continue
+        # Check if fq file names are valid
+        elif not all([extensions.validate_charset(fq) for fq in fq_files['name']]):
+            if not invalid_fq_file_name_warning:
+                st.warning('Datasets Excluded: Invalid Fastq File Name')
+                invalid_fq_file_name_warning = True
+            continue
+        elif not all([fq != '' for fq in fq_files['name']]):
+            if not empty_fq_file_name_warning:
+                st.warning('Datasets Excluded: Empty Fastq File Name')
+                empty_fq_file_name_warning = True
+            continue
+        
+        # Check if fq file names are not empty
+        valid_datasets[dataset] = fq_files
+    
+    num_valid_datasets = len(valid_datasets)
+    valid_dataset_names_df = pd.DataFrame({'name' : list(valid_datasets.keys())})
+    
+    st.write(f"Valid Datasets for Check In **{num_valid_datasets}/{total_input_datasets}**")
+    
+    if num_valid_datasets > 0:
+        
+        # Overview of valid datasets
+
+        if 'available_staging' not in st.session_state:
+            st.session_state['available_staging'] = valid_dataset_names_df
+            #st.session_state['available_staging_input'] = fq_datasets_avail['id'].tolist()
+            
+        if 'selected_staging' not in st.session_state:
+            st.session_state['selected_staging'] = pd.DataFrame(columns=['name'])
+            #st.session_state['selected_staging_input'] = pd.DataFrame(columns=['name'])
+
+        @st.fragment
+        def update_select_form_fq_datasets():               
+            
+            col1, col2, col3 = st.columns([5.5,1,5.5])
+            
+            # First col to select available datasets
+            with col1:
+                
+                with st.container(border = True):
+                    
+                    st.write('Available Datasets')
+                                
+                    datasets_available = st.session_state['available_staging']
+                    
+                    search_value_fq_ds = st.text_input("Search Datasets",
+                                    help = 'Search in available Datasets',
+                                    placeholder='Search Available Datasets',
+                                    key = 'update_search_fq_datasets_staging',
+                                    label_visibility = 'collapsed')
+                                    
+                    fq_datasets_show = datasets_available.loc[
+                        datasets_available['name'].str.contains(search_value_fq_ds, case=False) 
+                    ]
+                    
+                    fq_avail_df = st.dataframe(fq_datasets_show,
+                                                use_container_width=True,
+                                                hide_index = True,
+                                                column_config = {
+                                                    'name' : st.column_config.Column('Name'),
+                                                },
+                                                key='update_datasets_df_staging',
+                                                on_select = 'rerun',
+                                                selection_mode='multi-row')
+
+            # Column with selected datasets
+            with col3:
+                with st.container(border = True):              
+                    
+                    st.write('Selected Datasets')
+                    
+                    datasets_selected = st.session_state['selected_staging']
+                    
+                    search_value_fq_ds_select = st.text_input("Search Datasets",
+                                                            help = 'Search in Selected Datasets',
+                                                            placeholder='Search Selected Datasets',
+                                                            key = 'update_search_attached_fq_datasets_staging',
+                                                            label_visibility = 'collapsed')
+                                    
+                    fq_datasets_select_show = datasets_selected.loc[
+                            datasets_selected['name'].str.contains(search_value_fq_ds_select, case=False) 
+                        ]
+                    
+                    fq_select_df = st.dataframe(fq_datasets_select_show,
+                                                use_container_width=True,
+                                                hide_index = True,
+                                                column_config = {
+                                                    'name' : st.column_config.TextColumn('Name'),
+                                                },
+                                                key='update_datasets_select_df_staging',
+                                                on_select = 'rerun',
+                                                selection_mode='multi-row')
+
+                with col2:
+                    
+                    # CONTINUE HERE
+                    
+                    
+                    # Spacer Container
+                    st.container(height = 100, border = False)
+                    st.button(':material/arrow_forward:', use_container_width=True, type='primary', on_click=add_selected_datasets, args = (fq_datasets_show, fq_avail_df.selection['rows']))
+                    st.button(':material/arrow_back:', use_container_width=True, type='primary', on_click=remove_selected_datasets, args = (fq_datasets_select_show, fq_select_df.selection['rows']))
+            
+
+        update_select_form_fq_datasets()
+                
+        st.write('Attach datasets to one or more projects')
+                    
+        project_names_select = st.multiselect("Select Projects",
+                sorted(projects_owner_group['name'].unique()),
+                help = 'Attach the dataset to project(s).')
+                
+        # region Check In Button  
+        _, col = st.columns([9,3])    
+        with col:
+            if st.button('Confirm', key='confirm_bulk_checkin', type = 'primary', use_container_width=True):
+                
+                selected_datasets = st.session_state['selected_staging']
+                selected_datasets = selected_datasets['name'].tolist()
+                
+                # Prep project ids
+                project_ids = projects_owner_group.loc[
+                    projects_owner_group['name'].isin(project_names_select),'id'].tolist()
+                
+                for dataset_name in selected_datasets:
+                    dataset_df = valid_datasets[dataset_name]
+                    dataset_qc_passed = True
+                    
+                    fq_file_r1 = None
+                    fq_file_r2 = None
+                    fq_file_i1 = None
+                    fq_file_i2 = None
+                    
+                    # Loop over fq files and check in
+                    for ix, fq_file in dataset_df.iterrows():
+                        
+                        if fq_file['read_type'] == 'R1':
+                            fq_file_r1 = fq_file['id']
+                        elif fq_file['read_type'] == 'R2':
+                            fq_file_r2 = fq_file['id']
+                        elif fq_file['read_type'] == 'I1':
+                            fq_file_i1 = fq_file['id']
+                        elif fq_file['read_type'] == 'I2':
+                            fq_file_i2 = fq_file['id']
+                        
+                        if not fq_file['qc_passed']:
+                            dataset_qc_passed = False
+                        
+                        
+                        fq_file['qc_phred'] = json.loads(fq_file['qc_phred'].replace("'", "\""))
+                    
+                        # Check in Fq Files
+                        datamanager.checkin_fq_file_staging(
+                            st.session_state["jwt_auth_header"],
+                            fq_file['id'],
+                            fq_file['name'],
+                            fq_file['bucket'],
+                            fq_file['key'],
+                            fq_file['upload_path'],
+                            fq_file['qc_passed'],
+                            fq_file['read_type'],
+                            fq_file['read_length'],
+                            fq_file['num_reads'],
+                            fq_file['qc_phred_mean'],
+                            fq_file['qc_phred'],
+                            fq_file['size_mb'],
+                            fq_file['md5_checksum'],
+                            fq_file['pipeline_version']
+                        )
+                    
+                    if fq_file_r1 and fq_file_r2:
+                        paired_end = True
+                    else:
+                        paired_end = False
+                    if fq_file_i1 or fq_file_i2:
+                        index_read = True
+                    else:
+                        index_read = False
+                    
+                    # Create FqDataset
+                    fq_pk = datamanager.create_fq_dataset(
+                        st.session_state["jwt_auth_header"],
+                        name = dataset_name,
+                        description = '',
+                        qc_passed=dataset_qc_passed,
+                        index_read=index_read,
+                        fq_file_r1=fq_file_r1,
+                        fq_file_r2=fq_file_r2,
+                        fq_file_i1=fq_file_i1,
+                        fq_file_i2=fq_file_i2,
+                        paired_end=paired_end,
+                        project=project_ids,
+                        metadata={}
+                    )
+                
+                del st.session_state['fq_data_staging']
+                del st.session_state['available_staging']
+                del st.session_state['selected_staging']
+                st.cache_data.clear()
+                st.rerun()
+    
+    
 def delete_fastq_files(fq_file_ids: List[int]):
     for fq_file_id in fq_file_ids:
         datamanager.delete_fq_file(fq_file_id)
@@ -384,7 +686,15 @@ def delete_fastq_files(fq_file_ids: List[int]):
     del st.session_state['fq_data_staging']
     st.cache_data.clear()
     st.rerun()  
-        
+
+@st.dialog('Delete Staged FASTQ Files', width='medium')
+def bulk_delete_fq_files(fq_file_ids: List[int]):
+    num_files = len(fq_file_ids)
+    st.warning(f'Confirm deletion of {num_files} staged FASTQ Files.')
+    
+    if st.button('Confirm Delete', key='confirm_delete', type='primary'):
+        delete_fastq_files(fq_file_ids)
+
 #region DATA
 
 # Define the number of fastq files to display to avoid long loading times
@@ -399,7 +709,6 @@ else:
     fq_files_staging = datamanager.get_fq_file_staging_overview(st.session_state["jwt_auth_header"])
     
     st.session_state['fq_data_staging'] = fq_files_staging
-
 
 # Get fqdataset names for owner group
 fq_dataset_names_owner_group = datamanager.get_fq_dataset_owner_group(st.session_state["jwt_auth_header"])['name']
@@ -434,16 +743,8 @@ fq_files_staging_update = []
 do_rerun = False
 
 if fq_files_staging.shape[0] > 0:
-    #     with col1f:
-    #     st.success("No FASTQ Files to Check In.", icon=":material/check:")
-    
-    # with col2f:
-    #     with st.container(border=True):
-    #         st.write('Jobs in QC Queue:', str(num_jobs))
 
-    # col1f, col2f, col3f = st.columns([8.25, 3, 0.75], vertical_alignment='center')
-
-    col1s, col2s, col3s, col4s = st.columns([6, 4, 1.25, 0.75], vertical_alignment='center')
+    col1s, col2s, col3s, col4s = st.columns([4.5, 4.5, 2.25, 0.75], vertical_alignment='center')
     
     with col1s:
         st.info(f"{len(fq_files_staging)} FASTQ files waiting for Check In.")
@@ -453,15 +754,19 @@ if fq_files_staging.shape[0] > 0:
              st.write(str(num_jobs), ' Jobs in QC Queue')
     
     with col3s:
-        with st.popover(':material/help:'):
+        with st.popover('More', use_container_width=True):
             
-            st.markdown("ReadStore groups **Dataset**s based on the filename of each **FASTQ** file.\n")
-            st.markdown("The **Read** type is also infered. [Read1/R1, Read2/R2, Index1/I1, Index2/I2]\n")
-                        
-            st.markdown("Click *Check In* to validate and register the **Dataset**s \n")
-            
-            st.markdown("If the infered **Datasets** are not correct, you can change the name in the Dataset columns below.\n")
-            st.markdown("Also the **Read** type can be changed by clicking the column blow.\n")
+            if st.button('Bulk Check In', use_container_width=True, type='primary'):
+                bulk_checkin_df(fq_files_staging,
+                                projects_owner_group,
+                                fq_dataset_names_owner_group)
+                
+            if st.button('Bulk Delete', use_container_width=True, type='primary'):
+                fq_file_ids_stage = fq_files_staging['id'].tolist()
+                bulk_delete_fq_files(fq_file_ids_stage)
+                
+            if st.button('Import From File', use_container_width=True, type='primary', disabled=True):
+                st.write('Import From File')
             
     with col4s:
         if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
@@ -478,7 +783,6 @@ if fq_files_staging.shape[0] > 0:
                                 key = 'search_fastq',
                                 label_visibility = 'collapsed')
         
-    
     dataset_check = fq_files_staging['dataset'].str.contains(search_value_fastq, case=False, na=False) 
     fastq_check = fq_files_staging['name'].str.contains(search_value_fastq, case=False, na=False)
     
@@ -566,7 +870,8 @@ if fq_files_staging.shape[0] > 0:
                     st.rerun()
 
 else:
-    col1f, col2f, col3f = st.columns([7.25, 4, 0.75], vertical_alignment='center')
+    
+    col1f, col2f, col3f, col4f = st.columns([4.5, 4.5, 2.25, 0.75], vertical_alignment='center')
     
     with col1f:
         st.success("No FASTQ Files to Check In.", icon=":material/check:")
@@ -574,8 +879,18 @@ else:
     with col2f:
         with st.container(border=True):
             st.write(str(num_jobs), ' Jobs in QC Queue')
-        
+    
     with col3f:
+        with st.popover('More', use_container_width=True):
+            
+            st.button('Bulk CheckIn', use_container_width=True, type='primary', disabled=True)
+                
+            st.button('Bulk Delete', use_container_width=True, type='primary', disabled=True)
+                
+            if st.button('File Import', use_container_width=True, type='primary', disabled=True):
+                st.write('File Import')
+    
+    with col4f:
         if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
             if 'fq_data_staging' in st.session_state:
                 del st.session_state['fq_data_staging']
