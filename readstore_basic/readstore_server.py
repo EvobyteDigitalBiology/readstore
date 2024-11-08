@@ -167,8 +167,6 @@ def run_rs_server(db_directory: str,
             logger.error(f'ERROR: Gunicorn not found in PATH!')
             return
     
-    
-    
     logger.info(f'Prepare ReadStore Server Config')
     
     config_path = os.path.join(config_directory, 'readstore_server_config.yaml')
@@ -185,22 +183,18 @@ def run_rs_server(db_directory: str,
     # Open and edit config file
     with open(config_path, "r") as f:
         rs_config = yaml.safe_load(f)
+
+    rs_config['streamlit']['port'] = streamlit_port    
+    rs_config['global']['readstore_version'] = __version__
     
     rs_config['django']['gunicorn_access_logfile'] = os.path.join(log_directory, 'readstore_gunicorn_access.log')
     rs_config['django']['gunicorn_error_logfile'] = os.path.join(log_directory, 'readstore_gunicorn_error.log')
     rs_config['django']['logger_path'] = os.path.join(log_directory, 'readstore_django.log')
-    
     rs_config['django']['db_path'] = os.path.join(db_directory, 'readstore_db.sqlite3')
     rs_config['django']['db_backup_dir'] = db_backup_directory
-    
     rs_config['django']['port'] = django_port
-    rs_config['streamlit']['port'] = streamlit_port
-    
-    rs_config['global']['readstore_version'] = __version__
-
     rs_config['django']['python_exec'] = python_exec
     
-
     # Define 
     if debug:
         rs_config['django']['django_settings_module'] = 'settings.development'
@@ -351,7 +345,7 @@ def main():
     if 'RS_STREAMLIT_PORT' in os.environ:
         streamlit_port = int(os.environ['RS_STREAMLIT_PORT'])
         print('Found RS_STREAMLIT_PORT in Environment Variables')
-        
+    
     if db_directory is None:
         parser.print_help()
         print('ERROR: --db-directory is required')
