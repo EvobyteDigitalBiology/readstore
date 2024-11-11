@@ -46,6 +46,7 @@ from .serializers import ProjectCLIDetailSerializer
 from .serializers import TokenAuthSerializer
 from .serializers import PwdSerializer
 from .serializers import FqUploadSerializer
+from .serializers import FqUploadCLISerializer
 from .serializers import LicenseKeySerializer
 
 from django.contrib.auth.models import User
@@ -481,18 +482,20 @@ class FqFileUploadView(APIView):
     
     # Set permission classes, i.e. user must be authenticated to DB
     permission_classes = []
-    serializer_class = FqUploadSerializer
+    serializer_class = FqUploadCLISerializer
     
     def post(self, request):
         
         data = request.data
-        serializer = FqUploadSerializer(data=data)
+        serializer = FqUploadCLISerializer(data=data)
         
         if serializer.is_valid():
             username = request.data.get('username').lower()
             token = request.data.get('token')
             filepath = request.data.get('fq_file_path')
             filepath = os.path.abspath(filepath)
+            fq_name = request.data.get('fq_file_name', None)
+            read_type = request.data.get('read_type', None)
             
             # Check if username is part of appuser group
             usercheck1 = Q(username=username) & Q(groups__name='appuser')
@@ -528,36 +531,107 @@ class FqFileUploadView(APIView):
                         else:
                             return Response({'message' : 'Invalid Fastq extension.'}, status=400)
                         
-                        # Set read type
-                        # Infer Read Type
-                        if any([filepath_stub.endswith(suffix) for suffix in VALID_READ1_SUFFIX]):
-                            read_type = 'R1'
-                        elif any([filepath_stub.endswith(suffix) for suffix in VALID_READ2_SUFFIX]):
-                            read_type = 'R2'
-                        elif any([filepath_stub.endswith(suffix) for suffix in VALID_INDEX1_SUFFIX]):
-                            read_type = 'I1'
-                        elif any([filepath_stub.endswith(suffix) for suffix in VALID_INDEX2_SUFFIX]):
-                            read_type = 'I2'
+                        if read_type is None:
+                            # Set read type
+                            # Infer Read Type
+                            if any([filepath_stub.endswith(suffix) for suffix in VALID_READ1_SUFFIX]):
+                                read_type = 'R1'
+                            elif any([filepath_stub.endswith(suffix) for suffix in VALID_READ2_SUFFIX]):
+                                read_type = 'R2'
+                            elif any([filepath_stub.endswith(suffix) for suffix in VALID_INDEX1_SUFFIX]):
+                                read_type = 'I1'
+                            elif any([filepath_stub.endswith(suffix) for suffix in VALID_INDEX2_SUFFIX]):
+                                read_type = 'I2'
+                            else:
+                                read_type = 'NA'
+                        # Case that read_type is provided
                         else:
-                            read_type = 'NA'
-                        
+                            if not read_type in ['R1', 'R2', 'I1', 'I2']:
+                                read_type = 'NA'
+                                
                         if not 'pipelines' in sys.modules:
                             from app import pipelines
                         
-                        file_name = os.path.basename(filepath_stub)
-                        
+                        if filepath is None:                    
+                            file_name = os.path.basename(filepath_stub)
+                        else:
+                            file_name = fq_name
+                            
                         res = pipelines.exec_staging_job(filepath,
-                                                   file_name,
-                                                   user,
-                                                   read_type)
+                                                        file_name,
+                                                        user,
+                                                        read_type)
                         
                         if res:                    
                             return Response({'message' : 'fastq upload submitted'}, status=200)
                         else:
-                            return Response({'message' : 'fastq upload failed since queue is full. Try later.'}, status=400)           
+                            return Response({'message' : 'fastq upload failed since queue is full. Try later.'}, status=400)
+            else:
+                return Response({'message' : 'username not found'}, status=400)        
         else:
             return Response(serializer.errors, status=400)  
 
+
+
+class FqFileUploadAppView(APIView):
+    
+     # Set permission classes, i.e. user must be authenticated to DB
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FqUploadSerializer
+        
+    def post(self, request):
+        
+        data = request.data
+        serializer = FqUploadSerializer(data=data)
+        
+        if serializer.is_valid():
+            filepath = request.data.get('fq_file_path')
+            file_name = request.data.get('fq_file_name')
+            read_type = request.data.get('read_type')
+            filepath = os.path.abspath(filepath)
+            
+            if hasattr(request.user, 'appuser'):
+                
+                usercheck1 = Q(username=request.user.username)
+                staging_check = Q(groups__name='staging')
+                
+                if User.objects.filter(usercheck1 & staging_check).exists():
+                    if not os.path.exists(filepath):
+                        return Response({'message' : 'File not found'}, status=400)
+                    elif not os.access(filepath, os.R_OK):
+                        return Response({'message' : 'No Read Permission'}, status=400)
+                    # Get Fq Stats
+                    else:
+                        # Validate Fastq File Extension
+                        for ext in VALID_FASTQ_EXTENSIONS:
+                            if filepath.endswith(ext):
+                                filepath_stub = filepath.replace(ext, '')
+                                break
+                        else:
+                            return Response({'message' : 'Invalid fastq extension.'}, status=400)
+                        
+                        if not read_type in ['R1', 'R2', 'I1', 'I2']:
+                            return Response({'message' : 'Invalid read type'}, status=400)
+                        
+                        if not 'pipelines' in sys.modules:
+                            from app import pipelines
+                        
+                        res = pipelines.exec_staging_job(filepath,
+                                                        file_name,
+                                                        request.user,
+                                                        read_type)
+                        
+                        if res:                    
+                            return Response({'message' : 'fastq upload submitted'}, status=200)
+                        else:
+                            return Response({'message' : 'fastq upload failed since queue is full. Try later.'}, status=400)                    
+                else:
+                    return Response({'message' : 'User has no staging'}, status=400)
+            else:
+                return Response({'message' : 'User is not an appuser'}, status=400)          
+        else:
+            return Response(serializer.errors, status=400)  
+        
 
 class FqQueueView(APIView):
     
