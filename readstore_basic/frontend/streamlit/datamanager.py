@@ -35,7 +35,7 @@ from uidataclasses import FqAttachmentPost
 from uidataclasses import URL
 from uidataclasses import LicenseKey
 from uidataclasses import FqQueue
-
+from uidataclasses import FqFileUploadApp
 
 #region basic functions
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
@@ -479,7 +479,18 @@ def get_project_collaborators(headers: dict, project_id: int) -> pd.DataFrame:
     return app_users  
 
 
-def infer_dataset(query: str):
+def infer_dataset(query: str) -> str:
+    """Method to infer default dataset name from fq_file name
+
+    # Strip extensions from fq_file name and set as dataset
+    # Strip trailing underscores, dots and dashes
+    
+    Args:
+        query (str): query fq_file name
+        
+    Returns:
+        str: inferred dataset name
+    """
     
     def test_ext_readset(q, ext: List[str]):
         for e in ext:
@@ -500,6 +511,7 @@ def infer_dataset(query: str):
     else:
         q = query.rstrip('_').rstrip('.').rstrip('-')
         return q
+        
         
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
 def get_fq_file_staging_overview(headers: dict) -> pd.DataFrame:
@@ -787,6 +799,24 @@ def create_license_key(headers: dict, key: str, seats: int, expiration_date: dat
         headers=headers,
         method='data'
     )
+
+
+def submit_fq_queue_job(headers: dict, fq_file_name: str, fq_file_path: str, read_type: str):
+    
+    fq_file_upload_app = FqFileUploadApp(
+        fq_file_name = fq_file_name,
+        fq_file_path = fq_file_path,
+        read_type = read_type
+    )
+    
+    endpoint = os.path.join(uiconfig.BACKEND_API_ENDPOINT,'fq_file_upload_app/')
+    
+    res = requests.post(endpoint, 
+                        json=fq_file_upload_app.dict(),
+                        headers=headers)
+    
+    return res    
+
 
 #region UPDATE
 
