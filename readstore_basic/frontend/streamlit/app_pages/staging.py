@@ -6,9 +6,11 @@ import uuid
 import string
 import json
 import itertools
+import os
 
 import streamlit as st
 import pandas as pd
+import openpyxl
 
 import extensions
 import datamanager
@@ -322,7 +324,6 @@ def checkin_df(fq_file_df: pd.DataFrame,
                     st.error('Dataset Name: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
                 else:
                     # 2) Second check for fq file names
-                    
                     for v in read_fq_map.values():
                         if not extensions.validate_charset(v['name']):
                             st.error('FASTQ Name: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
@@ -625,7 +626,6 @@ def bulk_checkin_df(fq_files_staging_df: pd.DataFrame,
                         if not fq_file['qc_passed']:
                             dataset_qc_passed = False
                         
-                        
                         fq_file['qc_phred'] = json.loads(fq_file['qc_phred'].replace("'", "\""))
                     
                         # Check in Fq Files
@@ -694,6 +694,113 @@ def bulk_delete_fq_files(fq_file_ids: List[int]):
     
     if st.button('Confirm Delete', key='confirm_delete', type='primary'):
         delete_fastq_files(fq_file_ids)
+
+@st.dialog('Import FASTQ from File', width='large')
+def import_from_file():
+
+    # Upload File
+    
+    upload_template = st.file_uploader("**Upload Template File**",
+                                        help = "Upload a template file to import FASTQ files.",
+                                        type = ['.csv', '.xlsx'],
+                                        accept_multiple_files = False)
+           
+    if upload_template:
+        if upload_template.name.endswith('.csv'):
+            upload_template = pd.read_csv(upload_template, header=0)
+        elif upload_template.name.endswith('.xlsx'):
+            upload_template = pd.read_excel(upload_template, header=0)
+        else:
+            st.error('Please upload a valid CSV or Excel file.')
+            return
+        
+        if not upload_template.shape[1] == 3:
+            st.error('Invalid number of columns in template file. Please use FASTQFileName, ReadType, UploadPath')
+            return
+        if upload_template.shape[0] == 0:
+            st.error('No FASTQ files found in template file')
+            return
+        
+        # Check if sufficient space in queue    
+
+        # Get number of fq files in queue
+        num_queue_jobs = datamanager.get_fq_queue_jobs(st.session_state["jwt_auth_header"])
+        max_jobs_queue = uiconfig.BACKEND_MAX_QUEUE_SIZE
+        max_allowed_jobs = max_jobs_queue - num_queue_jobs
+        
+        if upload_template.shape[0] > max_allowed_jobs:
+            st.error(f'Not enough space in jobs queue. Maximum allowed files for upload: {max_jobs_queue}')
+            st.error(f'Currently running jobs: {num_queue_jobs}')
+            return
+                
+        # Check column names
+        if not all(upload_template.columns == ['FASTQFileName', 'ReadType', 'UploadPath']):
+            st.error('Invalid column names in template file. Please use FASTQFileName, ReadType, UploadPath')
+        if not upload_template['ReadType'].isin(['R1', 'R2', 'I1', 'I2']).all():
+            st.error('Invalid ReadType in template file. Please use only R1, R2, I1, I2')
+        else:
+            # Validate FASTQ File Names
+            for fq_name in upload_template['FASTQFileName']:
+                
+                if (fq_name == '') or (pd.isna(fq_name)):
+                    st.error('Empty FASTQ name found')
+                    break
+                elif not extensions.validate_charset(fq_name):
+                    st.error('Error in FASTQ name found. Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces')
+                    break
+            else:
+                with st.container(border=True):
+                    st.write('**FASTQ Files to Import**')
+
+                    st.dataframe(upload_template,
+                                use_container_width=True,
+                                column_config = {
+                                    'FASTQFileName' : st.column_config.TextColumn('FASTQ File Name'),
+                                    'ReadType' : st.column_config.TextColumn('Read Type'),
+                                    'UploadPath' : st.column_config.TextColumn('Upload Path')
+                                })
+
+    cols = st.columns([4,5,3])
+    
+    with cols[0]:
+        with st.popover('Download Templates'):
+            
+            excel_template_path = os.path.join(uiconfig.STATIC_PATH_PREFIX, "static/readstore_upload_template.xlsx")
+            csv_template_path = os.path.join(uiconfig.STATIC_PATH_PREFIX, "static/readstore_upload_template.csv")
+            
+            excel_template = open(excel_template_path, 'rb').read()
+            csv_template = open(csv_template_path, 'rb').read()
+
+            st.download_button('Download Excel Template',
+                               excel_template,
+                               'readstore_template.xlsx',
+                               help='Download a template Excel file to import FASTQ files.',
+                               use_container_width=True)
+            st.download_button('Download .csv Template',
+                               csv_template,
+                               'readstore_template.csv',
+                               help='Download a template CSV file to import FASTQ files.',
+                               use_container_width=True)
+    
+    with cols[2]:
+        if st.button('Confirm', key='confirm_import_fastq', type='primary', use_container_width=True):
+            
+            if not upload_template is None:
+                for ix, row in upload_template.iterrows():
+                    res = datamanager.submit_fq_queue_job(
+                            st.session_state["jwt_auth_header"],
+                            row['FASTQFileName'],
+                            row['UploadPath'],
+                            row['ReadType']
+                    )
+                    
+                    if res.status_code == 400:
+                        st.warning(f"Error with file {row['FASTQFileName']} \n {res.json()['message']} \n Quit Import")
+                    break
+                else:        
+                    st.cache_data.clear()
+                    st.rerun()
+
 
 #region DATA
 
@@ -765,8 +872,8 @@ if fq_files_staging.shape[0] > 0:
                 fq_file_ids_stage = fq_files_staging['id'].tolist()
                 bulk_delete_fq_files(fq_file_ids_stage)
                 
-            if st.button('Import From File', use_container_width=True, type='primary', disabled=True):
-                st.write('Import From File')
+            if st.button('Import From File', use_container_width=True, type='primary'):
+                import_from_file()
             
     with col4s:
         if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
@@ -782,7 +889,7 @@ if fq_files_staging.shape[0] > 0:
                                 placeholder='Search FASTQ',
                                 key = 'search_fastq',
                                 label_visibility = 'collapsed')
-        
+    
     dataset_check = fq_files_staging['dataset'].str.contains(search_value_fastq, case=False, na=False) 
     fastq_check = fq_files_staging['name'].str.contains(search_value_fastq, case=False, na=False)
     
@@ -810,7 +917,6 @@ if fq_files_staging.shape[0] > 0:
         col1, col2 = st.columns([1.5, 10.5], vertical_alignment='center')
         
         with col1:
-            
             if st.button("Check In", key=f"checkin_{ix}", type = 'primary', help='Validate and Register Dataset'):
                 checkin_df(fq_file_df,
                         projects_owner_group,
@@ -870,7 +976,6 @@ if fq_files_staging.shape[0] > 0:
                     st.rerun()
 
 else:
-    
     col1f, col2f, col3f, col4f = st.columns([4.5, 4.5, 2.25, 0.75], vertical_alignment='center')
     
     with col1f:
@@ -884,11 +989,10 @@ else:
         with st.popover('More', use_container_width=True):
             
             st.button('Bulk CheckIn', use_container_width=True, type='primary', disabled=True)
-                
             st.button('Bulk Delete', use_container_width=True, type='primary', disabled=True)
                 
-            if st.button('File Import', use_container_width=True, type='primary', disabled=True):
-                st.write('File Import')
+            if st.button('Import From File', use_container_width=True, type='primary'):
+                import_from_file()
     
     with col4f:
         if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
