@@ -191,3 +191,8 @@ class LicenseKey(BaseModel):
     
 class FqQueue(BaseModel):
     num_jobs: int
+    
+class FqFileUploadApp(BaseModel):
+    fq_file_name: str
+    fq_file_path: str
+    read_type: str
