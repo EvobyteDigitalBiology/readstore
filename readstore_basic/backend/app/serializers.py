@@ -362,14 +362,25 @@ class PwdSerializer(serializers.Serializer):
     new_password = serializers.CharField(max_length=200, required=True, trim_whitespace=True)
     
     
-class FqUploadSerializer(serializers.Serializer):
+class FqUploadCLISerializer(serializers.Serializer):
     """
-        Serializer for uploading Fastq files
+        Serializer for uploading Fastq files from CLI
     """
     
     username = serializers.CharField(max_length=150, required=True, trim_whitespace=True)
     token = serializers.CharField(max_length=200,required=True, trim_whitespace=True)
     fq_file_path = serializers.CharField(max_length=1000,required=True, trim_whitespace=True)
+    fq_file_name = serializers.CharField(max_length=200,required=False, trim_whitespace=True)
+    read_type = serializers.CharField(max_length=10,required=False, trim_whitespace=True)
+
+class FqUploadSerializer(serializers.Serializer):
+    """
+        Serializer for uploading Fastq files
+    """
+    
+    fq_file_path = serializers.CharField(max_length=1000,required=True, trim_whitespace=True)
+    fq_file_name = serializers.CharField(max_length=200,required=True, trim_whitespace=True)
+    read_type = serializers.CharField(max_length=10,required=True, trim_whitespace=True)
     
 class LicenseKeySerializer(serializers.ModelSerializer):
     
