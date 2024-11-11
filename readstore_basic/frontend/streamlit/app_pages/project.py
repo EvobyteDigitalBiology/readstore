@@ -757,21 +757,46 @@ def export_project(project_view: pd.DataFrame):
     
     st.write('Save Projects and Metadata as .csv file')
     
-    project_view_export = project_view.drop(columns=['dataset_metadata_keys',
-                                                     'collaborators',
-                                                     'id_str',
-                                                     'name_og'])
+    # Combine attachments to lists
+    project_attachments = datamanager.get_project_attachments(st.session_state["jwt_auth_header"])
     
-    project_view_export = project_view_export.rename(columns={'id_project' : 'id',
+    # Map in attachment names to projects
+    project_attachments_list = project_attachments.groupby('project_id')['name'].apply(list)
+    projects = project_view.merge(project_attachments_list, left_on = 'id_project', right_on='project_id', how='left')
+    projects['name'] = projects['name'].apply(lambda x: [] if x is np.nan else x)
+    
+    projects_export = projects.drop(columns=['dataset_metadata_keys',
+                                            'collaborators',
+                                            'id_str',
+                                            'name_og'])
+    
+    projects_export = projects_export.rename(columns={'id_project' : 'id',
                                                     'name_project' : 'name',
                                                     'owner_username' : 'creator',
                                                     'name' : 'attachments'})
     
     st.download_button('Download .csv',
-                       project_view_export.to_csv(index=False).encode("utf-8"),
+                       projects_export.to_csv(index=False).encode("utf-8"),
                        'projects.csv',
                        'text/csv')
-    
+
+# region Update Many Datasets
+@st.dialog('Update Datasets', width='large')
+def update_many_projects(project_select_df: pd.DataFrame):
+
+    # Show delete button if project is owned by user's owner_group
+    col1expander,_ = st.columns([4,8])
+    with col1expander:
+        with st.expander('Delete all Projects', icon=":material/delete_forever:",
+                        ):
+            if st.button('Confirm', key='delete_project'):
+                project_ids = project_select_df['id_project']
+                
+                [datamanager.delete_project(pid) for pid in project_ids]
+                
+                st.cache_data.clear()
+                st.rerun()
+
 #region Data
 
 # Data
@@ -895,7 +920,7 @@ projects_show = projects_show.fillna('')
 # TODO Change naming here
 projects_select = st.dataframe(projects_show[show_cols],
                     column_config = col_config,
-                    selection_mode='single-row',
+                    selection_mode='multi-row',
                     hide_index = True,
                     on_select = 'rerun',
                     use_container_width=True,
@@ -918,12 +943,15 @@ if len(projects_select.selection['rows']) == 1:
     selected_metadata.columns = ['key', 'value']
     
     # Check if the selected project is shared by user from different group
+    # TODO: Not necessary
     if selected_project['name_og'] == my_owner_group_name:
         update_ref_fq_datasets = fq_dataset_og
         update_disabled = False
     else:
         update_ref_fq_datasets = fq_dataset_collab
         update_disabled = True
+    
+    update_one = True
     
     if st.session_state['show_details']:
         show_project_details = True
@@ -938,10 +966,29 @@ if len(projects_select.selection['rows']) == 1:
     # Get attachments for selected project from backend
     select_project_attachments = datamanager.get_project_attachments(st.session_state["jwt_auth_header"],
                                                                      select_project_id)
-        
+    
+    project_export_select = projects_show.loc[[selected_project_ix],:]
+    
     # For download attachments
     st.session_state['project_select_id'] = select_project_id
+
+elif len(projects_select.selection['rows']) > 1:
     
+    select_row = projects_select.selection['rows']
+    
+    # Get original index from projects overview before subset
+    selected_project_ix = projects_show.iloc[select_row,:].index # Refers to original index
+    
+    selected_project = projects.loc[selected_project_ix,:]
+    selected_metadata = metadata.loc[selected_project_ix,:]
+    
+    update_disabled = False
+    update_one = False
+    
+    show_project_details = False
+    
+    project_export_select = selected_project
+
 else:
     update_disabled = True
     show_project_details = False
@@ -949,6 +996,8 @@ else:
     select_row = None
     selected_project = None
     selected_metadata = None
+    
+    project_export_select = projects_show
     
     st.session_state['project_select_id'] = None
 
@@ -963,15 +1012,20 @@ with col5a:
 with col6a:
     
     if st.button('Update', key='update_project', disabled = update_disabled, use_container_width=True, help = 'Update the selected Project'):
-        update_project(selected_project,
-                       selected_metadata,
-                       reference_og_project_names,
-                       update_ref_fq_datasets)
+        
+        if update_one:
+            update_project(selected_project,
+                        selected_metadata,
+                        reference_og_project_names,
+                        update_ref_fq_datasets)
 
+        else:
+            update_many_projects(selected_project)
+        
 with col7a:
     if st.button('Export', key='export_projects', use_container_width=True, help = 'Export and download Project overview'):
         
-        export_project(projects_show)
+        export_project(project_export_select)
 
 with col8a:  
    
@@ -1088,10 +1142,7 @@ if show_project_details:
                 st.write('**Attachments**')
             
             with col2atta:
-            
-                
                 if attach_select and len(attach_select.selection['rows']) == 1:
-                    
                     
                     select_ix = attach_select.selection['rows'][0]
                     select_attachment = select_project_attachments.iloc[select_ix,:]
