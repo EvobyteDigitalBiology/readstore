@@ -36,6 +36,7 @@ BACKEND_API_ENDPOINT_HOST = rs_config['django']['host']
 BACKEND_API_ENDPOINT_PORT = str(rs_config['django']['port'])
 BACKEND_API_VERSION = rs_config['django']['api_version']
 BACKEND_API_ENDPOINT = os.path.join('http://', BACKEND_API_ENDPOINT_HOST + ':' + BACKEND_API_ENDPOINT_PORT, BACKEND_API_VERSION)
+BACKEND_MAX_QUEUE_SIZE = rs_config['django']['fq_queue_maxsize']
 
 STATIC_PATH_PREFIX = rs_config['streamlit']['static_path_prefix']
 
@@ -91,5 +92,5 @@ ENDPOINT_CONFIG = {
     'fq_file' : '/'.join([BACKEND_API_ENDPOINT, 'fq_file/']),
     'fq_dataset' : '/'.join([BACKEND_API_ENDPOINT, 'fq_dataset/']),
     'fq_attachment' : '/'.join([BACKEND_API_ENDPOINT, 'fq_attachment/']),
-    'license_key' : '/'.join([BACKEND_API_ENDPOINT, 'license_key/']),
+    'license_key' : '/'.join([BACKEND_API_ENDPOINT, 'license_key/'])
 }
