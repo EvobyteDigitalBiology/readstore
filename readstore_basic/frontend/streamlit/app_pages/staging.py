@@ -419,8 +419,8 @@ def checkin_df(fq_file_df: pd.DataFrame,
                             st.cache_data.clear()
                             st.rerun()
         
-# region Bulk Check In
-@st.dialog('Bulk Check In Datasets', width='large')
+# region Batch Check In
+@st.dialog('Batch Check In Datasets', width='large')
 def bulk_checkin_df(fq_files_staging_df: pd.DataFrame,
                     projects_owner_group: pd.DataFrame,
                     reference_fq_dataset_names: pd.Series):
@@ -687,7 +687,7 @@ def delete_fastq_files(fq_file_ids: List[int]):
     st.cache_data.clear()
     st.rerun()  
 
-@st.dialog('Delete Staged FASTQ Files', width='medium')
+@st.dialog('Delete All Staged FASTQ Files', width='medium')
 def bulk_delete_fq_files(fq_file_ids: List[int]):
     num_files = len(fq_file_ids)
     st.warning(f'Confirm deletion of {num_files} staged FASTQ Files.')
@@ -794,9 +794,9 @@ def import_from_file():
                             row['ReadType']
                     )
                     
-                    if res.status_code == 400:
+                    if res.status_code != 200:
                         st.warning(f"Error with file {row['FASTQFileName']} \n {res.json()['message']} \n Quit Import")
-                    break
+                        break
                 else:        
                     st.cache_data.clear()
                     st.rerun()
@@ -863,17 +863,18 @@ if fq_files_staging.shape[0] > 0:
     with col3s:
         with st.popover('More', use_container_width=True):
             
-            if st.button('Bulk Check In', use_container_width=True, type='primary'):
+            if st.button('Import From File', use_container_width=True, type='primary'):
+                import_from_file()
+            
+            if st.button('Batch Check In', use_container_width=True, type='primary'):
                 bulk_checkin_df(fq_files_staging,
                                 projects_owner_group,
                                 fq_dataset_names_owner_group)
                 
-            if st.button('Bulk Delete', use_container_width=True, type='primary'):
+            if st.button('Delete All', use_container_width=True, type='primary'):
                 fq_file_ids_stage = fq_files_staging['id'].tolist()
                 bulk_delete_fq_files(fq_file_ids_stage)
                 
-            if st.button('Import From File', use_container_width=True, type='primary'):
-                import_from_file()
             
     with col4s:
         if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
@@ -988,12 +989,13 @@ else:
     with col3f:
         with st.popover('More', use_container_width=True):
             
-            st.button('Bulk CheckIn', use_container_width=True, type='primary', disabled=True)
-            st.button('Bulk Delete', use_container_width=True, type='primary', disabled=True)
-                
             if st.button('Import From File', use_container_width=True, type='primary'):
                 import_from_file()
-    
+            
+            st.button('Batch Check In', use_container_width=True, type='primary', disabled=True)
+            
+            st.button('Delete All', use_container_width=True, type='primary', disabled=True)
+                    
     with col4f:
         if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
             if 'fq_data_staging' in st.session_state:
