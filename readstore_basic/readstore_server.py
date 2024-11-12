@@ -13,6 +13,8 @@ import shutil
 import random
 import pathlib
 import socket
+import base64
+import pandas as pd
 
 # Define version, check case if readstore is installed as package or run from source
 try:
@@ -29,6 +31,8 @@ parser = argparse.ArgumentParser(
     usage='%(prog)s <command> [options]',
     description="ReadStore Server",
     epilog='For help on a specific command, type "readstore <command> <subcommand> -h"')
+
+subparsers = parser.add_subparsers(title="Commands")
 
 parser.add_argument(
     '--db-directory', type=str, help='Directory for Storing ReadStore Database (required)', metavar='')
@@ -51,6 +55,22 @@ parser.add_argument(
 
 parser.add_argument(
     '-v', '--version', action='store_true', help='Show Version Information')
+
+export_parser = subparsers.add_parser("export",
+                                      help='Export ReadStore Database',
+                                      add_help=True)
+
+export_parser.set_defaults(export_run=True)
+
+export_parser.add_argument(
+    '--db-directory', type=str, help='Directory for Storing ReadStore Database (required)', metavar='')
+
+export_parser.add_argument(
+    '--config-directory', type=str, help='Directory for Storing ReadStore Database (required)', metavar='')
+
+export_parser.add_argument(
+    '--export_directory', type=str, help='Directory for Exporting ReadStore Database (required)', metavar='')
+
 
 def _get_path(path: str):
     if '~' in path:
@@ -228,8 +248,7 @@ def run_rs_server(db_directory: str,
     os.chdir(os.path.join(BASE_DIR, 'frontend/streamlit'))
     
     streamlist_host = rs_config['streamlit']['host']
-    
-    
+
     streamlit_cmd = [streamlist_exec,
                     'run',
                     'app.py',
@@ -308,6 +327,146 @@ def run_rs_server(db_directory: str,
         os.environ['RS_CONFIG_PATH'] = ''
         os.environ['RS_KEY_PATH'] = ''
         
+        
+def run_db_export(db_directory: str,
+                  config_directory: str,
+                  export_directory: str):
+    """
+        Run ReadStore Server
+    """
+    
+    print("Run DB Export")
+    
+    # Validate paths
+    db_directory = _get_path(db_directory)
+    export_directory = _get_path(export_directory)
+    
+    # Check permissions for db_directory and db_backup_directory
+    assert os.path.isdir(db_directory), f'ERROR: db_directory {db_directory} does not exist!'
+    assert os.path.isdir(export_directory), f'ERROR: db_backup_directory {export_directory} does not exist!'
+    
+    assert os.access(db_directory, os.W_OK), f'ERROR: db_directory {db_directory} is not writable!'
+    assert os.access(export_directory, os.W_OK), f'ERROR: db_backup_directory {export_directory} is not writable!'
+    
+    assert os.access(db_directory, os.R_OK), f'ERROR: db_directory {db_directory} is not readable!'
+    assert os.access(export_directory, os.R_OK), f'ERROR: db_backup_directory {export_directory} is not readable!'
+    assert os.access(config_directory, os.R_OK), f'ERROR: config_directory {config_directory} is not readable!'
+    
+    
+    if 'RS_PYTHON' in os.environ:
+        print('Found RS_PYTHON in Environment Variables')
+        python_exec = os.environ['RS_PYTHON']
+    else:
+        python_exec = 'python3'
+    
+    # Check python availability
+    try:
+        subprocess.check_call([python_exec, '--version'])
+    except:
+        logger.error(f'ERROR: Python not found in PATH!')
+        return
+    
+    config_path = os.path.join(config_directory, 'readstore_server_config.yaml')
+    secret_key_path = os.path.join(config_directory, 'secret_key')
+    
+    # Open and edit config file
+    print(f'Load Config File {config_path}')
+    with open(config_path, "r") as f:
+        rs_config = yaml.safe_load(f)
+
+    os.environ['DJANGO_SETTINGS_MODULE'] = rs_config['django']['django_settings_module']
+    os.environ['RS_CONFIG_PATH'] = config_path
+    os.environ['RS_KEY_PATH'] = secret_key_path
+    
+    # Dump files to json
+
+    dump_table_names = ['app.project', 'app.fqdataset', 'app.fqfile', 'app.fqattachment', 'app.projectattachment']
+    
+    backend_dir = os.path.join(BASE_DIR, 'backend')
+    os.chdir(backend_dir)
+    
+    for table_name in dump_table_names:
+        print(f'Dump Table {table_name}')
+        export_filename = table_name.replace('.','_') + '.json'
+        export_path = os.path.join(export_directory, export_filename)
+        export_cmd = [python_exec,'manage.py','dumpdata','--output',export_path,table_name]
+        export_process = subprocess.Popen(export_cmd)
+        export_process.wait()
+    
+    # Reformat all tables except attachments    
+    export_filenames = ['app_project.json', 'app_fqdataset.json', 'app_fqfile.json']
+    
+    print('Reformat JSON Dump')
+    
+    for file_name in export_filenames:
+        export_path = os.path.join(export_directory, file_name)
+        
+        with open(export_path, 'r') as fh:
+            export_data = yaml.safe_load(fh)
+
+        export_data_format = []
+        for row in export_data:
+            pk = row['pk']
+            col_data = row['fields']
+            col_data['id'] = pk
+            export_data_format.append(col_data)
+    
+        export_df = pd.DataFrame(export_data_format)
+        export_df.to_csv(export_path.replace('.json','.csv'), index=False, sep=',')
+    
+    # Reformat json for attachments files / i.e. convert base64 data back to files stored alongside json
+    print('Reformat Attachments')
+    
+    attachment_file_names = ['app_fqattachment.json', 'app_projectattachment.json']
+    
+    for file_name in attachment_file_names:
+        
+        print(f'Reformat Attachment File {file_name}')
+        attachment_path = os.path.join(export_directory, file_name)
+        
+        with open(attachment_path, 'r') as fh:
+            attachment_data = yaml.safe_load(fh)
+        
+        attachment_data_format = [] 
+        for attachment in attachment_data:
+            
+            pk = attachment['pk']
+            
+            # Check if attachments refer to project or dataset
+            if 'fq_dataset' in attachment['fields']:
+                attach_fk_id = attachment['fields']['fq_dataset']
+                attach_fk_name = 'fq_dataset'
+            elif 'project' in attachment['fields']:
+                attach_fk_id = attachment['fields']['project']
+                attach_fk_name = 'project'
+            else:
+                print(attachment['fields'].keys())
+                sys.stderr.write(f'ERROR: Invalid column names in attachment files!\n')
+                return
+            
+            # Create output directory for project
+            dump_dir = os.path.join(export_directory, f'{attach_fk_name}_{attach_fk_id}')
+            os.makedirs(dump_dir, exist_ok=True)
+            
+            filename = attachment['fields']['name']
+            file_path = os.path.join(dump_dir, filename)
+            
+            data_b64 = attachment['fields']['body']
+            data_binary = base64.b64decode(data_b64)
+            
+            with open(file_path, 'wb') as fh:
+                fh.write(data_binary)
+    
+            col_data = attachment['fields']
+            col_data['id'] = pk
+            _ = col_data.pop('body')
+        
+            attachment_data_format.append(col_data)
+
+        attachment_df = pd.DataFrame(attachment_data_format)
+        attachment_df.to_csv(attachment_path.replace('.json','.csv'), index=False, sep=',')
+        
+        
 def main():
     
     args = parser.parse_args()
@@ -320,53 +479,84 @@ def main():
     streamlit_port = args.streamlit_port
     debug = args.debug
     
+    export_directory = args.export_directory
+        
     version = args.version
     
-    if version:
+    if 'export_run' in args:
+        
+        print('Export ReadStore Database')
+        
+        if 'RS_DB_DIRECTORY' in os.environ:
+            print('Found RS_DB_DIRECTORY in Environment Variables')
+            db_directory = os.environ['RS_DB_DIRECTORY']
+        
+        if 'RS_CONFIG_DIRECTORY' in os.environ:
+            print('Found RS_CONFIG_DIRECTORY in Environment Variables')
+            config_directory = os.environ['RS_CONFIG_DIRECTORY']
+        
+        if db_directory is None:
+            export_parser.print_help()
+            print('ERROR: --db-directory is required')
+            return
+        
+        if config_directory is None:
+            export_parser.print_help()
+            print('ERROR: --config-directory is required')
+            return
+        
+        if export_directory is None:
+            export_parser.print_help()
+            print('ERROR: --export_directory is required')
+            return
+                
+        run_db_export(db_directory, config_directory, export_directory)
+        
+    elif version:
         print(f'ReadStore Basic Version: {__version__}')
         return
-    
-    # Try to set from environment variables
-    if 'RS_DB_DIRECTORY' in os.environ:
-        print('Found RS_DB_DIRECTORY in Environment Variables')
-        db_directory = os.environ['RS_DB_DIRECTORY']
-    if 'RS_DB_BACKUP_DIRECTORY' in os.environ:
-        db_backup_directory = os.environ['RS_DB_BACKUP_DIRECTORY']
-        print('Found RS_DB_BACKUP_DIRECTORY in Environment Variables')
-    if 'RS_LOG_DIRECTORY' in os.environ:        
-        log_directory = os.environ['RS_LOG_DIRECTORY']
-        print('Found RS_LOG_DIRECTORY in Environment Variables')
-    if 'RS_CONFIG_DIRECTORY' in os.environ:
-        config_directory = os.environ['RS_CONFIG_DIRECTORY']
-        print('Found RS_CONFIG_DIRECTORY in Environment Variables')
-    if 'RS_DJANGO_PORT' in os.environ:
-        django_port = int(os.environ['RS_DJANGO_PORT'])
-        print('Found RS_DJANGO_PORT in Environment Variables')
-    if 'RS_STREAMLIT_PORT' in os.environ:
-        streamlit_port = int(os.environ['RS_STREAMLIT_PORT'])
-        print('Found RS_STREAMLIT_PORT in Environment Variables')
-    
-    if db_directory is None:
-        parser.print_help()
-        print('ERROR: --db-directory is required')
-        return
-    if db_backup_directory is None:
-        parser.print_help()
-        print('ERROR: --db_backup_directory is required')
-        return
-    if log_directory is None:
-        parser.print_help()
-        print('ERROR: --log_directory is required')
-        return
-    
-    # Define logger    
-    run_rs_server(db_directory,
-                  db_backup_directory,
-                  log_directory,
-                  config_directory,
-                  django_port,
-                  streamlit_port,
-                  debug)
+    else:
+        # Try to set from environment variables
+        if 'RS_DB_DIRECTORY' in os.environ:
+            print('Found RS_DB_DIRECTORY in Environment Variables')
+            db_directory = os.environ['RS_DB_DIRECTORY']
+        if 'RS_DB_BACKUP_DIRECTORY' in os.environ:
+            db_backup_directory = os.environ['RS_DB_BACKUP_DIRECTORY']
+            print('Found RS_DB_BACKUP_DIRECTORY in Environment Variables')
+        if 'RS_LOG_DIRECTORY' in os.environ:        
+            log_directory = os.environ['RS_LOG_DIRECTORY']
+            print('Found RS_LOG_DIRECTORY in Environment Variables')
+        if 'RS_CONFIG_DIRECTORY' in os.environ:
+            config_directory = os.environ['RS_CONFIG_DIRECTORY']
+            print('Found RS_CONFIG_DIRECTORY in Environment Variables')
+        if 'RS_DJANGO_PORT' in os.environ:
+            django_port = int(os.environ['RS_DJANGO_PORT'])
+            print('Found RS_DJANGO_PORT in Environment Variables')
+        if 'RS_STREAMLIT_PORT' in os.environ:
+            streamlit_port = int(os.environ['RS_STREAMLIT_PORT'])
+            print('Found RS_STREAMLIT_PORT in Environment Variables')
+        
+        if db_directory is None:
+            parser.print_help()
+            print('ERROR: --db-directory is required')
+            return
+        if db_backup_directory is None:
+            parser.print_help()
+            print('ERROR: --db_backup_directory is required')
+            return
+        if log_directory is None:
+            parser.print_help()
+            print('ERROR: --log_directory is required')
+            return
+        
+        # Define logger    
+        run_rs_server(db_directory,
+                    db_backup_directory,
+                    log_directory,
+                    config_directory,
+                    django_port,
+                    streamlit_port,
+                    debug)
 
 
 if __name__ == '__main__':
