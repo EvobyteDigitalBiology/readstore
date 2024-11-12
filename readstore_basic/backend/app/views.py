@@ -552,7 +552,7 @@ class FqFileUploadView(APIView):
                         if not 'pipelines' in sys.modules:
                             from app import pipelines
                         
-                        if filepath is None:                    
+                        if fq_name is None:                    
                             file_name = os.path.basename(filepath_stub)
                         else:
                             file_name = fq_name
