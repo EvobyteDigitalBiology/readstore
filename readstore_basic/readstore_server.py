@@ -478,14 +478,14 @@ def main():
     django_port = args.django_port
     streamlit_port = args.streamlit_port
     debug = args.debug
-    
-    export_directory = args.export_directory
-        
+            
     version = args.version
     
     if 'export_run' in args:
         
         print('Export ReadStore Database')
+        
+        export_directory = args.export_directory
         
         if 'RS_DB_DIRECTORY' in os.environ:
             print('Found RS_DB_DIRECTORY in Environment Variables')
