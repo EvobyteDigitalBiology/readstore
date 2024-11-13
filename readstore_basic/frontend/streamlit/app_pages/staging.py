@@ -598,9 +598,20 @@ def bulk_checkin_df(fq_files_staging_df: pd.DataFrame,
                 selected_datasets = st.session_state['selected_staging']
                 selected_datasets = selected_datasets['name'].tolist()
                 
+                st.write(selected_datasets)
+                
                 # Prep project ids
                 project_ids = projects_owner_group.loc[
                     projects_owner_group['name'].isin(project_names_select),'id'].tolist()
+                
+                # Get metadata keys for selected projects returns list of dicts
+                project_dataset_metadata_keys = projects_owner_group.loc[
+                    projects_owner_group['name'].isin(project_names_select),'dataset_metadata_keys'].tolist()
+                
+                project_dataset_metadata_keys = [list(m.keys()) for m in project_dataset_metadata_keys]
+                project_dataset_metadata_keys = itertools.chain.from_iterable(project_dataset_metadata_keys)
+                                
+                dataset_metadata = {k:'' for k in project_dataset_metadata_keys}
                 
                 for dataset_name in selected_datasets:
                     dataset_df = valid_datasets[dataset_name]
@@ -669,7 +680,7 @@ def bulk_checkin_df(fq_files_staging_df: pd.DataFrame,
                         fq_file_i2=fq_file_i2,
                         paired_end=paired_end,
                         project=project_ids,
-                        metadata={}
+                        metadata=dataset_metadata
                     )
                 
                 del st.session_state['fq_data_staging']
@@ -801,6 +812,19 @@ def import_from_file():
                     st.cache_data.clear()
                     st.rerun()
 
+@st.dialog('Help')
+def staging_help():
+    
+    st.markdown("ReadStore groups **Dataset**s based on the filename of each **FASTQ** file.\n")
+    st.markdown("The **Read** type is also infered. [Read1/R1, Read2/R2, Index1/I1, Index2/I2]\n")
+                
+    st.markdown("Click *Check In* to validate and register the **Dataset**s \n")
+    
+    st.markdown("If the infered **Datasets** are not correct, you can change the name in the Dataset columns below.\n")
+    st.markdown("Also the **Read** type can be changed by clicking the column blow.\n")
+    
+    st.link_button('Manual in ReadStore Blog', 'https://evo-byte.com/readstore-tutorial-uploading-staging-fastq-files/')
+
 
 #region DATA
 
@@ -871,10 +895,12 @@ if fq_files_staging.shape[0] > 0:
                                 projects_owner_group,
                                 fq_dataset_names_owner_group)
                 
-            if st.button('Delete All', use_container_width=True, type='primary'):
+            if st.button(':material/delete_forever: Delete All', use_container_width=True, type='primary'):
                 fq_file_ids_stage = fq_files_staging['id'].tolist()
                 bulk_delete_fq_files(fq_file_ids_stage)
-                
+            
+            if st.button(':material/help: Help', use_container_width=True, type='primary'):
+                staging_help()
             
     with col4s:
         if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
@@ -994,8 +1020,11 @@ else:
             
             st.button('Batch Check In', use_container_width=True, type='primary', disabled=True)
             
-            st.button('Delete All', use_container_width=True, type='primary', disabled=True)
-                    
+            st.button(':material/delete_forever: Delete All', use_container_width=True, type='primary', disabled=True)
+            
+            if st.button(':material/help: Help', use_container_width=True, type='primary'):
+                staging_help()
+            
     with col4f:
         if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
             if 'fq_data_staging' in st.session_state:
