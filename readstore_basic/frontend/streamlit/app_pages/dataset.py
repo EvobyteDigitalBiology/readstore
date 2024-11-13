@@ -426,7 +426,9 @@ def update_many_datasets(selected_fq_dataset: pd.DataFrame,
         
         with coldel:
             with st.expander('Delete all Datasets', icon=":material/delete_forever:"):
-                if st.button('Confirm', key='delete_fq_dataset'):
+                if st.button('Confirm', key='delete_fq_dataset_many'):
+                    
+                    # IN selected_fq_dataset all none values are casted to nan
                     
                     fq_file_ids_r1 = selected_fq_dataset['fq_file_r1'].tolist()
                     fq_file_ids_r2 = selected_fq_dataset['fq_file_r2'].tolist()
@@ -434,17 +436,20 @@ def update_many_datasets(selected_fq_dataset: pd.DataFrame,
                     fq_file_ids_i2 = selected_fq_dataset['fq_file_i2'].tolist()
                     
                     fq_file_ids = fq_file_ids_r1 + fq_file_ids_r2 + fq_file_ids_i1 + fq_file_ids_i2
-                    fq_file_ids = [f for f in fq_file_ids if f]
+                    
+                    fq_file_ids = [f for f in fq_file_ids if (f and np.isnan(f) == False)]
                     
                     # Delete Fq Files attached to Dataset
                     # Dataset will automatically be deleted through cascade
-                    for file_id in fq_file_ids:
-                        datamanager.delete_fq_file(file_id)
-                    
+                    with st.spinner('Deleting Datasets...'):
+                        
+                        for file_id in fq_file_ids:
+                            datamanager.delete_fq_file(file_id)
+                        
                     st.cache_data.clear()
                     st.rerun()
 
-        _, col1d = st.columns([9,3])
+    _, col1d = st.columns([9,3])
     
     with col1d:
         
