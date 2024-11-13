@@ -792,7 +792,7 @@ def update_many_projects(project_select_df: pd.DataFrame):
             if st.button('Confirm', key='delete_project'):
                 project_ids = project_select_df['id_project']
                 
-                [datamanager.delete_project(pid) for pid in project_ids]
+                _ = [datamanager.delete_project(pid) for pid in project_ids]
                 
                 st.cache_data.clear()
                 st.rerun()
@@ -1137,7 +1137,7 @@ if show_project_details:
             else:
                 attach_select = None
             
-            col1atta, col2atta = st.columns([1.5,10.5])
+            col1atta, col2atta = st.columns([2,10])
             with col1atta:
                 st.write('**Attachments**')
             
