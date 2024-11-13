@@ -86,7 +86,7 @@ def create_user(reference_user_names: pd.Series,
     owner_group_name = uiconfig.DEFAULT_OWNER_GROUP
     
     staging = st.checkbox("Staging Permissions",
-                          help = "Enables FASTQ File Upload via CLI",)
+                          help = "Enables FASTQ File Upload",)
     
     _ , col2c = st.columns([9,3], vertical_alignment='center')
     
@@ -168,7 +168,7 @@ def update_user(row_ix: int,
     owner_group_name = uiconfig.DEFAULT_OWNER_GROUP
     
     staging = st.checkbox("Staging Permissions",
-                          help = "Enables FASTQ File Upload via CLI",
+                          help = "Enables FASTQ File Upload",
                           value = staging_old)
     
     is_active = st.checkbox("User Is Active",
@@ -377,7 +377,7 @@ with tab1:
             'email' : st.column_config.TextColumn('Mail'),
             'is_active' : st.column_config.Column('Active', help = "Account Active or Disabled"),
             'token' : st.column_config.Column('Token', help = 'Token for CLI/SDK Access'),
-            'staging' : st.column_config.Column('Staging', help = 'Enables FASTQ File Upload via CLI'),
+            'staging' : st.column_config.Column('Staging', help = 'Enables FASTQ File Upload'),
             'date_joined' : st.column_config.DateColumn('Created'),
             'id_user_str' : None
         }
