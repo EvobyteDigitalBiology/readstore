@@ -400,6 +400,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                         st.cache_data.clear()
                         st.rerun()
 
+# region Update Many Datasets
 @st.dialog('Update Datasets', width='large')
 def update_many_datasets(selected_fq_dataset: pd.DataFrame,
                          selected_fq_metadata: pd.DataFrame,
@@ -453,6 +454,13 @@ def update_many_datasets(selected_fq_dataset: pd.DataFrame,
             # Get project ids for selected project names
             project_ids = reference_project_names_df.loc[
                 reference_project_names_df['name'].isin(project_names_select),'id'].tolist()
+            
+            # Get metadata keys for selected projects returns list of dicts
+            project_dataset_metadata_keys = reference_project_names_df.loc[
+                reference_project_names_df['name'].isin(project_names_select),'dataset_metadata_keys'].tolist()
+            
+            project_dataset_metadata_keys = [list(m.keys()) for m in project_dataset_metadata_keys]
+            project_dataset_metadata_keys = itertools.chain.from_iterable(project_dataset_metadata_keys)
 
             # Update selected FqDatasets with new project ids
             for ix, (_, fq_dataset) in enumerate(selected_fq_dataset.iterrows()):
@@ -462,6 +470,12 @@ def update_many_datasets(selected_fq_dataset: pd.DataFrame,
                 metadata.columns = ['key', 'value']
                 metadata_dict = {k:v for k,v in zip(metadata['key'],metadata['value'])}
 
+                # Update with new metadata keys
+                for k in project_dataset_metadata_keys:
+                    if not k in metadata_dict.keys():
+                        metadata_dict[k] = ''
+                
+                # Attach new project metadata keys to metadata
                 fq_dataset_id = fq_dataset['id']                
                 name = fq_dataset['name']
                 description = fq_dataset['description']
@@ -477,9 +491,7 @@ def update_many_datasets(selected_fq_dataset: pd.DataFrame,
             st.cache_data.clear()
             st.rerun()
             
-            
-            
-    
+
     
 #region Detail Fastq File
 def start_fq_file_download(fq_file_id:int):
@@ -722,7 +734,6 @@ with col5:
     if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
         on_click = extensions.refresh_page()
 
-
 col_config_user = {
     'id': st.column_config.TextColumn('ID'),
     'name' : st.column_config.TextColumn('Name', help='FASTQ Dataset Name'),
@@ -791,7 +802,6 @@ if st.session_state.show_fq_metadata:
 else:
     show_cols = fq_datasets.columns.tolist()
     col_config = col_config_user
-
 
 # Dynamically adjust height of dataframe
 if st.session_state['show_details']:
@@ -862,10 +872,11 @@ elif len(fq_select.selection['rows']) > 1:
     # Get original index from projects overview before subset
     selected_fq_dataset_ix = fq_datasets_show.iloc[select_row,:].index # Refers to original index
     
+    # Get fq datasets and associated metadata assays
     fq_dataset_detail = fq_datasets.loc[selected_fq_dataset_ix,:]
-    
     fq_metadata_detail_many = fq_metadata.loc[selected_fq_dataset_ix,:]
     
+    # TODO: Is this necessary?
     fq_dataset_update = fq_dataset_detail.copy()
     fq_metadata_update_many = fq_metadata_detail_many.copy()
     
