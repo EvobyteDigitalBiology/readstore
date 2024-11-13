@@ -597,9 +597,7 @@ def bulk_checkin_df(fq_files_staging_df: pd.DataFrame,
                 
                 selected_datasets = st.session_state['selected_staging']
                 selected_datasets = selected_datasets['name'].tolist()
-                
-                st.write(selected_datasets)
-                
+                                
                 # Prep project ids
                 project_ids = projects_owner_group.loc[
                     projects_owner_group['name'].isin(project_names_select),'id'].tolist()
@@ -613,75 +611,78 @@ def bulk_checkin_df(fq_files_staging_df: pd.DataFrame,
                                 
                 dataset_metadata = {k:'' for k in project_dataset_metadata_keys}
                 
-                for dataset_name in selected_datasets:
-                    dataset_df = valid_datasets[dataset_name]
-                    dataset_qc_passed = True
+                with st.spinner('Checking In Datasets'):
                     
-                    fq_file_r1 = None
-                    fq_file_r2 = None
-                    fq_file_i1 = None
-                    fq_file_i2 = None
-                    
-                    # Loop over fq files and check in
-                    for ix, fq_file in dataset_df.iterrows():
+                    for dataset_name in selected_datasets:
+                        dataset_df = valid_datasets[dataset_name]
+                        dataset_qc_passed = True
                         
-                        if fq_file['read_type'] == 'R1':
-                            fq_file_r1 = fq_file['id']
-                        elif fq_file['read_type'] == 'R2':
-                            fq_file_r2 = fq_file['id']
-                        elif fq_file['read_type'] == 'I1':
-                            fq_file_i1 = fq_file['id']
-                        elif fq_file['read_type'] == 'I2':
-                            fq_file_i2 = fq_file['id']
+                        fq_file_r1 = None
+                        fq_file_r2 = None
+                        fq_file_i1 = None
+                        fq_file_i2 = None
                         
-                        if not fq_file['qc_passed']:
-                            dataset_qc_passed = False
+                        # Loop over fq files and check in
+                        for ix, fq_file in dataset_df.iterrows():
+                            
+                            if fq_file['read_type'] == 'R1':
+                                fq_file_r1 = fq_file['id']
+                            elif fq_file['read_type'] == 'R2':
+                                fq_file_r2 = fq_file['id']
+                            elif fq_file['read_type'] == 'I1':
+                                fq_file_i1 = fq_file['id']
+                            elif fq_file['read_type'] == 'I2':
+                                fq_file_i2 = fq_file['id']
+                            
+                            if not fq_file['qc_passed']:
+                                dataset_qc_passed = False
+                            
+                            if isinstance(fq_file['qc_phred'], str):
+                                fq_file['qc_phred'] = json.loads(fq_file['qc_phred'].replace("'", "\""))                        
                         
-                        fq_file['qc_phred'] = json.loads(fq_file['qc_phred'].replace("'", "\""))
-                    
-                        # Check in Fq Files
-                        datamanager.checkin_fq_file_staging(
+                            # Check in Fq Files
+                            datamanager.checkin_fq_file_staging(
+                                st.session_state["jwt_auth_header"],
+                                fq_file['id'],
+                                fq_file['name'],
+                                fq_file['bucket'],
+                                fq_file['key'],
+                                fq_file['upload_path'],
+                                fq_file['qc_passed'],
+                                fq_file['read_type'],
+                                fq_file['read_length'],
+                                fq_file['num_reads'],
+                                fq_file['qc_phred_mean'],
+                                fq_file['qc_phred'],
+                                fq_file['size_mb'],
+                                fq_file['md5_checksum'],
+                                fq_file['pipeline_version']
+                            )
+                        
+                        if fq_file_r1 and fq_file_r2:
+                            paired_end = True
+                        else:
+                            paired_end = False
+                        if fq_file_i1 or fq_file_i2:
+                            index_read = True
+                        else:
+                            index_read = False
+                        
+                        # Create FqDataset
+                        fq_pk = datamanager.create_fq_dataset(
                             st.session_state["jwt_auth_header"],
-                            fq_file['id'],
-                            fq_file['name'],
-                            fq_file['bucket'],
-                            fq_file['key'],
-                            fq_file['upload_path'],
-                            fq_file['qc_passed'],
-                            fq_file['read_type'],
-                            fq_file['read_length'],
-                            fq_file['num_reads'],
-                            fq_file['qc_phred_mean'],
-                            fq_file['qc_phred'],
-                            fq_file['size_mb'],
-                            fq_file['md5_checksum'],
-                            fq_file['pipeline_version']
+                            name = dataset_name,
+                            description = '',
+                            qc_passed=dataset_qc_passed,
+                            index_read=index_read,
+                            fq_file_r1=fq_file_r1,
+                            fq_file_r2=fq_file_r2,
+                            fq_file_i1=fq_file_i1,
+                            fq_file_i2=fq_file_i2,
+                            paired_end=paired_end,
+                            project=project_ids,
+                            metadata=dataset_metadata
                         )
-                    
-                    if fq_file_r1 and fq_file_r2:
-                        paired_end = True
-                    else:
-                        paired_end = False
-                    if fq_file_i1 or fq_file_i2:
-                        index_read = True
-                    else:
-                        index_read = False
-                    
-                    # Create FqDataset
-                    fq_pk = datamanager.create_fq_dataset(
-                        st.session_state["jwt_auth_header"],
-                        name = dataset_name,
-                        description = '',
-                        qc_passed=dataset_qc_passed,
-                        index_read=index_read,
-                        fq_file_r1=fq_file_r1,
-                        fq_file_r2=fq_file_r2,
-                        fq_file_i1=fq_file_i1,
-                        fq_file_i2=fq_file_i2,
-                        paired_end=paired_end,
-                        project=project_ids,
-                        metadata=dataset_metadata
-                    )
                 
                 del st.session_state['fq_data_staging']
                 del st.session_state['available_staging']
