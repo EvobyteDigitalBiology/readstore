@@ -356,6 +356,10 @@ Login to the User Interface on your browser and move to the `Staging` page. Here
 
 For large files the QC step can take a while to complete. FASTQ files are grouped in Datasets which you can `Check In`. Then they appear in the `Datasets` page.
 
+If you uploaded a large number of FASTQ files at once, you can Check In multiple FASTQ files at once using the `Batch Check In` function. For this, click on `More` in the top right and select `Batch Check In`. Select all datasets that you want to check in and confirm.
+
+Under `More`, you also find the `Import From File` method that allows you to get and upload Excel or .csv files with FASTQ paths to upload. 
+
 #### 4. Access Datasets via the CLI
 
 The ReadStore CLI enables programmatic access to Projects, Datasets, metadata and attachments.
