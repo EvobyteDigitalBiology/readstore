@@ -1,5 +1,20 @@
 # Changelog
 
+### v1.1.0 - 2024-11-14
+
+### Added
+
+- Support for batch Check In of many FASTQ files
+- Batch Upload of FASTQ files from Excel or csv files
+- Batch delete function
+- Frontend performance improvements
+
+### Changed
+
+- Option to select multiple datasets and projects
+
+### Removed
+
 ### v1.0.3  - 2024-11-06
 
 ### Added
