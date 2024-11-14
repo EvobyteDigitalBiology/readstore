@@ -1,0 +1,20 @@
+[Unit]
+Description=ReadStore Basic Server
+After=network.target
+
+[Service]
+User=myusername
+WorkingDirectory=~/.local/lib/python3.11/site-packages/readstore_basic
+ExecStart=/path/to/python/exec ~/.local/lib/python3.11/site-packages/readstore_basic/readstore_server.py \
+    --db-directory /path/to/db-directory \
+    --db-backup-directory /path/to/db-directory \
+    --log-directory /path/to/db-directory
+Restart=always
+RestartSec=15
+Environment=PYTHONUNBUFFERED=1
+Environment=RS_STREAMLIT=~/.local/bin/streamlit
+Environment=RS_PYTHON=/path/to/python_exec
+Environment=RS_GUNICORN=~/.local/bin/streamlit
+
+[Install]
+WantedBy=multi-user.target
