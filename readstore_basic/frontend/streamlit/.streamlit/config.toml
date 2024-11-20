@@ -33,7 +33,7 @@ toolbarMode = "minimal"
 # Controls whether the default sidebar page navigation in a multi-page app is displayed.
 
 # Default: true
-showSidebarNavigation = false
+showSidebarNavigation = true
 
 [server]
 port=8501 # change port number. By default streamlit uses 8501 port
