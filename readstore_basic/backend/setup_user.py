@@ -169,6 +169,7 @@ if __name__ == '__main__':
     project_permissions = ViewPermissions('project')
     project_attachment_permissions = ViewPermissions('projectattachment')
     license_key_permissions = ViewPermissions('licensekey')
+    pro_data_permissions = ViewPermissions('prodata')
 
     view_permissions_manager = ViewPermissionManager([user_permissions,
                                                     app_user_permissions,
@@ -179,13 +180,16 @@ if __name__ == '__main__':
                                                     project_attachment_permissions,
                                                     fq_dataset_permissions,
                                                     fq_attachment_permissions,
-                                                    license_key_permissions])
+                                                    license_key_permissions,
+                                                    pro_data_permissions])
 
     print("Setup user groups....")
 
     admin_group, created = Group.objects.get_or_create(name='admin')
     admin_group.permissions.set(view_permissions_manager.get_full_permissions())
 
+    # Revise full permissions and fq_file_permissions // 
+    # AppUser group
     appuser_group, created = Group.objects.get_or_create(name='appuser')
     appuser_group.permissions.set(view_permissions_manager.get_view_permissions() + \
                                     project_permissions.get_full_permissions() + \
@@ -193,11 +197,11 @@ if __name__ == '__main__':
                                     user_permissions.get_full_permissions() + \
                                     fq_dataset_permissions.get_full_permissions() + \
                                     fq_attachment_permissions.get_full_permissions() + \
-                                    fq_file_permissions.get_full_permissions())
+                                    fq_file_permissions.get_full_permissions() + \
+                                    pro_data_permissions.get_full_permissions())
 
     staging_group, created = Group.objects.get_or_create(name='staging')
     staging_group.permissions.set(fq_file_permissions.get_full_permissions())
-
 
     # Create admin user
     print("Setup admin user....")
@@ -207,7 +211,6 @@ if __name__ == '__main__':
         admin = User.objects.get(username='admin')
     else:
         print('\n')
-
         print('Set ReadStore ADMIN Account')
         
         admin = User.objects.create(username='admin',
