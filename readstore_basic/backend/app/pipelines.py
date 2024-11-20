@@ -18,6 +18,8 @@ from .models import FqFile
 from settings.base import FQ_QUEUE_NUM_WORKERS
 from settings.base import FQ_QUEUE_MAX_SIZE
 
+# QC Function
+
 def stage_fastq(fq_file_path: str, fq_name: str, owner: User, read_type: str):
     """Get stats from Fastq File
 
@@ -89,7 +91,50 @@ def stage_fastq(fq_file_path: str, fq_name: str, owner: User, read_type: str):
     
     print('Created FqFile object for ', fq_name)
     print('Created FqFile path for ', fq_file_path)
+
+
+def get_model_invalid_upload_paths(model_qset) -> List[dict]:
+    """Get Invalid Paths From Model
     
+    Get all invalid paths from a model
+    
+    Args:
+        model: Model to check for invalid paths
+    """
+    
+    # TODO: Get FqFiles for all FqDatasets of the owner group
+    invalid_paths = []
+    
+    for model_file in model_qset:
+        file_exists = os.path.exists(model_file.upload_path)
+        file_accessible = os.access(model_file.upload_path, os.R_OK)
+        if not os.path.exists(model_file.upload_path):
+            invalid_paths.append({'id': model_file.id, 'upload_path': model_file.upload_path})
+        elif not os.access(model_file.upload_path, os.R_OK):
+            invalid_paths.append({'id': model_file.id, 'upload_path': model_file.upload_path})
+        
+    return invalid_paths
+
+
+#region QC Job Queue
+
+def get_queue_jobs() -> int:
+    return len(dataset_queue)
+
+def exec_staging_job(fq_file_path: str, fq_name: str, owner: User, read_type: str):
+    
+    queue_size = get_queue_jobs()
+    if queue_size >= FQ_QUEUE_MAX_SIZE:
+        return False
+    
+    dataset_queue.append(fq_file_path)
+    
+    job_queue.put({'fq_file_path': fq_file_path,
+                   'fq_name': fq_name,
+                   'owner': owner,
+                   'read_type': read_type})
+    
+    return True
 
 # Worker function to pick up and process jobs from the queue
 def staging_worker():
@@ -111,20 +156,3 @@ for i in range(num_worker_threads):
     t.start()
     threads.append(t)
 
-def get_queue_jobs() -> int:
-    return len(dataset_queue)
-        
-def exec_staging_job(fq_file_path: str, fq_name: str, owner: User, read_type: str):
-    
-    queue_size = get_queue_jobs()
-    if queue_size >= FQ_QUEUE_MAX_SIZE:
-        return False
-    
-    dataset_queue.append(fq_file_path)
-    
-    job_queue.put({'fq_file_path': fq_file_path,
-                   'fq_name': fq_name,
-                   'owner': owner,
-                   'read_type': read_type})
-    
-    return True
