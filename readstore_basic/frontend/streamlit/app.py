@@ -74,6 +74,21 @@ if auth_status:
     if not 'username' in st.session_state:
         st.session_state['username'] = datamanager.get_my_user(st.session_state["jwt_auth_header"]).username
     
+    # Check if all file paths are valid
+    if not 'valid_filepath' in st.session_state:
+        # Check if the file path in the database are valid
+        fq_files_invalid_path = datamanager.get_fq_file_invalid_upload_paths(st.session_state["jwt_auth_header"])
+        pro_data_invalid_path = datamanager.get_pro_data_invalid_upload_paths(st.session_state["jwt_auth_header"])
+
+        if len(fq_files_invalid_path) > 0:
+            st.error('FASTQ upload paths not found:')
+            st.error(fq_files_invalid_path.to_dict())
+        if len(pro_data_invalid_path) > 0:
+            st.error('ProData upload paths not found:')
+            st.error(pro_data_invalid_path.to_dict())            
+        else:
+            st.session_state['valid_filepath'] = True
+    
     # Define group to select pages to display
     user_groups = datamanager.get_user_groups(st.session_state["jwt_auth_header"])['name'].tolist()
 
