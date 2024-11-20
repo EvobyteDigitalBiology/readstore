@@ -196,3 +196,23 @@ class FqFileUploadApp(BaseModel):
     fq_file_name: str
     fq_file_path: str
     read_type: str
+
+class InvalidPath(BaseModel):
+    id: int
+    upload_path: str
+    
+class ProData(BaseModel):
+    id: Optional[int] = None
+    name: str
+    data_type: str
+    description: str
+    version: int
+    upload_path: str
+    metadata: dict
+    fq_dataset: int
+    created: Optional[datetime.datetime] = None
+    updated: Optional[datetime.datetime] = None
+    valid_from: Optional[datetime.datetime] = None
+    valid_to: Optional[datetime.datetime] = None
+    owner: Optional[int] = None
+    owner_username: Optional[str] = None
