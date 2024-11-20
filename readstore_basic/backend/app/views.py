@@ -48,6 +48,7 @@ from .serializers import PwdSerializer
 from .serializers import FqUploadSerializer
 from .serializers import FqUploadCLISerializer
 from .serializers import LicenseKeySerializer
+from .serializers import ProDataSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
@@ -63,7 +64,7 @@ from .models import FqAttachment
 from .models import Project
 from .models import ProjectAttachment
 from .models import LicenseKey
-
+from .models import ProData
 
 from settings.base import VALID_FASTQ_EXTENSIONS
 from settings.base import VALID_READ1_SUFFIX
@@ -399,6 +400,26 @@ class FqFileViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(qset, many=True)        
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'])
+    def validate_upload_path(self, request):
+        """Validate Upload Path
+
+        Validate upload path for FqFile
+        
+        Args:
+            request
+
+        Returns:
+            Response: List of invalid paths
+        """
+        
+        if not 'pipelines' in sys.modules:
+            from app import pipelines
+        
+        # TODO: Needs restricting by owner group
+        invalid_paths = pipelines.get_model_invalid_upload_paths(FqFile.objects.all())
+        
+        return Response(invalid_paths)
     
     @action(detail=False, methods=['post'], permission_classes=[], serializer_class=TokenAuthSerializer)
     def token(self, request):
@@ -570,7 +591,6 @@ class FqFileUploadView(APIView):
                 return Response({'message' : 'username not found'}, status=400)        
         else:
             return Response(serializer.errors, status=400)  
-
 
 
 class FqFileUploadAppView(APIView):
@@ -829,10 +849,23 @@ class FqDatasetViewSet(viewsets.ModelViewSet):
                         for attach in fq_attach.values('fq_dataset_id','name'):
                             attach_dict[attach['fq_dataset_id']].append(attach['name'])
                         
-                        # add attachments to fq datasets
+                        # Get all pro_data
+                        pro_data = ProData.objects \
+                            .filter(fq_dataset__in=qset) \
+                            .all() \
+                            .order_by("-created")
                         
+                        pro_data_dict = defaultdict(list)
+                        
+                        for data in pro_data.values('fq_dataset_id', 'id', 'name','upload_path'):
+                            pro_data_dict[data['fq_dataset_id']].append({'id' : data['id'],
+                                                                        'name' : data['name'],
+                                                                         'upload_path' : data['upload_path']})
+                        
+                        # add attachments to fq datasets
                         for p in qset:
                             p.attachments = attach_dict[p.id]
+                            p.pro_data = pro_data_dict[p.id]
 
                             names = p.project.all().values_list('name', flat=True)
                             ids = p.project.all().values_list('id', flat=True)
@@ -889,10 +922,24 @@ class FqDatasetViewSet(viewsets.ModelViewSet):
                         for attach in fq_attach.values('fq_dataset_id','name'):
                             attach_dict[attach['fq_dataset_id']].append(attach['name'])
                         
+                        # Get all pro_data
+                        pro_data = ProData.objects \
+                            .filter(fq_dataset__in=qset, valid_to==None)  \
+                            .all() \
+                            .order_by("-created")
+                        
+                        pro_data_dict = defaultdict(list)
+                        
+                        for data in pro_data.values('fq_dataset_id', 'id', 'name','upload_path'):
+                            pro_data_dict[data['fq_dataset_id']].append({'id' : data['id'],
+                                                                        'name' : data['name'],
+                                                                         'upload_path' : data['upload_path']})
+                        
                         # add attachments to project
                         for p in qset:
                             p.attachments = attach_dict[p.id]
-                            
+                            p.pro_data = pro_data_dict[p.id]
+
                             names = p.project.all().values_list('name', flat=True)
                             ids = p.project.all().values_list('id', flat=True)
                                
@@ -1461,3 +1508,113 @@ class LicenseKeyViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(qset, many=True)        
         return Response(serializer.data)
+    
+class ProDataViewSet(viewsets.ModelViewSet):
+    
+    permission_classes = [permissions.IsAuthenticated,
+                        permissions.DjangoModelPermissions]
+    
+    queryset = ProData.objects.all().order_by("-created")
+    serializer_class = ProDataSerializer
+    
+    def perform_create(self, serializer):
+        
+        name = serializer.validated_data.get('name')
+        fq_dataset = serializer.validated_data.get('fq_dataset')
+        
+        # Update last dataset
+        # Versioning is developed into fq_dataset, name, owner_group 
+        q_last = ProData.objects.filter(valid_to=None,
+                                        name=name,
+                                        fq_dataset=fq_dataset).first()
+                
+        if q_last:
+            q_last.valid_to = datetime.datetime.now()
+            new_version = q_last.version + 1
+            
+            q_last.save()
+        else:
+            new_version = 1
+        
+        serializer.save(owner=self.request.user, version=new_version)
+      
+    @action(detail=False, methods=['get'])
+    def valid(self, request):
+        
+        qset = ProData.objects.filter(valid_to=None).all().order_by("-created")
+        
+        serializer = self.get_serializer(qset, many=True)        
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def fq_dataset(self, request, pk):
+        """Get ProData for FqDataset
+        
+        Get ProData for FqDataset defined by FqDataset PK
+        Check if authenticated user has permission FqDataset
+
+        Args:
+            request
+            pk: FqDataset Primary Key
+
+        Returns:
+            Response
+        """
+        
+        # Check if owner has permission to access project
+        if hasattr(request.user, 'appuser'):
+            owner_group = request.user.appuser.owner_group
+            
+            # In this case user is part of owner group
+            if FqDataset.objects.filter(owner_group=owner_group, pk=pk).exists():
+                qset = ProData.objects.filter(fq_dataset_id=pk).all().order_by("-created")
+                serializer = ProDataSerializer(qset, many=True)
+                return Response(serializer.data)
+            else:
+                return Response({'message' : 'FqDataset does not exists'}, status=400)
+        else:
+            return Response({'message' : 'User is not an appuser'}, status=400)
+    
+    
+    @action(detail=False, methods=['get'])
+    def owner_group(self, request):
+        """Get ProData for owner_group
+
+        Return ProData where user is part of owner_group
+        
+        Args:
+            request
+
+        Returns:
+            Response
+        """
+        
+        if hasattr(request.user, 'appuser'):
+            owner_group = request.user.appuser.owner_group
+            fq_datasets = FqDataset.objects.filter(owner_group=owner_group).all()
+            qset = ProData.objects.filter(fq_dataset__in=fq_datasets).all().order_by("-created")
+            
+            serializer = self.get_serializer(qset, many=True)        
+            return Response(serializer.data)
+        else:
+            return Response({'message' : 'User is not an appuser'}, status=400)
+    
+    @action(detail=False, methods=['get'])
+    def validate_upload_path(self, request):
+        """Validate Upload Path
+
+        Validate upload path for FqFile
+        
+        Args:
+            request
+
+        Returns:
+            Response: List of invalid paths
+        """
+        
+        if not 'pipelines' in sys.modules:
+            from app import pipelines
+        
+        invalid_paths = pipelines.get_model_invalid_upload_paths(ProData.objects.filter(valid_to=None).all())
+        
+        return Response(invalid_paths)
