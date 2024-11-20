@@ -37,6 +37,8 @@ router.register(r'fq_attachment', views.FqAttachmentViewSet, basename='FqAttachm
 router.register(r'project', views.ProjectViewSet, basename='Project')
 router.register(r'project_attachment', views.ProjectAttachmentViewSet, basename='ProjectAttachment')
 router.register(r'license_key', views.LicenseKeyViewSet, basename='LicenseKey')
+router.register(r'pro_data', views.ProDataViewSet, basename='ProData')
+
 
 urlpatterns = [
     path('api_v1/', include(router.urls)),
@@ -77,6 +79,9 @@ urlpatterns = [
     path('api_v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api_v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api_v1/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    
+    path('api_v1/pro_data/owner_group/', views.ProDataViewSet.as_view({'get': 'owner_group'})),
+    path('api_v1/pro_data/fq_dataset/<pk>/', views.ProDataViewSet.as_view({'get': 'fq_dataset'})),
     
     path('admin/', admin.site.urls),
 ]
