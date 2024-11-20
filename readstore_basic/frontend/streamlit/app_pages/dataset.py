@@ -61,19 +61,29 @@ styles.adjust_button_height(25)
 # Set sesstion state for downloaing attachments
 if not 'dataset_select_id' in st.session_state:
     st.session_state['dataset_select_id'] = None
-
+if not 'pro_data_show_archived_versions' in st.session_state:
+    st.session_state['pro_data_show_archived_versions'] = False
+    
 def update_attachment_select():
     if st.session_state['dataset_select_id']:
         dataset_id = st.session_state['dataset_select_id']
         st.session_state[f'download_fq_attachments_select_{dataset_id}'] = st.session_state['fq_attachment_details_df']
 
+def update_pro_data_select():
+    if st.session_state['dataset_select_id']:
+        dataset_id = st.session_state['dataset_select_id']
+        st.session_state[f'download_pro_data_select_{dataset_id}'] = st.session_state['fq_prodata_details_df']
+
+def update_pro_data_show_archived():
+    new_state = st.session_state['checkbox_pro_data_include_archive']
+    st.session_state['pro_data_show_archived_versions'] = new_state
 
 #region Update Dataset
-
 @st.dialog('Update Dataset', width='large')
 def update_dataset(selected_fq_dataset: pd.DataFrame,
                    selected_fq_metadata: pd.DataFrame,
                    selected_fq_attachments: pd.DataFrame,
+                   selected_fq_pro_data: pd.DataFrame,
                     reference_fq_dataset_names: pd.Series,
                     reference_project_names_df: pd.DataFrame):
     
@@ -122,7 +132,8 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
     tab_names = [read_long_map[rt] for rt in read_file_file_map.keys()]
     tab_names_format = [":blue-background[**Projects**]",
                         ":blue-background[**Features**]",
-                        ":blue-background[**Attachments**]"]
+                        ":blue-background[**Attachments**]",
+                        ":blue-background[**ProData**]"]
     tab_names_format.extend([f":blue-background[**{tn}**]" for tn in tab_names])
     fq_file_names = [None] * len(read_file_file_map)
     
@@ -252,11 +263,63 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                             # Reset attachment select for project id
                             st.session_state[f'download_fq_attachments_select_{fq_dataset_id}'] = None
                             st.rerun()
+    
+    # region ProData
+    
+    with tabs[3]:
+        
+        with st.container(border=True, height=460):
             
+            # List all attachments
+            
+            st.subheader('Processed Data')
+        
+            update_include_archived = st.checkbox('Include archived',
+                                                key='pro_data_show_archived_versions_update',
+                                                value = False)
+            
+            if not update_include_archived:
+                selected_fq_pro_data = selected_fq_pro_data.loc[
+                        selected_fq_pro_data['valid_to'].isna(),:]
+                    
+            pro_data_select = st.dataframe(selected_fq_pro_data,
+                                        hide_index = True,
+                                        use_container_width = True,
+                                        column_config = {
+                                            'id' : st.column_config.TextColumn('ID'),
+                                            'name' : st.column_config.TextColumn('Name'),
+                                            'data_type' : st.column_config.TextColumn('Type'),
+                                            'description' : None,
+                                            'version' : st.column_config.TextColumn('Version'),
+                                            'owner_username' : st.column_config.TextColumn('Creator'),
+                                            'valid_to' : None
+                                        },
+                                        key='update_pro_data_df',
+                                        selection_mode='multi-row',
+                                        on_select = 'rerun')
+
+            col, _ = st.columns([4,8])
+            
+            with col:
+                with st.expander('Delete ProData', icon=":material/delete_forever:"):
+                    if st.button('Confirm', key='delete_pro_data'):
+                        
+                        pro_data_ixes = pro_data_select.selection['rows']
+                        pro_data_ids = selected_fq_pro_data.loc[pro_data_ixes,'id'].tolist()
+                        
+                        for pro_data_id in pro_data_ids:
+                            datamanager.delete_pro_data(pro_data_id)
+                        else:
+                            st.cache_data.clear()
+                            # Reset selection config for pro data
+                            st.session_state[f'download_pro_data_select_{fq_dataset_id}'] = None
+                            st.rerun()
+        
+        
     for ix, rt in enumerate(read_file_file_map.keys()):
         
         # region Read Tab
-        with tabs[3+ix]:
+        with tabs[4+ix]:
             
             col1, col2 = st.columns([1, 1])
             
@@ -562,23 +625,102 @@ def detail_fq_file(fq_file_id: int):
     with st.popover('FASTQ File Path'):
         st.text_input('FASTQ File Path', value=fq_file_read.upload_path)
 
+# region Detail ProData
+@st.dialog('Processed Data', width='large')
+def detail_pro_data(pro_data_id: int):
+    
+    pro_data = datamanager.get_pro_data_detail(st.session_state["jwt_auth_header"],
+                                               pro_data_id)
+
+    name = pro_data.name
+    description = pro_data.description
+    created = pro_data.created
+    creator = pro_data.owner_username
+    metadata = pro_data.metadata
+    version = pro_data.version
+    upload_path = pro_data.upload_path
+    valid_to = pro_data.valid_to
+    
+    created = created.strftime('%Y-%m-%d %H:%M')
+    if valid_to:
+        valid_to = valid_to.strftime('%Y-%m-%d %H:%M')
+    
+    detail_df = pd.DataFrame({
+        'Name' : [name],
+        'Version' : [version],
+        'Creator' : [creator],
+        'Created' : [created],
+        'Valid To' : [valid_to]
+    })
+    detail_df = detail_df.T.reset_index()
+    
+    detail_df.columns = ['ProData ID', pro_data_id]
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        with st.container(border=True, height=400):
+            st.subheader('Details')
+            
+            st.dataframe(detail_df,
+                        use_container_width=True,
+                        hide_index=True)
+        
+            st.text_input('File Path',
+                          value=upload_path)
+
+    with col2:
+        with st.container(border=True, height=400):
+            st.subheader('Description')
+            
+            st.text_area('description',
+                         value=description,
+                         label_visibility = 'collapsed',
+                         height=68)
+            
+            st.subheader('Metadata')
+            
+            metadata_df = pd.DataFrame(metadata.items(), columns=['Key', 'Value'])
+            
+            st.dataframe(metadata_df,
+                        use_container_width=True,
+                        hide_index=True)
+            
+    
+    # col1, col2 = st.columns([1, 1])
+            
+    # with col1:
+        
+    #     with st.container(border=True, height=400):
+
+
+
 #region Export Project
 
 @st.dialog('Export Datasets')            
 def export_datasets(fq_dataset_view: pd.DataFrame):
     
-    st.write('Save Datasets and Metadata or Dataset FASTQ stats as .csv file')
+    st.markdown("""Export Selection as .csv file
+- Datasets and Metadata
+- Dataset FASTQ stats
+- Dataset Processed Data
+            """)
     
+    st.divider()
+            
     if fq_dataset_view.empty:
         st.warning('No Datasets selected for export')
     else:
-        export_fq = st.toggle('Export FASTQ Files',
-                                help='Export FASTQ Files associated with each Dataset')
+        export_selection = st.segmented_control(
+            '**Export Selection**',
+            ['Datasets', 'FASTQ Files', 'Processed Data'],
+            key='export_selection',
+            default='Datasets'
+        ) 
         
-        if export_fq:
+        if export_selection == 'FASTQ Files':
             
             # Reduce number of required API calls
-            
             with st.spinner('Exporting Datasets...'):
                             
                 fq_dataset_file_ids = []
@@ -640,7 +782,7 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
                             'fastq_files.csv',
                             'text/csv')
             
-        else:
+        elif export_selection == 'Datasets':
             # Get fq_attachments
             fq_attachments = datamanager.get_fq_dataset_attachments(st.session_state["jwt_auth_header"])
             fq_attachments_list = fq_attachments.groupby('fq_dataset_id')['name'].apply(list)
@@ -672,6 +814,54 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
                             'datasets.csv',
                             'text/csv')
 
+        elif export_selection == 'Processed Data':
+            
+            export_include_archived = st.checkbox('Include archived',
+                                    key='pro_data_show_archived_versions_export',
+                                    value = False)
+
+            # Reduce number of required API calls
+            with st.spinner('Exporting Datasets...'):
+                
+                selected_fq_ids = fq_dataset_view['id'].tolist()
+                
+                fq_datasets, fq_metadata = datamanager.get_fq_dataset_meta_overview(st.session_state["jwt_auth_header"])
+                fq_datasets = fq_datasets[['id', 'name']]
+                
+                # Subset fq_datasets and metadata to selected ids
+                fq_datasets_meta = pd.concat([fq_datasets, fq_metadata], axis=1)
+                fq_datasets_meta = fq_datasets_meta.loc[fq_datasets_meta['id'].isin(selected_fq_ids),:]
+                
+                pro_data, pro_metadata = datamanager.get_pro_data_meta_overview(st.session_state["jwt_auth_header"])
+                
+                pro_data_meta = pd.concat([pro_data, pro_metadata], axis=1)
+                
+                pro_data_meta_merge = pro_data_meta.merge(fq_datasets_meta,
+                                                          left_on='fq_dataset',
+                                                        right_on='id',
+                                                        suffixes=('', '_fq_dataset'))
+                
+                pro_data_meta_merge = pro_data_meta_merge.drop(columns=['fq_dataset', 'name_fq_dataset'])
+                pro_data_meta_merge = pro_data_meta_merge.rename(columns={'owner_username' : 'creator',
+                                                                        'id_fq_dataset' : 'fq_dataset_id',
+                                                                        'name_fq_dataset' : 'fq_dataset_name'})
+                                    
+                if not export_include_archived:
+                    pro_data_meta_merge = pro_data_meta_merge.loc[
+                        pro_data_meta_merge['valid_to'].isna(),:]
+                    
+            
+            pro_data = datamanager.get_pro_data_owner_group(st.session_state["jwt_auth_header"])
+            
+            st.download_button('Download .csv',
+                            pro_data_meta_merge.to_csv(index=False).encode("utf-8"),
+                            'processed_data.csv',
+                            'text/csv')
+        
+        else:
+            st.error('Invalid Export Selection')
+        
+        
 #region DATA
 
 # Get overfiew of all fastq datasets
@@ -857,6 +1047,11 @@ if len(fq_select.selection['rows']) == 1:
         st.session_state["jwt_auth_header"],
         fq_dataset_id = fq_dataset_detail_id
     )
+    
+    select_fq_dataset_pro_data = datamanager.get_fq_dataset_pro_data(
+        st.session_state["jwt_auth_header"],
+        fq_dataset_id = fq_dataset_detail_id
+    )
         
     if st.session_state['show_details']:
         show_project_details = True
@@ -867,7 +1062,7 @@ if len(fq_select.selection['rows']) == 1:
     update_one = True
     
     fq_export_select = fq_datasets_show.loc[[selected_fq_dataset_ix],:]
-    
+        
     st.session_state['dataset_select_id'] = fq_dataset_detail_id
 
 elif len(fq_select.selection['rows']) > 1:
@@ -926,6 +1121,7 @@ with col5a:
             update_dataset(fq_dataset_update,
                         fq_metadata_update,
                         select_fq_dataset_attachments,
+                        select_fq_dataset_pro_data,
                         reference_dataset_names,
                         reference_project_names_df)
 
@@ -956,7 +1152,10 @@ if show_project_details:
     
     st.divider()
     
-    tab1d, tab2d, tab3d = st.tabs([':blue-background[**Features**]', ':blue-background[**Projects**]', ':blue-background[**Attachments**]'])
+    tab1d, tab2d, tab3d, tab4d = st.tabs([':blue-background[**Features**]',
+                                   ':blue-background[**Projects**]',
+                                   ':blue-background[**Attachments**]',
+                                   ':blue-background[**ProData**]'])
     
     with tab1d:
     
@@ -971,7 +1170,6 @@ if show_project_details:
                 fq_dataset_detail_format = fq_dataset_detail.copy()
                 project_detail_og = fq_dataset_detail_format['owner_group_name']
                 fq_dataset_id = fq_dataset_detail_format.pop('id')
-                
                 
                 fq_file_r1_id = fq_dataset_detail_format.pop('fq_file_r1')
                 fq_file_r2_id = fq_dataset_detail_format.pop('fq_file_r2')
@@ -1134,3 +1332,75 @@ if show_project_details:
                         selection_mode='single-row',
                         key='fq_attachment_details_df',
                         height = max_df_height)
+
+    with tab4d:
+        
+        with st.container(border = True, height = 400):
+            
+            select_dataset_id = st.session_state['dataset_select_id']
+            include_archived = st.session_state['pro_data_show_archived_versions']
+            
+            # Value is none if not run
+            detail_fq_pro_data_key_name = f'download_pro_data_select_{select_dataset_id}'
+            
+            # Filter out all older versions
+            if not st.session_state['pro_data_show_archived_versions']:
+                select_fq_dataset_pro_data = select_fq_dataset_pro_data.loc[
+                    select_fq_dataset_pro_data['valid_to'].isna(),:]
+
+            # Check if a ProData element was selected
+            if detail_fq_pro_data_key_name in st.session_state:
+                fq_pro_data_select = st.session_state[detail_fq_pro_data_key_name]
+            else:
+                fq_pro_data_select = None
+            
+            col1pro, col2pro, col3pro = st.columns([2,2,8])
+            
+            with col1pro:
+                st.write('**ProData**')
+            
+            with col2pro:
+                
+                if fq_pro_data_select and len(fq_pro_data_select.selection['rows']) == 1:
+                    
+                    select_ix = fq_pro_data_select.selection['rows'][0]
+                    select_pro_data = select_fq_dataset_pro_data.iloc[select_ix,:]
+                    select_pro_data_id = int(select_pro_data['id'])
+                    
+                    st.button('Details',
+                              key='download_pro_data',
+                              help = 'Download ProData',
+                              on_click = detail_pro_data,
+                              args = (select_pro_data_id,))
+                
+                else:
+                    st.button('Details',
+                              disabled = True)
+            
+            # Limit Max Height of Dataframe
+            if select_fq_dataset_pro_data.shape[0] > 7:
+                max_df_height = 315
+            else:
+                max_df_height = None
+            
+            st.dataframe(select_fq_dataset_pro_data,
+                        hide_index = True,
+                        use_container_width = True,
+                        column_config = {
+                            'id' : st.column_config.TextColumn('ID'),
+                            'name' : st.column_config.TextColumn('Name'),
+                            'data_type' : st.column_config.TextColumn('Type'),
+                            'description' : None,
+                            'version' : st.column_config.TextColumn('Version'),
+                            'owner_username' : st.column_config.TextColumn('Creator'),
+                            'valid_to' : None
+                        },
+                        on_select = update_pro_data_select,
+                        selection_mode='single-row',
+                        key='fq_prodata_details_df',
+                        height = max_df_height)
+            
+            st.checkbox('Include archived',
+                        key='checkbox_pro_data_include_archive',
+                        value = st.session_state['pro_data_show_archived_versions'],
+                        on_change = update_pro_data_show_archived)
