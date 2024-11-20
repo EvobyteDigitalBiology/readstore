@@ -15,6 +15,7 @@ from .models import FqAttachment
 from .models import Project
 from .models import ProjectAttachment
 from .models import LicenseKey
+from .models import ProData
 
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
@@ -231,6 +232,7 @@ class FqDatasetCLISerializer(serializers.Serializer):
     project_names = serializers.ListField(child=serializers.CharField())
     metadata = serializers.JSONField()
     attachments = serializers.ListField(child=serializers.CharField())
+    pro_data = serializers.ListField(child=serializers.JSONField())
     
     
 class FqDatasetCLIDetailSerializer(serializers.Serializer):
@@ -250,6 +252,7 @@ class FqDatasetCLIDetailSerializer(serializers.Serializer):
     fq_file_i2 = serializers.PrimaryKeyRelatedField(read_only=True)
     metadata = serializers.JSONField()
     attachments = serializers.ListField(child=serializers.CharField())
+    pro_data = serializers.ListField(child=serializers.JSONField())
 
 
 class FqAttachmentListSerializer(serializers.ModelSerializer):
@@ -391,3 +394,30 @@ class LicenseKeySerializer(serializers.ModelSerializer):
         extra_kwargs = {
                 "owner": {"read_only": True},
             }
+        
+class ProDataSerializer(serializers.ModelSerializer):
+    
+    owner = serializers.PrimaryKeyRelatedField(read_only=True)
+    owner_username = serializers.CharField(source='owner.username', read_only=True)
+    
+    class Meta:
+        model = ProData
+        fields = '__all__'
+        
+        extra_kwargs = {
+                "owner": {"read_only": True},
+                "version": {"read_only": True},
+            }
+        
+class ProDataTokenAuthSerializer(serializers.Serializer):
+    
+    username = serializers.CharField(max_length=150, required=True, trim_whitespace=True)
+    token = serializers.CharField(max_length=200,required=True, trim_whitespace=True)
+    name = serializers.CharField(max_length=200,required=True)
+    data_type = serializers.CharField(max_length=200,required=True)
+    pro_data_file_path = serializers.CharField(max_length=1000,required=True)
+    
+    metadata = serializers.JSONField(required=False)
+    description = serializers.CharField(required=False)
+    dataset_id = serializers.IntegerField(required=False)
+    dataset_name = serializers.CharField(max_length=200, required=False)
