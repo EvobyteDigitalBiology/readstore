@@ -78,7 +78,15 @@ METADATA_RESERVED_KEYS = ['id',
                           'name_og',
                           'archived',
                           'collaborators',
-                          'dataset_metadata_keys']
+                          'dataset_metadata_keys',
+                          'data_type',
+                          'version',
+                          'valid_to',
+                          'upload_path',
+                          'owner_username',
+                          'fq_dataset',
+                          'id_fq_dataset',
+                          'name_fq_dataset']
 
 # # Endpoint config. Register and check access to all endpoints here
 # URLs must end with a slash
@@ -92,5 +100,6 @@ ENDPOINT_CONFIG = {
     'fq_file' : '/'.join([BACKEND_API_ENDPOINT, 'fq_file/']),
     'fq_dataset' : '/'.join([BACKEND_API_ENDPOINT, 'fq_dataset/']),
     'fq_attachment' : '/'.join([BACKEND_API_ENDPOINT, 'fq_attachment/']),
-    'license_key' : '/'.join([BACKEND_API_ENDPOINT, 'license_key/'])
+    'license_key' : '/'.join([BACKEND_API_ENDPOINT, 'license_key/']),
+    'pro_data' : '/'.join([BACKEND_API_ENDPOINT, 'pro_data/']),
 }
