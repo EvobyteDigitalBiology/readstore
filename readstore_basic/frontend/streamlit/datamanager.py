@@ -36,6 +36,8 @@ from uidataclasses import URL
 from uidataclasses import LicenseKey
 from uidataclasses import FqQueue
 from uidataclasses import FqFileUploadApp
+from uidataclasses import InvalidPath
+from uidataclasses import ProData
 
 #region basic functions
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
@@ -194,6 +196,13 @@ def get_fq_file_download_url(headers: dict, fq_file_id: int) -> bytes:
     
     return url.url
 
+def get_fq_file_invalid_upload_paths(headers: dict) -> List[dict]:
+    
+    endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['fq_file'],'validate_upload_path/')
+    df = extensions.get_request_to_df(endpoint, InvalidPath, headers=headers)
+    
+    return df
+
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')   
 def get_fq_dataset(headers: dict, owner: int | None = None) -> pd.DataFrame:
     
@@ -251,6 +260,17 @@ def get_fq_dataset_attachments(headers: dict, fq_dataset_id: int | None = None) 
     return df
 
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
+def get_fq_dataset_pro_data(headers: dict, fq_dataset_id: int) -> pd.DataFrame:
+    
+    fq_dataset_id = int(fq_dataset_id)
+    endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['pro_data'], 'fq_dataset/', str(fq_dataset_id) + '/')
+    df = extensions.get_request_to_df(endpoint, ProData, headers=headers)
+
+    df = df[['id', 'name', 'data_type', 'description', 'version', 'valid_to', 'owner_username']]
+    
+    return df
+
+@st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
 def get_fq_dataset_detail(headers: dict, fq_dataset_id: int) -> Tuple[pd.DataFrame,pd.DataFrame]:
     
     fq_dataset = extensions.detail_request_to_model(
@@ -300,6 +320,29 @@ def get_fq_queue_jobs(headers: dict) -> int:
     num_jobs = fq_queue_model.num_jobs
     
     return num_jobs
+
+@st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
+def get_pro_data_owner_group(headers: dict) -> pd.DataFrame:
+    
+    endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['pro_data'], 'owner_group/')
+    df = extensions.get_request_to_df(endpoint, ProData, headers=headers)
+    
+    return df
+
+@st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
+def get_pro_data_detail(headers: dict, pro_data_id: int) -> ProData:
+    
+    endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['pro_data'], str(pro_data_id) + '/')
+    pro_data = extensions.detail_request_to_model(endpoint, ProData, headers=headers)
+    
+    return pro_data
+
+def get_pro_data_invalid_upload_paths(headers: dict) -> List[dict]:
+    
+    endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['pro_data'],'validate_upload_path/')
+    df = extensions.get_request_to_df(endpoint, InvalidPath, headers=headers)
+    
+    return df
 
 #region COMBINED
 
@@ -593,7 +636,33 @@ def get_fq_dataset_meta_overview(headers: dict) -> Tuple[pd.DataFrame,pd.DataFra
     
     return merge, metadata
     
-    
+
+@st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
+def get_pro_data_meta_overview(headers: dict) -> Tuple[pd.DataFrame,pd.DataFrame]:
+        
+        pro_data_owner_group = get_pro_data_owner_group(headers)
+        
+        return_cols =[
+            'fq_dataset',
+            'id',
+            'name',
+            'description',
+            'data_type',
+            'version',
+            'created',
+            'valid_to',
+            'owner_username',
+            'upload_path',
+        ]
+        
+        metadata = pro_data_owner_group.pop('metadata')
+        metadata = pd.DataFrame(metadata.tolist())
+        
+        pro_data_owner_group = pro_data_owner_group[return_cols]
+        
+        return pro_data_owner_group, metadata
+
+
 #region  CREATE
  
 def create_owner_group(name: str):
@@ -1183,6 +1252,16 @@ def delete_fq_attachment(fq_attachment_id: int):
     extensions.pk_to_delete_request(
         endpoint,
         int(fq_attachment_id),
+        headers=st.session_state['jwt_auth_header']
+    )
+
+def delete_pro_data(pro_data_id: int):
+    
+    endpoint = uiconfig.ENDPOINT_CONFIG['pro_data']
+    
+    extensions.pk_to_delete_request(
+        endpoint,
+        int(pro_data_id),
         headers=st.session_state['jwt_auth_header']
     )
 
