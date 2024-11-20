@@ -268,4 +268,20 @@ class LicenseKey(BasicModel):
     class Meta:
         db_table = 'license_keys'
         
+class ProData(BasicModel):
     
+    """
+        ProData Model
+    """
+    
+    name = models.TextField()
+    data_type = models.TextField()
+    description = models.TextField(blank=True, null=True)
+    version = models.IntegerField()
+    upload_path = models.TextField()
+    metadata = models.JSONField()
+    fq_dataset = models.ForeignKey(FqDataset, on_delete=models.CASCADE)
+    
+    class Meta:
+        db_table = 'pro_data'
+        unique_together = ('name', 'version', 'fq_dataset')
