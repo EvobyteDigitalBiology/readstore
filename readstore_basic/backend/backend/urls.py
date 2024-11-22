@@ -39,6 +39,7 @@ router.register(r'project_attachment', views.ProjectAttachmentViewSet, basename=
 router.register(r'license_key', views.LicenseKeyViewSet, basename='LicenseKey')
 router.register(r'pro_data', views.ProDataViewSet, basename='ProData')
 
+ext_router = routers.DefaultRouter()
 
 urlpatterns = [
     path('api_v1/', include(router.urls)),
@@ -47,41 +48,61 @@ urlpatterns = [
     path('api_v1/user/my_user/', views.UserViewSet.as_view({'get': 'my_user'})),
     path('api_v1/user/regenerate_token/', views.UserViewSet.as_view({'get': 'regenerate_token'})),
     path('api_v1/user/reset_password/', views.UserViewSet.as_view({'get': 'reset_password'})),
-    path('api_v1/user/auth_token/', views.UserViewSet.as_view({'get': 'auth_token'})),
 
-    path('api_v1/fq_file_upload/', views.FqFileUploadView.as_view()),
+    path('api_x_v1/', include(ext_router.urls)),
+    
+    path('api_x_v1/auth_token/', views.TokenExt.as_view()),
+
     path('api_v1/fq_file_upload_app/', views.FqFileUploadAppView.as_view()),
     path('api_v1/fq_queue/', views.FqQueueView.as_view()),
 
+    path('api_x_v1/fq_file_upload/', views.FqFileUploadExt.as_view()),
+
     path('api_v1/fq_file/staging/', views.FqFileViewSet.as_view({'get': 'staging'})),
     path('api_v1/fq_file/my_fq_file/', views.FqFileViewSet.as_view({'get': 'my_fq_file'})),
-    path('api_v1/fq_file/token/', views.FqFileViewSet.as_view({'get': 'token'})),
-
+    
+    # External API
+    path('api_x_v1/fq_file/<pk>/', views.FqFileExt.as_view()),
+    path('api_x_v1/fq_file/', views.FqFileExt.as_view()),
+    
+    path('api_x_v1/fq_dataset/<pk>/', views.FqDatasetExt.as_view()),
+    path('api_x_v1/fq_dataset/', views.FqDatasetExt.as_view()),
+    
     path('api_v1/fq_dataset/collab/', views.FqDatasetViewSet.as_view({'get': 'collab'})),
     path('api_v1/fq_dataset/owner_group/', views.FqDatasetViewSet.as_view({'get': 'owner_group'})),
     path('api_v1/fq_dataset/my_fq_dataset/', views.FqDatasetViewSet.as_view({'get': 'my_fq_dataset'})),
-    path('api_v1/fq_dataset/token/', views.FqDatasetViewSet.as_view({'get': 'token'})),
 
     path('api_v1/fq_attachment/owner_group/', views.FqAttachmentViewSet.as_view({'get': 'owner_group'})),
     path('api_v1/fq_attachment/collab/', views.FqAttachmentViewSet.as_view({'get': 'collab'})),
     path('api_v1/fq_attachment/fq_dataset/<pk>/', views.FqAttachmentViewSet.as_view({'get': 'fq_dataset'})),
-    path('api_v1/fq_attachment/token/', views.FqAttachmentViewSet.as_view({'get': 'token'})),
 
+    path('api_x_v1/fq_attachment/<pk>/', views.FqAttachmentExt.as_view()),
+    path('api_x_v1/fq_attachment/', views.FqAttachmentExt.as_view()),
+    
     path('api_v1/project/collab/', views.ProjectViewSet.as_view({'get': 'collab'})),
     path('api_v1/project/owner_group/', views.ProjectViewSet.as_view({'get': 'owner_group'})),
-    path('api_v1/project/token/', views.ProjectViewSet.as_view({'get': 'token'})),
+
+    path('api_x_v1/project/<pk>/', views.ProjectExt.as_view()),
+    path('api_x_v1/project/', views.ProjectExt.as_view()),
 
     path('api_v1/project_attachment/owner_group/', views.ProjectAttachmentViewSet.as_view({'get': 'owner_group'})),
     path('api_v1/project_attachment/collab/', views.ProjectAttachmentViewSet.as_view({'get': 'collab'})),
     path('api_v1/project_attachment/project/<pk>/', views.ProjectAttachmentViewSet.as_view({'get': 'project'})),
-    path('api_v1/project_attachment/token/', views.ProjectAttachmentViewSet.as_view({'get': 'token'})),
+
+    path('api_x_v1/project_attachment/<pk>/', views.ProjectAttachmentExt.as_view()),
+    path('api_x_v1/project_attachment/', views.ProjectAttachmentExt.as_view()),
 
     path('api_v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api_v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api_v1/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     
+    path('api_v1/pro_data/valid/', views.ProDataViewSet.as_view({'get': 'valid'})),
     path('api_v1/pro_data/owner_group/', views.ProDataViewSet.as_view({'get': 'owner_group'})),
     path('api_v1/pro_data/fq_dataset/<pk>/', views.ProDataViewSet.as_view({'get': 'fq_dataset'})),
+    path('api_v1/pro_data/validate_upload_path', views.ProDataViewSet.as_view({'get': 'validate_upload_path'})),
+    
+    path('api_x_v1/pro_data/<pk>/', views.ProDataExt.as_view()),
+    path('api_x_v1/pro_data/', views.ProDataExt.as_view()),
     
     path('admin/', admin.site.urls),
 ]
