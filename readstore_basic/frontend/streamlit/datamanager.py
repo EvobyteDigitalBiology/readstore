@@ -906,7 +906,7 @@ def user_reset_password(old_pwd: str, new_pwd: str) -> bool:
                               'new_password' : new_pwd})
     
     if res.status_code != 200:
-        message = res.json()['message']
+        message = res.json()['detail']
         if message == 'password incorrect':
             return False
         else:
