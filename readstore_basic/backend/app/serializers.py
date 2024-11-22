@@ -339,22 +339,6 @@ class ProjectCLIDetailSerializer(serializers.Serializer):
     attachments = serializers.ListField(child=serializers.CharField())
     metadata = serializers.JSONField()
     
-
-class TokenAuthSerializer(serializers.Serializer):
-    """
-        Serializer for token based authentication
-    """
-    
-    username = serializers.CharField(max_length=150, required=True, trim_whitespace=True)
-    token = serializers.CharField(max_length=200,required=True, trim_whitespace=True)
-    project_name = serializers.CharField(max_length=200,required=False)
-    project_id = serializers.IntegerField(required=False)
-    attachment_name = serializers.CharField(max_length=200,required=False)
-    dataset_name = serializers.CharField(max_length=200,required=False)
-    dataset_id = serializers.IntegerField(required=False)
-    fq_file_id = serializers.IntegerField(required=False)
-    role = serializers.CharField(max_length=200,required=False)
-    
     
 class PwdSerializer(serializers.Serializer):
     """
@@ -364,17 +348,6 @@ class PwdSerializer(serializers.Serializer):
     old_password = serializers.CharField(max_length=200, required=True, trim_whitespace=True)
     new_password = serializers.CharField(max_length=200, required=True, trim_whitespace=True)
     
-    
-class FqUploadCLISerializer(serializers.Serializer):
-    """
-        Serializer for uploading Fastq files from CLI
-    """
-    
-    username = serializers.CharField(max_length=150, required=True, trim_whitespace=True)
-    token = serializers.CharField(max_length=200,required=True, trim_whitespace=True)
-    fq_file_path = serializers.CharField(max_length=1000,required=True, trim_whitespace=True)
-    fq_file_name = serializers.CharField(max_length=200,required=False, trim_whitespace=True)
-    read_type = serializers.CharField(max_length=10,required=False, trim_whitespace=True)
 
 class FqUploadSerializer(serializers.Serializer):
     """
@@ -382,8 +355,8 @@ class FqUploadSerializer(serializers.Serializer):
     """
     
     fq_file_path = serializers.CharField(max_length=1000,required=True, trim_whitespace=True)
-    fq_file_name = serializers.CharField(max_length=200,required=True, trim_whitespace=True)
-    read_type = serializers.CharField(max_length=10,required=True, trim_whitespace=True)
+    fq_file_name = serializers.CharField(max_length=200,required=False, trim_whitespace=True)
+    read_type = serializers.CharField(max_length=10,required=False, trim_whitespace=True)
     
 class LicenseKeySerializer(serializers.ModelSerializer):
     
@@ -409,15 +382,25 @@ class ProDataSerializer(serializers.ModelSerializer):
                 "version": {"read_only": True},
             }
         
-class ProDataTokenAuthSerializer(serializers.Serializer):
-    
-    username = serializers.CharField(max_length=150, required=True, trim_whitespace=True)
-    token = serializers.CharField(max_length=200,required=True, trim_whitespace=True)
-    name = serializers.CharField(max_length=200,required=True)
-    data_type = serializers.CharField(max_length=200,required=True)
-    pro_data_file_path = serializers.CharField(max_length=1000,required=True)
-    
-    metadata = serializers.JSONField(required=False)
-    description = serializers.CharField(required=False)
-    dataset_id = serializers.IntegerField(required=False)
-    dataset_name = serializers.CharField(max_length=200, required=False)
+class ProDataCLISerializer(serializers.Serializer):
+
+    id = serializers.PrimaryKeyRelatedField(read_only=True)
+    name = serializers.CharField(max_length=200)
+    data_type = serializers.CharField()
+    version = serializers.IntegerField()
+    fq_dataset = serializers.PrimaryKeyRelatedField(read_only=True)
+    upload_path = serializers.CharField()
+    metadata = serializers.JSONField()
+
+class ProDataCLIDetailSerializer(serializers.Serializer):
+
+    id = serializers.PrimaryKeyRelatedField(read_only=True)
+    name = serializers.CharField(max_length=200)
+    description = serializers.CharField()
+    data_type = serializers.CharField()
+    version = serializers.IntegerField()
+    created = serializers.DateTimeField()
+    creator = serializers.CharField(source='owner.username', read_only=True)
+    fq_dataset = serializers.PrimaryKeyRelatedField(read_only=True)
+    upload_path = serializers.CharField()
+    metadata = serializers.JSONField()
