@@ -807,7 +807,7 @@ def import_from_file():
                     )
                     
                     if res.status_code != 200:
-                        st.warning(f"Error with file {row['FASTQFileName']} \n {res.json()['message']} \n Quit Import")
+                        st.warning(f"Error with file {row['FASTQFileName']} \n {res.json()['detail']} \n Quit Import")
                         break
                 else:        
                     st.cache_data.clear()
