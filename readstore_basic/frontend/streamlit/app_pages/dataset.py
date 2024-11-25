@@ -143,7 +143,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
     # region Projects Tab
     with tabs[0]:
         
-        with st.container(border=True, height=395):
+        with st.container(border=True, height=495):
             
             st.subheader('Projects')
 
@@ -174,7 +174,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
     # region Metadata Tab        
     with tabs[1]:
         
-        with st.container(border=True, height=460):
+        with st.container(border=True, height=560):
             
             st.subheader('Dataset Description')
             
@@ -219,15 +219,21 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                 key = 'update_metadata_df'
             )
     
-    
     # region Attachment Tab
     with tabs[2]:
         
-        with st.container(border=True, height=460):
+        with st.container(border=True, height=375):
             
             # List all attachments
             
             st.subheader('Attachments')
+            
+            # Define Max Heigth of attachment select
+            # Limit Max Height of Dataframe
+            if selected_fq_attachments.shape[0] > 7:
+                max_df_height = 290
+            else:
+                max_df_height = None
             
             attach_select = st.dataframe(selected_fq_attachments,
                                     hide_index = True,
@@ -239,41 +245,40 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                                         'fq_dataset_id' : None},
                                     key='update_attachment_df',
                                     selection_mode='multi-row',
-                                    on_select = 'rerun')
-            
-            st.write('Upload attachments for the dataset.')
-            
-            uploaded_files = st.file_uploader("Choose Files to Upload",
-                help = "Upload attachments for the dataset. Attachments can be any file type.",
-                accept_multiple_files = True)
+                                    on_select = 'rerun',
+                                    height = max_df_height)
+                        
+        uploaded_files = st.file_uploader("**Upload attachments for the dataset**",
+            help = "Upload attachments for the dataset. Attachments can be any file type.",
+            accept_multiple_files = True)
 
-            col, _ = st.columns([4,8])
-            
-            with col:
-                with st.expander('Delete Attachment(s)', icon=":material/delete_forever:"):
-                    if st.button('Confirm', key='delete_attachments'):
-                        
-                        attach_ixes = attach_select.selection['rows']
-                        attach_ids = selected_fq_attachments.loc[attach_ixes,'id'].tolist()
-                        
-                        for attach_id in attach_ids:
-                            datamanager.delete_fq_attachment(attach_id)
-                        else:
-                            st.cache_data.clear()
-                            # Reset attachment select for project id
-                            st.session_state[f'download_fq_attachments_select_{fq_dataset_id}'] = None
-                            st.rerun()
+        col, _ = st.columns([4,8])
+        
+        with col:
+            with st.expander('Delete Attachment(s)', icon=":material/delete_forever:"):
+                if st.button('Confirm', key='delete_attachments'):
+                    
+                    attach_ixes = attach_select.selection['rows']
+                    attach_ids = selected_fq_attachments.loc[attach_ixes,'id'].tolist()
+                    
+                    for attach_id in attach_ids:
+                        datamanager.delete_fq_attachment(attach_id)
+                    else:
+                        st.cache_data.clear()
+                        # Reset attachment select for project id
+                        st.session_state[f'download_fq_attachments_select_{fq_dataset_id}'] = None
+                        st.rerun()
     
     # region ProData
     
     with tabs[3]:
         
-        with st.container(border=True, height=460):
+        with st.container(border=True, height=495):
             
             # List all attachments
             
             st.subheader('Processed Data')
-        
+
             update_include_archived = st.checkbox('Include archived',
                                                 key='pro_data_show_archived_versions_update',
                                                 value = False)
@@ -281,7 +286,14 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
             if not update_include_archived:
                 selected_fq_pro_data = selected_fq_pro_data.loc[
                         selected_fq_pro_data['valid_to'].isna(),:]
-                    
+
+            # Define Max Heigth of attachment select
+            # Limit Max Height of Dataframe
+            if selected_fq_pro_data.shape[0] > 7:
+                max_df_height = 350
+            else:
+                max_df_height = None
+            
             pro_data_select = st.dataframe(selected_fq_pro_data,
                                         hide_index = True,
                                         use_container_width = True,
@@ -296,26 +308,27 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                                         },
                                         key='update_pro_data_df',
                                         selection_mode='multi-row',
-                                        on_select = 'rerun')
+                                        on_select = 'rerun',
+                                        height = max_df_height)
 
-            col, _ = st.columns([4,8])
-            
-            with col:
-                with st.expander('Delete ProData', icon=":material/delete_forever:"):
-                    if st.button('Confirm', key='delete_pro_data'):
-                        
-                        pro_data_ixes = pro_data_select.selection['rows']
-                        pro_data_ids = selected_fq_pro_data.loc[pro_data_ixes,'id'].tolist()
-                        
-                        for pro_data_id in pro_data_ids:
-                            datamanager.delete_pro_data(pro_data_id)
-                        else:
-                            st.cache_data.clear()
-                            # Reset selection config for pro data
-                            st.session_state[f'download_pro_data_select_{fq_dataset_id}'] = None
-                            st.rerun()
-        
-        
+        col, _ = st.columns([4,8])
+
+        with col:
+            with st.expander('Delete ProData', icon=":material/delete_forever:"):
+                if st.button('Confirm', key='delete_pro_data'):
+                    
+                    pro_data_ixes = pro_data_select.selection['rows']
+                    pro_data_ids = selected_fq_pro_data.loc[pro_data_ixes,'id'].tolist()
+                    
+                    for pro_data_id in pro_data_ids:
+                        datamanager.delete_pro_data(pro_data_id)
+                    else:
+                        st.cache_data.clear()
+                        # Reset selection config for pro data
+                        st.session_state[f'download_pro_data_select_{fq_dataset_id}'] = None
+                        st.rerun()
+
+
     for ix, rt in enumerate(read_file_file_map.keys()):
         
         # region Read Tab
@@ -1163,7 +1176,7 @@ if show_project_details:
     
         with col1d1:
             
-            with st.container(border = True, height = 400):
+            with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
                 
                 st.write('**Details**')
                 
@@ -1229,7 +1242,7 @@ if show_project_details:
                             key='project_details_df')
                 
         with col2d1:
-            with st.container(border = True, height = 400):
+            with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
                 
                 st.write('**Metadata**')
                 
@@ -1244,7 +1257,7 @@ if show_project_details:
     
     with tab2d:
         
-        with st.container(border = True, height = 400):
+        with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
             
             st.write('**Projects**')
             
@@ -1274,7 +1287,7 @@ if show_project_details:
             
     with tab3d:
     
-        with st.container(border = True, height = 400):
+        with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
             
             select_dataset_id = st.session_state['dataset_select_id']
             
@@ -1335,7 +1348,7 @@ if show_project_details:
 
     with tab4d:
         
-        with st.container(border = True, height = 400):
+        with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
             
             select_dataset_id = st.session_state['dataset_select_id']
             include_archived = st.session_state['pro_data_show_archived_versions']
@@ -1347,8 +1360,13 @@ if show_project_details:
             if not st.session_state['pro_data_show_archived_versions']:
                 select_fq_dataset_pro_data = select_fq_dataset_pro_data.loc[
                     select_fq_dataset_pro_data['valid_to'].isna(),:]
+                
+                # Reset selection to avoid problems with old selection
+                if detail_fq_pro_data_key_name in st.session_state:
+                    del st.session_state[detail_fq_pro_data_key_name]
 
             # Check if a ProData element was selected
+            # Get selection from session state {'selection': {'rows': [2], 'columns': []}}
             if detail_fq_pro_data_key_name in st.session_state:
                 fq_pro_data_select = st.session_state[detail_fq_pro_data_key_name]
             else:
@@ -1379,7 +1397,7 @@ if show_project_details:
             
             # Limit Max Height of Dataframe
             if select_fq_dataset_pro_data.shape[0] > 7:
-                max_df_height = 315
+                max_df_height = 260
             else:
                 max_df_height = None
             
