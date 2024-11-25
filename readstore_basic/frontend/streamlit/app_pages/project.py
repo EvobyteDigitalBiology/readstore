@@ -110,6 +110,8 @@ def remove_selected_datasets(fq_datasets, selected_rows):
         st.session_state['selected'] = st.session_state['selected'].loc[
             ~st.session_state['selected']['id'].isin(select_dataset_r['id']),:]
 
+# region Create Project
+
 # # USERS
 @st.dialog('Create Project', width='large')
 def create_project(reference_project_names: pd.Series,
@@ -132,54 +134,55 @@ def create_project(reference_project_names: pd.Series,
         description = st.text_area("Enter Project Description",
                                 help = 'Description of the project.',)
         
+        with st.container(border=True, height=290):
         
-        col1c, col2c = st.columns([11,1], vertical_alignment='top')
-            
-        with col1c:
-            
-            tab1c, tab2c = st.tabs([":blue-background[**Metadata**]", ":blue-background[**Dataset Keys**]"])
+            col1c, col2c = st.columns([11,1], vertical_alignment='top')
                 
-            with tab1c:
+            with col1c:
                 
-                st.write('Key-value pairs to describe and group project metadata')
-                
-                metadata_df = st.data_editor(
-                    pd.DataFrame(columns=['key', 'value']),
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config = {
-                        'key' : st.column_config.TextColumn('Key'),
-                        'value' : st.column_config.TextColumn('Value')
-                    },
-                    num_rows ='dynamic',
-                    key = 'create_metadata_df'
-                )
+                tab1c, tab2c = st.tabs([":blue-background[**Metadata**]", ":blue-background[**Dataset Keys**]"])
+                    
+                with tab1c:
+                    
+                    st.write('Key-value pairs to describe and group project metadata')
+                    
+                    metadata_df = st.data_editor(
+                        pd.DataFrame(columns=['key', 'value']),
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config = {
+                            'key' : st.column_config.TextColumn('Key'),
+                            'value' : st.column_config.TextColumn('Value')
+                        },
+                        num_rows ='dynamic',
+                        key = 'create_metadata_df'
+                    )
 
-            with tab2c:
-                
-                st.write('Metadata keys for datasets attached to the project')
+                with tab2c:
+                    
+                    st.write('Metadata keys for datasets attached to the project')
 
-                # Value column is hidden so that value is set to None for each created key
-                dataset_meta_keys_df = st.data_editor(
-                    pd.DataFrame(columns=['key', 'value']),
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config = {
-                        'key' : st.column_config.Column('Key'),
-                        'value' : None
-                    },
-                    num_rows ='dynamic',
-                    key = 'create_dataset_metadata_keys_df'
-                )
-        
-        with col2c:
-            with st.popover(':material/help:'):
-                
-                st.write('Define Project and Dataset Metadata')
-                st.write('**Project Metadata** are key-value pairs to describe project attributes, e.g. "assay":"RNA-Seq"')
-                st.write("""**Dataset Keys** are templates for attached datasets' metadata""")
-                st.write('Dataset Metadata are autmatically prefilled with Dataset Keys')
-                st.write('')
+                    # Value column is hidden so that value is set to None for each created key
+                    dataset_meta_keys_df = st.data_editor(
+                        pd.DataFrame(columns=['key', 'value']),
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config = {
+                            'key' : st.column_config.Column('Key'),
+                            'value' : None
+                        },
+                        num_rows ='dynamic',
+                        key = 'create_dataset_metadata_keys_df'
+                    )
+            
+            with col2c:
+                with st.popover(':material/help:'):
+                    
+                    st.write('Define Project and Dataset Metadata')
+                    st.write('**Project Metadata** are key-value pairs to describe project attributes, e.g. "assay":"RNA-Seq"')
+                    st.write("""**Dataset Keys** are templates for attached datasets' metadata""")
+                    st.write('Dataset Metadata are autmatically prefilled with Dataset Keys')
+                    st.write('')
         
     with tab2:
         
@@ -210,7 +213,7 @@ def create_project(reference_project_names: pd.Series,
             # First col to select available datasets
             with col1:
                 
-                with st.container(border = True):
+                with st.container(border = True, height=475):
                     
                     st.write('Available Datasets')
                                 
@@ -244,7 +247,7 @@ def create_project(reference_project_names: pd.Series,
 
             # Column with selected datasets
             with col3:
-                with st.container(border = True):              
+                with st.container(border = True, height=475):              
                     
                     st.write('Attached Datasets')
                     
@@ -419,59 +422,61 @@ def update_project(project_select_df: pd.DataFrame,
                                 help = 'Description of the project.',
                                 value = description_old)
         
-        col1c, col2c = st.columns([11,1], vertical_alignment='top')
+        with st.container(border=True, height=290):
             
-        with col1c:
+            col1c, col2c = st.columns([11,1], vertical_alignment='top')
+                
+            with col1c:
+                
+                tab1c, tab2c = st.tabs([":blue-background[**Metadata**]", ":blue-background[**Dataset Keys**]"])
+                    
+                with tab1c:
+                    
+                    st.write('Key-value pairs to describe and group project metadata')
+                    
+                    metadata_select_df = metadata_select_df.astype(str)
+                    
+                    metadata_df = st.data_editor(
+                        metadata_select_df,
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config = {
+                            'key' : st.column_config.TextColumn('Key', width='medium'),
+                            'value' : st.column_config.TextColumn('Value', width='medium')
+                        },
+                        num_rows ='dynamic',
+                        key = 'create_metadata_df'
+                    )
+
+                with tab2c:
+                    
+                    st.write('Metadata keys for datasets attached to the project')
+
+                    # Value column is hidden so that value is set to None for each created key
+                    dataset_meta_keys_df = st.data_editor(
+                        pd.DataFrame({
+                            'key' : dataset_metadata_keys,
+                            'value' : None},
+                                    dtype=str),
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config = {
+                            'key' : st.column_config.TextColumn('Key', width='medium'),
+                            'value' : None
+                        },
+                        num_rows ='dynamic',
+                        key = 'create_dataset_metadata_keys_df'
+                    )
             
-            tab1c, tab2c = st.tabs([":blue-background[**Metadata**]", ":blue-background[**Dataset Keys**]"])
-                
-            with tab1c:
-                
-                st.write('Key-value pairs to describe and group project metadata')
-                
-                metadata_select_df = metadata_select_df.astype(str)
-                
-                metadata_df = st.data_editor(
-                    metadata_select_df,
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config = {
-                        'key' : st.column_config.TextColumn('Key', width='medium'),
-                        'value' : st.column_config.TextColumn('Value', width='medium')
-                    },
-                    num_rows ='dynamic',
-                    key = 'create_metadata_df'
-                )
-
-            with tab2c:
-                
-                st.write('Metadata keys for datasets attached to the project')
-
-                # Value column is hidden so that value is set to None for each created key
-                dataset_meta_keys_df = st.data_editor(
-                    pd.DataFrame({
-                        'key' : dataset_metadata_keys,
-                        'value' : None},
-                                 dtype=str),
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config = {
-                        'key' : st.column_config.TextColumn('Key', width='medium'),
-                        'value' : None
-                    },
-                    num_rows ='dynamic',
-                    key = 'create_dataset_metadata_keys_df'
-                )
-        
-        with col2c:
-            with st.popover(':material/help:'):
-                
-                st.write('Define Project and Dataset Metadata')
-                st.write('**Project Metadata** are key-value pairs to describe project attributes, e.g. "assay":"RNA-Seq"')
-                st.write("""**Dataset Keys** are templates for attached datasets' metadata""")
-                st.write('Dataset Metadata are autmatically prefilled with Dataset Keys')
-                st.write('')
-        
+            with col2c:
+                with st.popover(':material/help:'):
+                    
+                    st.write('Define Project and Dataset Metadata')
+                    st.write('**Project Metadata** are key-value pairs to describe project attributes, e.g. "assay":"RNA-Seq"')
+                    st.write("""**Dataset Keys** are templates for attached datasets' metadata""")
+                    st.write('Dataset Metadata are autmatically prefilled with Dataset Keys')
+                    st.write('')
+            
         # Show delete button if project is owned by user's owner_group
         col1expander,_ = st.columns([3,9])
         with col1expander:
@@ -509,7 +514,7 @@ def update_project(project_select_df: pd.DataFrame,
         def update_select_form_fq_datasets():               
             
             # Content
-            col1a, col2a = st.columns([11,1])
+            col1a, col2a = st.columns([11,1], vertical_alignment='center')
             
             with col1a:
                 st.write('Attach **Datasets** to the project.')
@@ -528,7 +533,7 @@ def update_project(project_select_df: pd.DataFrame,
             # First col to select available datasets
             with col1:
                 
-                with st.container(border = True):
+                with st.container(border = True, height=540):
                     
                     st.write('Available Datasets')
                                 
@@ -562,7 +567,7 @@ def update_project(project_select_df: pd.DataFrame,
 
             # Column with selected datasets
             with col3:
-                with st.container(border = True):              
+                with st.container(border = True, height=540):              
                     
                     st.write('Attached Datasets')
                     
@@ -607,28 +612,41 @@ def update_project(project_select_df: pd.DataFrame,
     #region TAB3 Attachments
     with tab3:
         
-        select_attach_update = st.dataframe(
-            select_project_attachments,
-            hide_index = True,
-            use_container_width=True,
-            column_config = {
-                'id' : None,
-                'name' : st.column_config.Column('Name'),
-                'description' : None,
-                'project_id' : None},
-            on_select = 'rerun',
-            selection_mode='multi-row',
-            key = 'select_attachment_update')
-        
-        if len(select_attach_update.selection['rows']) > 0:
-            delete_disabled = False
-        else:
-            delete_disabled = True
+        with st.container(border=True, height=375):
+            
+            st.write(' ')
+
+            # Define Max Heigth of attachment select
+            # Limit Max Height of Dataframe
+            if select_project_attachments.shape[0] > 7:
+                max_df_height = 320
+            else:
+                max_df_height = None
+            
+            
+            select_attach_update = st.dataframe(
+                select_project_attachments,
+                hide_index = True,
+                use_container_width=True,
+                column_config = {
+                    'id' : None,
+                    'name' : st.column_config.Column('Name'),
+                    'description' : None,
+                    'project_id' : None},
+                on_select = 'rerun',
+                selection_mode='multi-row',
+                key = 'select_attachment_update',
+                height = max_df_height)
+            
+            if len(select_attach_update.selection['rows']) > 0:
+                delete_disabled = False
+            else:
+                delete_disabled = True
     
         st.write(' ')
     
         uploaded_files = st.file_uploader(
-            "Choose Files to Upload", accept_multiple_files=True
+            "**Upload attachments for the project**", accept_multiple_files=True
         )
         
         st.write(' ')
@@ -1053,7 +1071,7 @@ if show_project_details:
         col1d, col2d = st.columns([7,5])
         
         with col1d:
-            with st.container(border = True, height = 400):
+            with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
                 
                 project_detail = selected_project.copy()
                 project_detail_og = project_detail['name_og']
@@ -1085,7 +1103,7 @@ if show_project_details:
                 st.write(' ')
             
         with col2d:
-            with st.container(border = True, height = 400):
+            with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
                 
                 st.write('**Metadata**')
                 
@@ -1101,7 +1119,7 @@ if show_project_details:
     #region Detail Datasets
     with detail_tabs[1]:
         
-        with st.container(border = True, height = 400):
+        with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
                 
             st.write('**Datasets**')
             
@@ -1125,7 +1143,7 @@ if show_project_details:
     #region Detail Attachments   
     with detail_tabs[2]:
         
-        with st.container(border = True, height = 400):
+        with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
             
             select_project_id = st.session_state['project_select_id']
                         
