@@ -77,6 +77,10 @@ def update_pro_data_select():
 def update_pro_data_show_archived():
     new_state = st.session_state['checkbox_pro_data_include_archive']
     st.session_state['pro_data_show_archived_versions'] = new_state
+    
+    # Reset selection to avoid problems with old selection
+    if detail_fq_pro_data_key_name in st.session_state:
+        del st.session_state[detail_fq_pro_data_key_name]
 
 #region Update Dataset
 @st.dialog('Update Dataset', width='large')
@@ -86,7 +90,6 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                    selected_fq_pro_data: pd.DataFrame,
                     reference_fq_dataset_names: pd.Series,
                     reference_project_names_df: pd.DataFrame):
-    
     
     fq_dataset_input = selected_fq_dataset.copy()
         
@@ -1360,10 +1363,6 @@ if show_project_details:
             if not st.session_state['pro_data_show_archived_versions']:
                 select_fq_dataset_pro_data = select_fq_dataset_pro_data.loc[
                     select_fq_dataset_pro_data['valid_to'].isna(),:]
-                
-                # Reset selection to avoid problems with old selection
-                if detail_fq_pro_data_key_name in st.session_state:
-                    del st.session_state[detail_fq_pro_data_key_name]
 
             # Check if a ProData element was selected
             # Get selection from session state {'selection': {'rows': [2], 'columns': []}}
@@ -1378,7 +1377,6 @@ if show_project_details:
                 st.write('**ProData**')
             
             with col2pro:
-                
                 if fq_pro_data_select and len(fq_pro_data_select.selection['rows']) == 1:
                     
                     select_ix = fq_pro_data_select.selection['rows'][0]
