@@ -393,13 +393,13 @@ class ProDataCLISerializer(serializers.Serializer):
     metadata = serializers.JSONField()
 
 class ProDataCLIDetailSerializer(serializers.Serializer):
-
     id = serializers.PrimaryKeyRelatedField(read_only=True)
     name = serializers.CharField(max_length=200)
     description = serializers.CharField()
     data_type = serializers.CharField()
     version = serializers.IntegerField()
     created = serializers.DateTimeField()
+    valid_to = serializers.DateTimeField()
     creator = serializers.CharField(source='owner.username', read_only=True)
     fq_dataset = serializers.PrimaryKeyRelatedField(read_only=True)
     upload_path = serializers.CharField()
