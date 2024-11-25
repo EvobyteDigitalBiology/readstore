@@ -49,6 +49,9 @@ CACHE_TTL_SECONDS=15*60
 
 DEFAULT_OWNER_GROUP = 'default'
 
+# Define Height of detail view
+DETAIL_VIEW_HEIGHT = 400
+
 # Define ReadEndings
 VALID_READ1_SUFFIX = rs_config['global']['valid_read1_suffix'].split(',')
 VALID_READ2_SUFFIX = rs_config['global']['valid_read2_suffix'].split(',')
