@@ -53,7 +53,7 @@ from .serializers import FqUploadSerializer
 from .serializers import LicenseKeySerializer
 from .serializers import ProDataSerializer
 from .serializers import ProDataCLISerializer
-
+from .serializers import ProDataCLIDetailSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
@@ -1562,7 +1562,7 @@ class ProDataExt(APIView):
     def get_permissions(self):
         view_permissions = super().get_permissions()
         view_permissions.append(IsAuthenticated())
-        if self.request.method == 'POST':
+        if self.request.method in ['POST', 'DELETE']:
             view_permissions.append(RSClientHasStaging())
         return view_permissions
 
@@ -1582,6 +1582,7 @@ class ProDataExt(APIView):
         data_type = self.request.query_params.get('data_type', None)
         valid = self.request.query_params.get('valid', None)
         detail = self.request.query_params.get('detail', None)
+        version = self.request.query_params.get('version', None)
         
         # Convert valid flag to boolean
         if valid:
@@ -1607,6 +1608,7 @@ class ProDataExt(APIView):
             name_check = Q()
             data_type_check = Q()
             valid_check = Q()
+            version_check = Q()
             
             if pk:
                 Q_comb = Q(pk=pk) \
@@ -1624,8 +1626,11 @@ class ProDataExt(APIView):
                     name_check = Q(name=name)
                 if data_type:
                     data_type_check = Q(data_type=data_type)
+                if version:
+                    version_check = Q(version=version)
                 if valid:
                     valid_check = Q(valid_to=None)
+                    
                     
                 Q_comb = project_id_check \
                     & project_name_check \
@@ -1634,8 +1639,9 @@ class ProDataExt(APIView):
                     & name_check \
                     & data_type_check \
                     & valid_check \
+                    & version_check \
                     & (og_check | collab_check)
-             
+            
             qset = ProData.objects.filter(Q_comb).distinct().all()
             
             if detail:
@@ -1678,7 +1684,7 @@ class ProDataExt(APIView):
                 new_version = qset.version + 1
             else:
                 new_version = 1
-                
+            
             # Create ProData
             res = ProData.objects.create(name=name,
                                         data_type=data_type,
@@ -1693,3 +1699,46 @@ class ProDataExt(APIView):
         else:
             return Response(serializer.errors, status=400)
         
+    
+    def delete(self, request, pk=None):
+
+        dataset_id = self.request.query_params.get('dataset_id', None)
+        dataset_name = self.request.query_params.get('dataset_name', None)
+        name = self.request.query_params.get('name', None)
+        version = self.request.query_params.get('version', None)
+
+        if pk:
+            if ProData.objects.filter(pk=pk).exists():
+                qset = ProData.objects.filter(pk=pk).delete()
+                return Response({'detail' : 'ProData deleted', 'id' : pk}, status=200)
+            else:
+                return Response({'detail' : 'ProData not found'}, status=400)
+        else:
+            if name and (dataset_id or dataset_name):
+                name_check = Q(name=name)
+                dataset_id_check = Q()
+                dataset_name_check = Q()
+                version_check = Q()
+
+                if dataset_id:
+                    dataset_id_check = Q(fq_dataset__id=dataset_id)
+                if dataset_name:
+                    dataset_name_check = Q(fq_dataset__name=dataset_name)
+
+                if version:
+                    version_check = Q(version=version)
+                else:
+                    version_check = Q(valid_to=None)    
+
+                Q_comb = name_check & dataset_id_check & dataset_name_check & version_check
+
+                if ProData.objects.filter(Q_comb).exists():
+                    qset = ProData.objects.filter(Q_comb).first()
+                    pro_data_id = qset.id
+                    qset.delete()
+
+                    return Response({'detail' : 'ProData deleted', 'id' : pro_data_id}, status=200)
+                else:
+                    return Response({'detail' : 'ProData not found'}, status=400)
+            else:
+                return Response({'detail' : 'Provide name and (dataset_id or dataset_name)'}, status=400)
