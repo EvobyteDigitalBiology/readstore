@@ -1613,6 +1613,7 @@ class ProDataExt(APIView):
             if pk:
                 Q_comb = Q(pk=pk) \
                     & (og_check | collab_check)
+                detail = True
             else:
                 if project_id:
                     project_id_check = Q(fq_dataset__project__id=project_id)
@@ -1630,7 +1631,6 @@ class ProDataExt(APIView):
                     version_check = Q(version=version)
                 if valid:
                     valid_check = Q(valid_to=None)
-                    
                     
                 Q_comb = project_id_check \
                     & project_name_check \
