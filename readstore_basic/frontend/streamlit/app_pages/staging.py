@@ -276,7 +276,10 @@ def checkin_df(fq_file_df: pd.DataFrame,
                         st.write('')
                         st.write('')
                         
-                        phred_values = json.loads(phred_values.replace("'", "\""))
+                        #  Reformart Phred Values only if string
+                        if isinstance(phred_values, str):
+                            phred_values = json.loads(phred_values.replace("'", "\""))
+                        
                         phred_base_pos = [i for i in range(1, len(phred_values)+1)]
                         phres_val = [phred_values[str(k-1)] for k in phred_base_pos]
                         
@@ -707,6 +710,8 @@ def bulk_delete_fq_files(fq_file_ids: List[int]):
     if st.button('Confirm Delete', key='confirm_delete', type='primary'):
         delete_fastq_files(fq_file_ids)
 
+#region Import FASTQ from file
+
 @st.dialog('Import FASTQ from File', width='large')
 def import_from_file():
 
@@ -719,9 +724,17 @@ def import_from_file():
            
     if upload_template:
         if upload_template.name.endswith('.csv'):
-            upload_template = pd.read_csv(upload_template, header=0)
+            try:
+                upload_template = pd.read_csv(upload_template, header=0)
+            except pd.errors.EmptyDataError:
+                st.error('No data found in template file .csv file')
+                return
         elif upload_template.name.endswith('.xlsx'):
-            upload_template = pd.read_excel(upload_template, header=0)
+            try:
+                upload_template = pd.read_excel(upload_template, header=0)
+            except pd.errors.EmptyDataError:
+                st.error('No data found in template file .excel file')
+                return
         else:
             st.error('Please upload a valid CSV or Excel file.')
             return
