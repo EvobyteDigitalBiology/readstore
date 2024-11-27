@@ -799,6 +799,7 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
                             'text/csv')
             
         elif export_selection == 'Datasets':
+            
             # Get fq_attachments
             fq_attachments = datamanager.get_fq_dataset_attachments(st.session_state["jwt_auth_header"])
             fq_attachments_list = fq_attachments.groupby('fq_dataset_id')['name'].apply(list)
@@ -824,7 +825,7 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
             fq_dataset_view = fq_dataset_view.rename(columns={'project' : 'project_ids',
                                                             'project_names' : 'project_names',
                                                             'owner_username' : 'creator'})
-            
+                         
             st.download_button('Download .csv',
                             fq_dataset_view.to_csv(index=False).encode("utf-8"),
                             'datasets.csv',
@@ -857,11 +858,15 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
                                                         right_on='id',
                                                         suffixes=('', '_fq_dataset'))
                 
-                pro_data_meta_merge = pro_data_meta_merge.drop(columns=['fq_dataset', 'name_fq_dataset'])
+                dataset_names = pro_data_meta_merge.pop('name_fq_dataset')
+                
+                pro_data_meta_merge = pro_data_meta_merge.drop(columns=['id_fq_dataset'])
                 pro_data_meta_merge = pro_data_meta_merge.rename(columns={'owner_username' : 'creator',
-                                                                        'id_fq_dataset' : 'fq_dataset_id',
-                                                                        'name_fq_dataset' : 'fq_dataset_name'})
-                                    
+                                                                        'fq_dataset' : 'dataset_id'})
+                    
+                # Reorder columns to have all metadata at the end
+                pro_data_meta_merge.insert(1, 'dataset_name', dataset_names)
+                                 
                 if not export_include_archived:
                     pro_data_meta_merge = pro_data_meta_merge.loc[
                         pro_data_meta_merge['valid_to'].isna(),:]
@@ -1077,8 +1082,14 @@ if len(fq_select.selection['rows']) == 1:
     update_disabled = False
     update_one = True
     
+    # Would need to only combine with the metadata exactly for the selected dataset
+    export_cols = fq_dataset_detail.index.tolist() + fq_metadata_detail['key'].tolist()
+    
+    # Combinate fq_dataset_detais
+    # Remove all metadata columns which arennot in fq_metadata_detail keys
     fq_export_select = fq_datasets_show.loc[[selected_fq_dataset_ix],:]
-        
+    fq_export_select = fq_export_select[export_cols]
+    
     st.session_state['dataset_select_id'] = fq_dataset_detail_id
 
 elif len(fq_select.selection['rows']) > 1:
@@ -1087,6 +1098,8 @@ elif len(fq_select.selection['rows']) > 1:
     
     # Get original index from projects overview before subset
     selected_fq_dataset_ix = fq_datasets_show.iloc[select_row,:].index # Refers to original index
+    
+    # Would need to only combine with the metadata exactly for the selected dataset
     
     # Get fq datasets and associated metadata assays
     fq_dataset_detail = fq_datasets.loc[selected_fq_dataset_ix,:]
@@ -1100,7 +1113,10 @@ elif len(fq_select.selection['rows']) > 1:
     update_disabled = False
     update_one = False
     
-    fq_export_select = fq_dataset_detail
+    # Remove all columns which are all None
+    fq_metadata_detail_many = fq_metadata_detail_many.dropna(axis=1, how='all')
+    
+    fq_export_select = pd.concat([fq_dataset_detail, fq_metadata_detail_many], axis=1)
     
     st.session_state['dataset_select_id'] = None
     
