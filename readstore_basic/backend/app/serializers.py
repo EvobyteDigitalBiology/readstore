@@ -388,7 +388,8 @@ class ProDataCLISerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)
     data_type = serializers.CharField()
     version = serializers.IntegerField()
-    fq_dataset = serializers.PrimaryKeyRelatedField(read_only=True)
+    dataset_id = serializers.PrimaryKeyRelatedField(source='fq_dataset',read_only=True)
+    dataset_name = serializers.CharField(source='fq_dataset.name', read_only=True)
     upload_path = serializers.CharField()
     metadata = serializers.JSONField()
 
@@ -401,6 +402,7 @@ class ProDataCLIDetailSerializer(serializers.Serializer):
     created = serializers.DateTimeField()
     valid_to = serializers.DateTimeField()
     creator = serializers.CharField(source='owner.username', read_only=True)
-    fq_dataset = serializers.PrimaryKeyRelatedField(read_only=True)
+    dataset_id = serializers.PrimaryKeyRelatedField(source='fq_dataset',read_only=True)
+    dataset_name = serializers.CharField(source='fq_dataset.name', read_only=True)
     upload_path = serializers.CharField()
     metadata = serializers.JSONField()
