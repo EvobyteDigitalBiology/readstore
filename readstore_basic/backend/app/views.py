@@ -1673,14 +1673,15 @@ class ProDataExt(APIView):
             
             owner = request.user
             
-            # Check if ProData already exists
-            qset = ProData.objects.filter(valid_to=None,
-                                        name=name,
-                                        fq_dataset=fq_dataset).first()
+            # Get ProData object with highest version
+            qset = ProData.objects.filter(name=name,
+                                            fq_dataset=fq_dataset).order_by('-version').first()
             
             if qset:
-                qset.valid_to = datetime.datetime.now()
-                qset.save()
+                # If valid to is None, set valid to to now
+                if qset.valid_to is None:
+                    qset.valid_to = datetime.datetime.now()
+                    qset.save()
                 new_version = qset.version + 1
             else:
                 new_version = 1
