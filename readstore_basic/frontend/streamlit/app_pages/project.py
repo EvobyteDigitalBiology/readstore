@@ -865,7 +865,7 @@ with col5:
     
 
 col_config_user = {
-        'id_project' : st.column_config.TextColumn('ID', width='small'),
+        'id_project' : st.column_config.NumberColumn('ID', width='small'),
         'name_project' : st.column_config.TextColumn('Name'),
         'description' : st.column_config.TextColumn('Description'),
         'name_og' : None,
@@ -879,7 +879,7 @@ col_config_user = {
     }
 
 col_config_meta = {
-        'id_project' : st.column_config.TextColumn('ID', width='small'),
+        'id_project' : st.column_config.NumberColumn('ID', width='small'),
         'name_project' : st.column_config.TextColumn('Name'),
         'name_og' : None,
         'id_str' : None
