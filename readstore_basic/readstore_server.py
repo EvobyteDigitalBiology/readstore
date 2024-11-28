@@ -60,16 +60,16 @@ export_parser = subparsers.add_parser("export",
                                       help='Export ReadStore Database',
                                       add_help=True)
 
+export_parser.add_argument(
+    '--db-directory', type=str, help='Directory containing ReadStore database (required)', metavar='')
+
+export_parser.add_argument(
+    '--config-directory', type=str, help='Directory containing ReadStore config files (required)', metavar='')
+
+export_parser.add_argument(
+    '--export_directory', type=str, help='Directory for storing exported ReadStore database files (required)', metavar='')
+
 export_parser.set_defaults(export_run=True)
-
-export_parser.add_argument(
-    '--db-directory', type=str, help='Directory for Storing ReadStore Database (required)', metavar='')
-
-export_parser.add_argument(
-    '--config-directory', type=str, help='Directory for Storing ReadStore Database (required)', metavar='')
-
-export_parser.add_argument(
-    '--export_directory', type=str, help='Directory for Exporting ReadStore Database (required)', metavar='')
 
 
 def _get_path(path: str):
@@ -380,7 +380,12 @@ def run_db_export(db_directory: str,
     
     # Dump files to json
 
-    dump_table_names = ['app.project', 'app.fqdataset', 'app.fqfile', 'app.fqattachment', 'app.projectattachment']
+    dump_table_names = ['app.project',
+                        'app.fqdataset',
+                        'app.fqfile',
+                        'app.prodata',
+                        'app.fqattachment',
+                        'app.projectattachment']
     
     backend_dir = os.path.join(BASE_DIR, 'backend')
     os.chdir(backend_dir)
@@ -394,7 +399,7 @@ def run_db_export(db_directory: str,
         export_process.wait()
     
     # Reformat all tables except attachments    
-    export_filenames = ['app_project.json', 'app_fqdataset.json', 'app_fqfile.json']
+    export_filenames = ['app_project.json', 'app_fqdataset.json', 'app_fqfile.json', 'app_prodata.json']
     
     print('Reformat JSON Dump')
     
