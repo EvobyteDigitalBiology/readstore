@@ -951,7 +951,7 @@ with col5:
         on_click = extensions.refresh_page()
 
 col_config_user = {
-    'id': st.column_config.TextColumn('ID'),
+    'id': st.column_config.NumberColumn('ID'),
     'name' : st.column_config.TextColumn('Name', help='FASTQ Dataset Name'),
     'project' : None,
     'project_names' : st.column_config.ListColumn('Projects', help='Projects the Dataset is associated with'),
@@ -971,7 +971,7 @@ col_config_user = {
 }
 
 col_config_meta = {
-    'id': st.column_config.TextColumn('ID'),
+    'id': st.column_config.NumberColumn('ID'),
     'name' : st.column_config.TextColumn('Name', help='FASTQ Dataset Name'),
     'project_names' : None,
     'owner_group_name' : None,
