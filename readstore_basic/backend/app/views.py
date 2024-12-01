@@ -52,8 +52,10 @@ from .serializers import PwdSerializer
 from .serializers import FqUploadSerializer
 from .serializers import LicenseKeySerializer
 from .serializers import ProDataSerializer
+from .serializers import ProDataUploadSerializer
 from .serializers import ProDataCLISerializer
 from .serializers import ProDataCLIDetailSerializer
+
 
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
@@ -1660,8 +1662,8 @@ class ProDataExt(APIView):
     def post(self, request):
         
         # Validate the Serializer
-        serializer = ProDataSerializer(data=request.data)
-        
+        serializer = ProDataUploadSerializer(data=request.data)
+                
         if serializer.is_valid():
             
             name = serializer.validated_data.get('name')
@@ -1669,32 +1671,47 @@ class ProDataExt(APIView):
             description = serializer.validated_data.get('description')
             upload_path = serializer.validated_data.get('upload_path')
             metadata = serializer.validated_data.get('metadata')        
-            fq_dataset = serializer.validated_data.get('fq_dataset')
-            
-            owner = request.user
-            
-            # Get ProData object with highest version
-            qset = ProData.objects.filter(name=name,
-                                            fq_dataset=fq_dataset).order_by('-version').first()
-            
-            if qset:
-                # If valid to is None, set valid to to now
-                if qset.valid_to is None:
-                    qset.valid_to = datetime.datetime.now()
-                    qset.save()
-                new_version = qset.version + 1
+            dataset_id = serializer.validated_data.get('dataset_id', None)
+            dataset_name = serializer.validated_data.get('dataset_name', None)
+
+            if dataset_id:
+                fq_dataset = FqDataset.objects.filter(id=dataset_id).all()
+            elif dataset_name:
+                fq_dataset = FqDataset.objects.filter(name=dataset_name).all()
             else:
-                new_version = 1
-            
-            # Create ProData
-            res = ProData.objects.create(name=name,
-                                        data_type=data_type,
-                                        description=description,
-                                        upload_path=upload_path,
-                                        metadata=metadata,
-                                        owner=owner,
-                                        fq_dataset=fq_dataset,
-                                        version=new_version)
+                return Response({'detail' : 'Provide dataset_id or dataset_name'}, status=400)
+                        
+            if len(fq_dataset) == 0:
+                return Response({'detail' : 'FqDataset not found'}, status=400)
+            elif len(fq_dataset) > 1:
+                return Response({'detail' : 'Multiple FqDatasets found'}, status=400)
+            else:
+                fq_dataset = fq_dataset.first()
+                
+                owner = request.user
+                
+                # Get ProData object with highest version
+                qset = ProData.objects.filter(name=name,
+                                                fq_dataset=fq_dataset).order_by('-version').first()
+                
+                if qset:
+                    # If valid to is None, set valid to to now
+                    if qset.valid_to is None:
+                        qset.valid_to = datetime.datetime.now()
+                        qset.save()
+                    new_version = qset.version + 1
+                else:
+                    new_version = 1
+                
+                # Create ProData // No check if Path Exists?
+                res = ProData.objects.create(name=name,
+                                            data_type=data_type,
+                                            description=description,
+                                            upload_path=upload_path,
+                                            metadata=metadata,
+                                            owner=owner,
+                                            fq_dataset=fq_dataset,
+                                            version=new_version)
             
             return Response({'id' : res.id}, status=201)
         else:
