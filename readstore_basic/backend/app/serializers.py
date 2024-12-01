@@ -372,7 +372,7 @@ class ProDataSerializer(serializers.ModelSerializer):
     
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
     owner_username = serializers.CharField(source='owner.username', read_only=True)
-    
+
     class Meta:
         model = ProData
         fields = '__all__'
@@ -381,6 +381,16 @@ class ProDataSerializer(serializers.ModelSerializer):
                 "owner": {"read_only": True},
                 "version": {"read_only": True},
             }
+
+class ProDataUploadSerializer(serializers.Serializer):
+    
+    name = serializers.CharField(max_length=200,required=True, trim_whitespace=True)
+    data_type = serializers.CharField(max_length=200,required=True, trim_whitespace=True)
+    description = serializers.CharField(required=True, allow_blank=True)
+    upload_path = serializers.CharField(required=True)
+    metadata = serializers.JSONField(required=False, default={})
+    dataset_id = serializers.IntegerField(required=False)
+    dataset_name = serializers.CharField(max_length=200,required=False)
         
 class ProDataCLISerializer(serializers.Serializer):
 
