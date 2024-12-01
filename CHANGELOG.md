@@ -1,5 +1,23 @@
 # Changelog
 
+### v1.2.0 - 2024-12-01
+
+### Added
+
+- Management of Processed Data (ProData)
+- Extend Dataset App page with ProData functions
+- Add RSClientTokenAuth Token Based View Authentication
+- Add option RSClientHasStaging
+- Add automatic validation of file paths stored in ReadStore DB
+
+### Changed
+
+- New endpoint for external API calls (api_x_v1)
+- Update streamlit settings to 1.40
+
+### Removed
+- Deprecate /token API mechanism
+
 ### v1.1.0 - 2024-11-14
 
 ### Added
