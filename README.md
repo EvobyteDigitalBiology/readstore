@@ -19,6 +19,8 @@ Happy analysis :)
 - [Security, Permissions and Backup](#backup)
 - [Installation](#installation)
     - [Advanced Server Configuration](#advancedconfig)
+    - [Configure systemd service](#systemd)
+    - [Export Database to File](#export_dump)
 - [Usage](#usage)
     1. [Account Settings](#account_settings)
     2. [Upload Files](#upload_files)
@@ -29,9 +31,10 @@ Happy analysis :)
 - [License](#license)
 - [Credits and Acknowledgments](#acknowledgments)
 
-## The Lean Solution for Managing FASTQ and NGS Data
+## The Lean Solution for Managing NGS and Omics Data
 
-ReadStore is a platform for storing, managing, and integrating genomic data. It speeds up analysis and offers a simple way of managing and sharing FASTQ and NGS datasets. Built-in project and metadata management structures your workflows, and a collaborative web app enhances teamwork — so you can focus on generating insights.
+ReadStore is a platform for storing, managing, and integrating omics data. It speeds up analysis and offers a simple way of managing and sharing NGS omics datasets, metadata and processed data (**Pro**cessed **Data**).
+Built-in project and metadata management structures your workflows and a collaborative user interface enhances teamwork — so you can focus on generating insights.
 
 The integrated Webservice enables you to directly retrieve data from ReadStore via the terminal [Command-Line Interface (CLI)](#https://github.com/EvobyteDigitalBiology/readstore-cli) or [Python](#https://github.com/EvobyteDigitalBiology/pyreadstore) / [R](#https://github.com/EvobyteDigitalBiology/r-readstore) SDKs.
 
@@ -39,13 +42,13 @@ The ReadStore Basic version offered here provides a local web server with simple
 
 ## Description
 
-ReadStore facilitates managing FASTQ files and NGS data, along with experimental (meta)data. It provides a database and a web app with a simple user interface to create and edit datasets and projects. You can create your own structure using metadata key-value pairs (e.g., replicate: 1 or condition: control) or attach files as additional information.
+ReadStore facilitates managing FASTQ files, NGS and Omics data, along with experimental (meta)data and **Pro**cessed **Dataset**. It provides a database and a web app with a simple user interface to create and edit datasets and projects. You can create your own structure using metadata key-value pairs (e.g., replicate: 1 or condition: control) or attach files as additional information.
 
 Metadata, file attachments and processed datasets (ProData) can be accessed along with your NGS datasets from analysis scripts or data pipelines, providing consistent workflow automation.
 
 ReadStore Basic enables you to manage NGS data from your local Linux environment and can be set up in a few minutes. It comprises a local web server and web app that you can connect to via your browser to explore and edit your NGS experiments.
 
-To upload FASTQ files and processed data from the command line into the ReadStore database, you’ll also need to install the ReadStore CLI.
+To upload FASTQ files and Processed Data from the command line into the ReadStore database, you’ll also need to install the ReadStore CLI.
 
 Logging into the ReadStore web app via the browser requires a user account. User accounts are created from the Admin account, which is setup by default.
 
@@ -411,7 +414,7 @@ You can find a full documentation in the [ReadStore CLI Repository](https://gith
 #### 5. Managing **Pro**cessed **Data**<a id="manage_pro_data"></a>
 
 **Pro**cessed **Data** refer to files generated through processing of raw sequencing data.
-Depending on the omics technology and assay used, this could be for instance transcript count files, variant files or gene count matrices. 
+Depending on the omics technology and assay used, this could be a transcript count file, variant files or gene count matrices. 
 
 ProData are attached to Datasets, and can be uploaded via the ReadStore CLI or R & Python SDKs.
 You can check the ProData for each Dataset in the ReadStore App under the `Datasets` section.
@@ -421,7 +424,7 @@ their path are stored and validated.
 
 Here's an example how to upload, retrieve and delete a processed file.
 
-**NOTE** Your user account is required to have `Staging Permissions` to upload and delete files:
+**NOTE** Your user account is required to have `Staging Permissions` to upload and delete ProData files:
 
 `readstore pro-data upload -d test_dataset_1 -n test_dataset_count_matrix -t count_matrix test_count_matrix.h5`  
 Upload count matrix test_count_matrix.h5 with name "test_dataset_count_matrix" for dataset with name "test_dataset_1"
