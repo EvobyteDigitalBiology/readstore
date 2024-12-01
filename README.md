@@ -6,7 +6,7 @@ This README introduces ReadStore Data Platform, the lean solution for managing F
 
 You need a license key for using ReadStore Basic, please check the [ReadStore website](https://evo-byte.com/readstore-get-started/) for more information or reach out to license@evo-byte.com
 
-Tutorials and Intro Videos: https://www.youtube.com/@evobytedigitalbio
+Start with the ReadStore Intro and **Tutorials**: https://www.youtube.com/@evobytedigitalbio
 
 Blog posts and How-Tos: https://evo-byte.com/blog/
 
@@ -18,32 +18,43 @@ Happy analysis :)
 - [Description](#description)
 - [Security, Permissions and Backup](#backup)
 - [Installation](#installation)
+    - [Advanced Server Configuration](#advancedconfig)
+    - [Configure systemd service](#systemd)
+    - [Export Database to File](#export_dump)
 - [Usage](#usage)
+    1. [Account Settings](#account_settings)
+    2. [Upload Files](#upload_files)
+    3. [Stage Files](#stage_files)
+    4. [Access Datasets via the CLI](#access_via_cli)
+    5. [Managing Processed Data](#manage_pro_data)
 - [Contributing](#contributing)
 - [License](#license)
 - [Credits and Acknowledgments](#acknowledgments)
 
-## The Lean Solution for Managing FASTQ and NGS Data
+## The Lean Solution for Managing NGS and Omics Data
 
-ReadStore is a platform for storing, managing, and integrating genomic data. It speeds up analysis and offers a simple way of managing and sharing FASTQ and NGS datasets. Built-in project and metadata management structures your workflows, and a collaborative web app enhances teamwork — so you can focus on generating insights.
+ReadStore is a platform for storing, managing, and integrating omics data. It speeds up analysis and offers a simple way of managing and sharing NGS omics datasets, metadata and processed data (**Pro**cessed **Data**).
+Built-in project and metadata management structures your workflows and a collaborative user interface enhances teamwork — so you can focus on generating insights.
 
-The integrated Webservice enables you to directly retrieve data from ReadStore via the terminal Command-Line Interface (CLI) or Python/R SDKs.
+The integrated Webservice enables you to directly retrieve data from ReadStore via the terminal [Command-Line Interface (CLI)](#https://github.com/EvobyteDigitalBiology/readstore-cli) or [Python](#https://github.com/EvobyteDigitalBiology/pyreadstore) / [R](#https://github.com/EvobyteDigitalBiology/r-readstore) SDKs.
 
 The ReadStore Basic version offered here provides a local web server with simple user management. If you need organization-wide deployment, advanced user and group management, or cloud integration, please check the ReadStore Advanced versions and reach out to info@evo-byte.com.
 
 ## Description
 
-ReadStore facilitates managing FASTQ files and NGS data, along with experimental (meta)data. It provides a database and a web app with a simple user interface to create and edit datasets and projects. You can create your own structure using metadata key-value pairs (e.g., replicate: 1 or condition: control) or attach files as additional information.
+ReadStore facilitates managing FASTQ files, NGS and Omics data, along with experimental (meta)data and **Pro**cessed **Dataset**. It provides a database and a web app with a simple user interface to create and edit datasets and projects. You can create your own structure using metadata key-value pairs (e.g., replicate: 1 or condition: control) or attach files as additional information.
 
-Metadata and attachments can be accessed along with your NGS datasets from analysis scripts or data pipelines, providing consistent workflow automation.
+Metadata, file attachments and processed datasets (ProData) can be accessed along with your NGS datasets from analysis scripts or data pipelines, providing consistent workflow automation.
 
 ReadStore Basic enables you to manage NGS data from your local Linux environment and can be set up in a few minutes. It comprises a local web server and web app that you can connect to via your browser to explore and edit your NGS experiments.
 
-To upload FASTQ files into the ReadStore database, you’ll also need to install the ReadStore CLI, which offers a connection through your command line.
+To upload FASTQ files and Processed Data from the command line into the ReadStore database, you’ll also need to install the ReadStore CLI.
 
-Logging into the ReadStore web app via the browser requires a user account, which is created by an admin.
+Logging into the ReadStore web app via the browser requires a user account. User accounts are created from the Admin account, which is setup by default.
 
 ReadStore Basic provides a shared work environment for all registered users. Users can collaborate on editing datasets, projects, metadata, and attachments, with shared access to all resources. This facilitates cross-functional projects, connecting data analysts and experimental researchers.
+
+The ReadStore database can be accessed programmatically using the [Command-Line Interface (CLI)](#https://github.com/EvobyteDigitalBiology/readstore-cli) or [Python](#https://github.com/EvobyteDigitalBiology/pyreadstore) & [R](#https://github.com/EvobyteDigitalBiology/r-readstore) SDKs. This facilitates easy integration into bioinformatics pipelines and downstream analysis worflows.
 
 If you would like to have more advanced user, group, and permission management, please reach out for a demo of the ReadStore Advanced version.
 
@@ -81,6 +92,8 @@ See [Installation](#installation) for instructions how to setup Users
 ### Backups
 
 ReadStore automatically performs regular backups. The backup directory (see [Installation](#installation)) should be different from the database directory. ReadStore log files are also saved to a predefined folder. Each folder should have sufficient space to store database, backup, and log files.
+
+It is posible to **export** (dump) the database into `.json` and `.csv` files using the `readstore-server export` method. More information below the [Export](#export_dump) section. 
 
 ### Deployment and Server Configurations
 
@@ -322,7 +335,25 @@ You find here a starting point for setting up a service using `systemd` but you 
 
     `sudo systemctl restart readstore.service`
 
+### Export (Dump) ReadStore Database<a id="export_dump"></a>
 
+In some cases it might be necessary to retrieve the full database content including all tables in a flat file format (i.e. json or csv). This includes attachment files which have been uploaded for projects or datasets.
+
+The `readstore-server export` command dump the database and stored files.
+
+```
+usage: readstore-server export [-h] [--db-directory] [--config-directory] [--export_directory]
+
+options:
+  -h, --help           show this help message and exit
+  --db-directory       Directory containing ReadStore Database (required)
+  --config-directory   Directory containing ReadStore Database (required)
+  --export_directory   Directory for storing exported ReadStore Database files (required)
+```
+
+Example `readstore export --db-directory /path/to/db --config-directory /path/to/config --export_directory /path/to/export_files`
+
+The tables are exported as `.csv` and `.json` files. Project and Datasets attachment files are exported in their original file format, each in a separate folder for each Project or Dataset.
 
 ## Usage
 
@@ -332,7 +363,7 @@ Detailed tutorials, videos and explanations are found on [YouTube](https://www.y
 
 Let's upload some FASTQ files.
 
-#### 1. Account Settings
+#### 1. Account Settings<a id="account_settings"></a>
 
 Make sure you have the [ReadStore CLI](https://github.com/EvobyteDigitalBiology/readstore-cli) installed and configured (s. [Installation](#installation)).
 
@@ -342,7 +373,7 @@ Run the command to check if your configuration is in place.
 
 For uploading FASTQ files your User Account needs to have `Staging Permission`. Check this in the `Settings` page of your account. If you do not have `Staging Permission`, ask the Admin to grant you permission.
 
-#### 2. Upload Files
+#### 2. Upload Files<a id="upload_files"></a>
 
 Move to a folder that contains some FASTQ files.
 
@@ -350,7 +381,9 @@ Move to a folder that contains some FASTQ files.
 
 This will upload the file and run the QC check. You can select several files at once using the `*` wildcard.
 
-#### 3. Stage Files
+You can also upload multiple FASTQ files at once using the import function or perform a `Import From File` form the ReadStore app staging page. 
+
+#### 3. Stage Files<a id="stage_files"></a>
 
 Login to the User Interface on your browser and move to the `Staging` page. Here you find a list of all FASTQ files you just upload.
 
@@ -360,23 +393,49 @@ If you uploaded a large number of FASTQ files at once, you can Check In multiple
 
 Under `More`, you also find the `Import From File` method that allows you to get and upload Excel or .csv files with FASTQ paths to upload. 
 
-#### 4. Access Datasets via the CLI
+#### 4. Access Datasets via the CLI<a id="access_via_cli"></a>
 
 The ReadStore CLI enables programmatic access to Projects, Datasets, metadata and attachments.
 
-Some examples commands are:
+Some example commands are:
 
-`readstore list` : List all FASTQ files
+`readstore list`  List all FASTQ files
 
-`readstore get --id 25` : Get detailed view on Dataset 25
+`readstore get --id 25`  Get detailed view on Dataset 25
 
-`readstore get --id 25 --read1-path` : Get path for Read1 FASTQ file
+`readstore get --id 25 --read1-path`  Get path for Read1 FASTQ file
 
-`readstore get --id 25 --meta` : Get metadata for Dataset 25
+`readstore get --id 25 --meta`  Get metadata for Dataset 25
 
-`readstore project get --name cohort1 --attachment` : Get attachment files for Project "cohort1"
+`readstore project get --name cohort1 --attachment`  Get attachment files for Project "cohort1"
 
 You can find a full documentation in the [ReadStore CLI Repository](https://github.com/EvobyteDigitalBiology/readstore-cli)
+
+#### 5. Managing **Pro**cessed **Data**<a id="manage_pro_data"></a>
+
+**Pro**cessed **Data** refer to files generated through processing of raw sequencing data.
+Depending on the omics technology and assay used, this could be a transcript count file, variant files or gene count matrices. 
+
+ProData are attached to Datasets, and can be uploaded via the ReadStore CLI or R & Python SDKs.
+You can check the ProData for each Dataset in the ReadStore App under the `Datasets` section.
+
+Processed Data are not directly uploaded to the ReadStore database, but similar to raw datasets
+their path are stored and validated.
+
+Here's an example how to upload, retrieve and delete a processed file.
+
+**NOTE** Your user account is required to have `Staging Permissions` to upload and delete ProData files:
+
+`readstore pro-data upload -d test_dataset_1 -n test_dataset_count_matrix -t count_matrix test_count_matrix.h5`  
+Upload count matrix test_count_matrix.h5 with name "test_dataset_count_matrix" for dataset with name "test_dataset_1"
+
+`readstore pro-data list` List Processed Data for all Datasets and Projects
+
+`readstore pro-data get -d test_dataset_1 -n test_dataset_count_matrix` Get ProData details for Dataset "test_dataset_1" with the name "test_dataset_count_matrix"
+
+`readstore pro-data delete -d test_dataset_1 -n test_dataset_count_matrix` Delete ProData for dataset "test_dataset_1" with the name "test_dataset_count_matrix"
+
+The delete operation does not remove the file from the file system, only from the database.
 
 ## Contributing
 
@@ -389,7 +448,7 @@ Details are found in the LICENSE file.
 
 You need a license key for using ReadStore Basic, please check the ReadStore website for more information or reach out to license@evo-byte.com. Using ReadStore Basic without a valid license key is not permitted.
 
-ReadStore CLI is distributed under an Open Source Apache 2.0 License. 
+ReadStore CLI is distributed under an Open Source Apache 2.0 License.
 
 ## Credits and Acknowledgments<a id="acknowledgments"></a>
 
