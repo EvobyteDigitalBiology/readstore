@@ -54,7 +54,7 @@ Logging into the ReadStore web app via the browser requires a user account. User
 
 ReadStore Basic provides a shared work environment for all registered users. Users can collaborate on editing datasets, projects, metadata, and attachments, with shared access to all resources. This facilitates cross-functional projects, connecting data analysts and experimental researchers.
 
-The ReadStore database can be accessed programmatically using the [Command-Line Interface (CLI)](#https://github.com/EvobyteDigitalBiology/readstore-cli) or [Python](#https://github.com/EvobyteDigitalBiology/pyreadstore) & [R](#https://github.com/EvobyteDigitalBiology/r-readstore) SDKs. This facilitates easy integration into bioinformatics pipelines and downstream analysis worflows.
+The ReadStore database can be accessed programmatically using the [Command-Line Interface (CLI)](#https://github.com/EvobyteDigitalBiology/readstore-cli) or [Python](#https://github.com/EvobyteDigitalBiology/pyreadstore) & [R](#https://github.com/EvobyteDigitalBiology/r-readstore) SDKs. This facilitates easy integration into bioinformatics pipelines and downstream analysis workflows.
 
 If you would like to have more advanced user, group, and permission management, please reach out for a demo of the ReadStore Advanced version.
 
