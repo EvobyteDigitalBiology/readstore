@@ -206,7 +206,7 @@ class ProData(BaseModel):
     name: str
     data_type: str
     description: str
-    version: int
+    version: Optional[int] = None
     upload_path: str
     metadata: dict
     fq_dataset: int
@@ -216,3 +216,7 @@ class ProData(BaseModel):
     valid_to: Optional[datetime.datetime] = None
     owner: Optional[int] = None
     owner_username: Optional[str] = None
+    
+class TransferOwner(BaseModel):
+    source_owner_id: int
+    dest_owner_id: int
