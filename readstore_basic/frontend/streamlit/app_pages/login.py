@@ -42,7 +42,7 @@ col2a, col2, _ = st.columns([4, 4, 4], vertical_alignment="center")
 
 with col2:
     
-    st.image(os.path.join(uiconfig.STATIC_PATH_PREFIX, "static/BannerLargeLightBlueBackground.png"), use_column_width = True)
+    st.image(os.path.join(uiconfig.STATIC_PATH_PREFIX, "static/BannerLargeLightBlueBackground.png"), use_container_width = True)
     
     login_form = st.form("Login")
 
