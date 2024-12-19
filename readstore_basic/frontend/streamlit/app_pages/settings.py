@@ -31,6 +31,10 @@ def reset_password():
                             type='password',
                             help = 'Name must only contain 0-9 a-z A-Z. @ - _characters')
     
+    repeat_new_pwd = st.text_input('Repeat New Password',
+                            type='password',
+                            help = 'Name must only contain 0-9 a-z A-Z. @ - _characters')
+    
     if st.button('Confirm', type='primary'):
         
         if old_pwd == new_pwd:
@@ -38,7 +42,9 @@ def reset_password():
         elif not extensions.validate_charset(new_pwd):
             st.error('Password: Only 0-9 a-z A-Z. @ - _ characters allowed')
         elif len(new_pwd) < 8:
-                st.error('Password: Minimum 8 characters')
+            st.error('Password: Minimum 8 characters')
+        elif new_pwd != repeat_new_pwd:
+            st.error('New Passwords do not match')
         else:
             try:
                 if datamanager.user_reset_password(old_pwd, new_pwd):
@@ -89,7 +95,6 @@ if not datamanager.valid_license(st.session_state["jwt_auth_header"]):
 col1, _ = st.columns([4,8])
 
 with col1:
-    
     
     st.write('**Username**', user_data.username)
         
