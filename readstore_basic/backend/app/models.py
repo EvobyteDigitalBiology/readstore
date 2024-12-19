@@ -68,7 +68,7 @@ class BasicModel(models.Model):
     updated = models.DateTimeField(auto_now=True)
     valid_from = models.DateTimeField(auto_now=True)
     valid_to = models.DateTimeField(null=True, blank=True)
-    owner = models.ForeignKey(User, on_delete=models.PROTECT)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     
     class Meta:
         abstract = True
@@ -146,6 +146,7 @@ class OwnerGroup(BasicModel):
     """
     
     name = models.CharField(max_length=200, unique=True)
+    owner = owner = models.ForeignKey(User, on_delete=models.PROTECT)
     
     class Meta:
         db_table = 'owner_group'
@@ -195,7 +196,6 @@ class Project(BasicModel):
     dataset_metadata_keys = models.JSONField()
     collaborators = models.ManyToManyField(User, related_name='projects', blank=True)
     owner_group = models.ForeignKey(OwnerGroup, on_delete=models.CASCADE)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     
     class Meta:
         db_table = 'project'
@@ -210,7 +210,6 @@ class ProjectAttachment(BinaryFileModel):
     
     name = models.TextField()
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     
     class Meta:
         db_table = 'project_attachment'
@@ -226,10 +225,10 @@ class FqDataset(BasicModel):
     name = models.TextField()
     description = models.TextField(null=True, blank=True)
     qc_passed = models.BooleanField()
-    fq_file_r1 = models.OneToOneField(FqFile, related_name='fq_file_r1', on_delete=models.CASCADE, null=True, blank=True)
-    fq_file_r2 = models.OneToOneField(FqFile, related_name='fq_file_r2', on_delete=models.CASCADE, null=True, blank=True)
-    fq_file_i1 = models.OneToOneField(FqFile, related_name='fq_file_i1', on_delete=models.CASCADE, null=True, blank=True)
-    fq_file_i2 = models.OneToOneField(FqFile, related_name='fq_file_i2', on_delete=models.CASCADE, null=True, blank=True)
+    fq_file_r1 = models.OneToOneField(FqFile, related_name='fq_file_r1', on_delete=models.SET_NULL, null=True, blank=True)
+    fq_file_r2 = models.OneToOneField(FqFile, related_name='fq_file_r2', on_delete=models.SET_NULL, null=True, blank=True)
+    fq_file_i1 = models.OneToOneField(FqFile, related_name='fq_file_i1', on_delete=models.SET_NULL, null=True, blank=True)
+    fq_file_i2 = models.OneToOneField(FqFile, related_name='fq_file_i2', on_delete=models.SET_NULL, null=True, blank=True)
     paired_end = models.BooleanField()
     index_read = models.BooleanField()
     owner_group = models.ForeignKey(OwnerGroup, on_delete=models.CASCADE)
@@ -249,7 +248,6 @@ class FqAttachment(BinaryFileModel):
     
     name = models.TextField()
     fq_dataset = models.ForeignKey(FqDataset, on_delete=models.CASCADE)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     
     class Meta:
         db_table = 'fq_attachment'
@@ -267,7 +265,7 @@ class LicenseKey(BasicModel):
     
     class Meta:
         db_table = 'license_keys'
-        
+    
 class ProData(BasicModel):
     
     """
