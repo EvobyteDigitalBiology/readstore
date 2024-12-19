@@ -32,6 +32,15 @@ def show_updated(ix):
     change = st.session_state[f"fq_sd_{ix}"]
     edited = change['edited_rows']
     st.session_state['update_field_state'] = (ix, edited)
+
+def update_staging_mode():
+    
+    dataset_select_name = st.session_state['select_preexist_dataset']
+    
+    if not dataset_select_name is None:
+        st.session_state['preexist_dataset_name'] = dataset_select_name
+    else:
+        del st.session_state['preexist_dataset_name']
     
     
 # Print Info about User
@@ -106,14 +115,17 @@ def remove_selected_datasets(fq_datasets, selected_rows):
         st.session_state['selected_staging'] = st.session_state['selected_staging'].loc[
             ~st.session_state['selected_staging']['name'].isin(select_dataset_r['name']),:]
 
-
+# region Check In
 @st.dialog('Check In Dataset', width='large')
 def checkin_df(fq_file_df: pd.DataFrame,
                projects_owner_group: pd.DataFrame,
+               fq_datasets_empty: pd.DataFrame,
                reference_fq_dataset_names: pd.Series):
     
     reference_fq_dataset_names = reference_fq_dataset_names.str.lower()
     reference_fq_dataset_names = reference_fq_dataset_names.tolist()
+    
+    empty_dataset_names = fq_datasets_empty['name'].tolist()
     
     read_long_map = {
         'R1' : 'Read 1',
@@ -136,93 +148,125 @@ def checkin_df(fq_file_df: pd.DataFrame,
     else:
         name_old = fq_file_df['dataset'].iloc[0]
         
-        name = st.text_input("Dataset Name",
-                             value=name_old,
-                             key='dataset_name',
-                             help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).')
+        # Dynamically get dataset from backend
+        col_n_1, col_n_2 = st.columns([9, 3], vertical_alignment='bottom')
         
-        tab_names = [read_long_map[rt] for rt in read_types]
-        tab_names_format = [":blue-background[**Projects**]",
-                            ":blue-background[**Features**]",
-                             ":blue-background[**Attachments**]"]
-        tab_names_format.extend([f":blue-background[**{tn}**]" for tn in tab_names])
+        update_view = False
         
-        # Add Metadata and Attachments Tabs
-        tabs = st.tabs(tab_names_format)
-        fq_file_names = ['NA'] * len(read_types)
+        with col_n_1:
+            if 'preexist_dataset_name' in st.session_state:
+                display_name = st.session_state['preexist_dataset_name']
+                create_mode = False
+            else:
+                display_name = name_old
+                create_mode = True
+            
+            name = st.text_input("Dataset Name",
+                                value=display_name,
+                                key='dataset_name',
+                                help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).')
+        
+        with col_n_2:
+            
+            if len(empty_dataset_names) > 0:
+            
+                with st.popover('Select Existing', use_container_width=True):
+                    existing_dataset_select = st.selectbox('Select Existing',
+                                                        options=empty_dataset_names,
+                                                        index=None,
+                                                        label_visibility = 'collapsed',
+                                                        key = 'select_preexist_dataset',
+                                                        on_change = update_staging_mode)        
         
         # region Project Tab
+        tab_names = [read_long_map[rt] for rt in read_types]
+        fq_file_names = ['NA'] * len(read_types)
         
-        with tabs[0]:
+        if create_mode:
             
-            with st.container(border=True, height=460):
-                
-                st.subheader('Projects')
-                
-                st.write('Attach the dataset to one or more projects')
-                
-                project_names_select = st.multiselect("Select Projects",
-                        sorted(projects_owner_group['name'].unique()),
-                        help = 'Attach the dataset to project(s).')
-        
-        # region Metadata Tab
-        
-        with tabs[1]:
+            tab_names_format = [":blue-background[**Projects**]",
+                                ":blue-background[**Features**]",
+                                ":blue-background[**Attachments**]"]
+            tab_names_format.extend([f":blue-background[**{tn}**]" for tn in tab_names])
+            reads_offset = 3
             
-            with st.container(border=True, height=460):
-
-                # Get metadata keys for selected projects
-                # Metadata keys are stored as dicts in dataframe
-                # Extract keys and flatten
-                metadata_keys = projects_owner_group.loc[
-                    projects_owner_group['name'].isin(project_names_select),'dataset_metadata_keys'].to_list()
-                metadata_keys = [list(m.keys()) for m in metadata_keys]
-                metadata_keys = itertools.chain.from_iterable(metadata_keys)
-                metadata_keys = sorted(list(set(metadata_keys)))
-                
-                metadata_df_template = pd.DataFrame({
-                    'key' : metadata_keys,
-                    'value' : ''
-                })
-                
-                st.subheader('Dataset Description')
-                
-                description = st.text_area("Enter Dataset Description",
-                                help = 'Description of the FASTQ Dataset.',)
-
-                st.subheader('Metadata',
-                    help = "Key-value pairs to store and group dataset metadata. For example 'species' : 'human'")
-
-                metadata_df_template = metadata_df_template.astype(str)
-                metadata_df = st.data_editor(
-                    metadata_df_template,
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config = {
-                        'key' : st.column_config.TextColumn('Key'),
-                        'value' : st.column_config.TextColumn('Value')
-                    },
-                    num_rows ='dynamic',
-                    key = 'create_metadata_df'
-                )
-
-        # region Projects Tab
-        with tabs[2]:
+            # Add Metadata and Attachments Tabs
+            tabs = st.tabs(tab_names_format)
             
-            with st.container(border=True, height=460):
+            with tabs[0]:
                 
-                st.subheader('Attachments')
+                with st.container(border=True, height=460):
+                    
+                    st.subheader('Projects')
+                    
+                    st.write('Attach the dataset to one or more projects')
+                    
+                    project_names_select = st.multiselect("Select Projects",
+                            sorted(projects_owner_group['name'].unique()),
+                            help = 'Attach the dataset to project(s).')
+            
+            # region Metadata Tab
+            with tabs[1]:
                 
-                st.write('Upload attachments for the dataset')
+                with st.container(border=True, height=460):
+                    
+                    # Get metadata keys for selected projects
+                    # Metadata keys are stored as dicts in dataframe
+                    # Extract keys and flatten
+                    metadata_keys = projects_owner_group.loc[
+                        projects_owner_group['name'].isin(project_names_select),'dataset_metadata_keys'].to_list()
+                    metadata_keys = [list(m.keys()) for m in metadata_keys]
+                    metadata_keys = itertools.chain.from_iterable(metadata_keys)
+                    metadata_keys = sorted(list(set(metadata_keys)))
+                    
+                    metadata_df_template = pd.DataFrame({
+                        'key' : metadata_keys,
+                        'value' : ''
+                    })
+                    
+                    st.subheader('Dataset Description')
+                    
+                    description = st.text_area("Enter Dataset Description",
+                                    help = 'Description of the FASTQ Dataset.',)
+
+                    st.subheader('Metadata',
+                        help = "Key-value pairs to store and group dataset metadata. For example 'species' : 'human'")
+
+                    metadata_df_template = metadata_df_template.astype(str)
+                    metadata_df = st.data_editor(
+                        metadata_df_template,
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config = {
+                            'key' : st.column_config.TextColumn('Key'),
+                            'value' : st.column_config.TextColumn('Value')
+                        },
+                        num_rows ='dynamic',
+                        key = 'create_metadata_df'
+                    )
+
+            # region Projects Tab
+            with tabs[2]:
                 
-                uploaded_files = st.file_uploader("Choose Files to Upload",
-                    help = "Upload attachments for the dataset. Attachments can be any file type",
-                    accept_multiple_files = True)
+                with st.container(border=True, height=460):
+                    
+                    st.subheader('Attachments')
+                    
+                    st.write('Upload attachments for the dataset')
+                    
+                    uploaded_files = st.file_uploader("Choose Files to Upload",
+                        help = "Upload attachments for the dataset. Attachments can be any file type",
+                        accept_multiple_files = True)
         
+        else:
+            tab_names_format = [f":blue-background[**{tn}**]" for tn in tab_names]
+            tabs = st.tabs(tab_names_format)
+            reads_offset = 0
+            
         for ix, rt in enumerate(read_types):
             
             # region Read Tab
-            with tabs[3+ix]:
+            with tabs[reads_offset+ix]:
                 
                 col1, col2 = st.columns([1, 1])
                 
@@ -292,41 +336,145 @@ def checkin_df(fq_file_df: pd.DataFrame,
                 fq_file_read['name'] = fq_file_names[ix]
                 fq_file_read['qc_phred'] = phred_values
                 read_fq_map[rt] = fq_file_read
-                    
+                
         # region Check In Button  
         _, col = st.columns([9,3])    
         with col:
             if st.button('Confirm', key='confirm_checkin', type = 'primary', use_container_width=True):
                 
-                # Remove na values from metadata key column
-                metadata_df = metadata_df.loc[~metadata_df['key'].isna(),:]
-                # Replace all None values with empty string
-                metadata_df = metadata_df.fillna('')
+                if create_mode:
                     
-                keys = metadata_df['key'].tolist()
-                keys = [k.lower() for k in keys]
-                values = metadata_df['value'].tolist()
-                metadata = {k:v for k,v in zip(keys,metadata_df['value'])}
+                    # Remove na values from metadata key column
+                    metadata_df = metadata_df.loc[~metadata_df['key'].isna(),:]
+                    # Replace all None values with empty string
+                    metadata_df = metadata_df.fillna('')
+                        
+                    keys = metadata_df['key'].tolist()
+                    keys = [k.lower() for k in keys]
+                    values = metadata_df['value'].tolist()
+                    metadata = {k:v for k,v in zip(keys,metadata_df['value'])}
 
-                # Validate uploaded files
-                file_names = [file.name for file in uploaded_files]
-                file_bytes = [file.getvalue() for file in uploaded_files]
-                
-                # Prep project ids
-                project_ids = projects_owner_group.loc[
-                    projects_owner_group['name'].isin(project_names_select),'id'].tolist()
+                    # Validate uploaded files
+                    file_names = [file.name for file in uploaded_files]
+                    file_bytes = [file.getvalue() for file in uploaded_files]
+                    
+                    # Prep project ids
+                    project_ids = projects_owner_group.loc[
+                        projects_owner_group['name'].isin(project_names_select),'id'].tolist()
+                    
+                    # Check if dataset name is no yet used and adreres to naming conventions
+                    # 1) First check for dataset name
+                    if name == '':
+                        st.error("Please enter a Dataset Name.")
+                    elif name.lower() in reference_fq_dataset_names:
+                        st.error("Dataset name already exists in Group. Please choose another name.")
+                    elif not extensions.validate_charset(name):
+                        st.error('Dataset Name: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
+                    else:
+                        # 2) Second check for fq file names
+                        for v in read_fq_map.values():
+                            if not extensions.validate_charset(v['name']):
+                                st.error('FASTQ Name: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
+                                break
+                            if v['name'] == '':
+                                st.error("Please enter a FASTQ File Name")
+                                break
+                        else:
+                            # 3) Third check for metadata
+                            for k, v in zip(keys, values):
+                                if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
+                                    st.error(f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces.')
+                                    break
+                                if k in uiconfig.METADATA_RESERVED_KEYS:
+                                    st.error(f'Metadata key {k}: Reserved keyword, please choose another key')
+                                    break
+                            # 4) Execute Upload
+                            else:
+                                dataset_qc_passed = True
                                 
-                # Check if dataset name is no yet used and adreres to naming conventions
-                # TODO Automate
-                # 1) First check for dataset name
-                if name == '':
-                    st.error("Please enter a Dataset Name.")
-                elif name.lower() in reference_fq_dataset_names:
-                    st.error("Dataset name already exists in Group. Please choose another name.")
-                elif not extensions.validate_charset(name):
-                    st.error('Dataset Name: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
+                                # Update FqFiles
+                                for v in read_fq_map.values():
+                                    
+                                    if not v['qc_passed']:
+                                        dataset_qc_passed = False
+                                    
+                                    datamanager.checkin_fq_file_staging(
+                                        st.session_state["jwt_auth_header"],
+                                        v['id'],
+                                        v['name'],
+                                        v['bucket'],
+                                        v['key'],
+                                        v['upload_path'],
+                                        v['qc_passed'],
+                                        v['read_type'],
+                                        v['read_length'],
+                                        v['num_reads'],
+                                        v['qc_phred_mean'],
+                                        v['qc_phred'],
+                                        v['size_mb'],
+                                        v['md5_checksum'],
+                                        v['pipeline_version']
+                                    )
+                                
+                                # Create FqDataset
+                                
+                                # Define Read PKs
+                                fq_file_r1 = None
+                                fq_file_r2 = None
+                                fq_file_i1 = None
+                                fq_file_i2 = None
+                                
+                                if 'R1' in read_fq_map:
+                                    fq_file_r1 = read_fq_map['R1']['id']
+                                if 'R2' in read_fq_map:
+                                    fq_file_r2 = read_fq_map['R2']['id']
+                                if 'I1' in read_fq_map:
+                                    fq_file_i1 = read_fq_map['I1']['id']
+                                if 'I2' in read_fq_map:
+                                    fq_file_i2 = read_fq_map['I2']['id']
+                                
+                                if fq_file_r1 and fq_file_r2:
+                                    paired_end = True
+                                else:
+                                    paired_end = False
+                                if fq_file_i1 or fq_file_i2:
+                                    index_read = True
+                                else:
+                                    index_read = False
+                                                                                
+                                fq_pk = datamanager.create_fq_dataset(
+                                    st.session_state["jwt_auth_header"],
+                                    name = name,
+                                    description = description,
+                                    qc_passed=dataset_qc_passed,
+                                    index_read=index_read,
+                                    fq_file_r1=fq_file_r1,
+                                    fq_file_r2=fq_file_r2,
+                                    fq_file_i1=fq_file_i1,
+                                    fq_file_i2=fq_file_i2,
+                                    paired_end=paired_end,
+                                    project=project_ids,
+                                    metadata=metadata
+                                )
+                                
+                                # Upload Attachments
+                                for file_name, file_byte in zip(file_names, file_bytes):
+                                    datamanager.create_fq_attachment(file_name,
+                                                                        file_byte,
+                                                                        fq_pk)
+                    
                 else:
-                    # 2) Second check for fq file names
+                    
+                    fq_dataset_id = fq_datasets_empty.loc[fq_datasets_empty['name'] == display_name,
+                                                          'id'].iloc[0]
+                    
+                    fq_dataset_select = datamanager.get_fq_dataset_detail(
+                        st.session_state["jwt_auth_header"],
+                        fq_dataset_id
+                    )
+                    
+                    # Validate FQ files
+                    
                     for v in read_fq_map.values():
                         if not extensions.validate_charset(v['name']):
                             st.error('FASTQ Name: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
@@ -335,104 +483,101 @@ def checkin_df(fq_file_df: pd.DataFrame,
                             st.error("Please enter a FASTQ File Name")
                             break
                     else:
-                        # 3) Third check for metadata
-                        for k, v in zip(keys, values):
-                            if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-                                st.error(f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces.')
-                                break
-                            if k in uiconfig.METADATA_RESERVED_KEYS:
-                                st.error(f'Metadata key {k}: Reserved keyword, please choose another key')
-                                break
-                        # 4) Execute Upload
-                        else:
-                            dataset_qc_passed = True
-                            
-                            # Update FqFiles
-                            for v in read_fq_map.values():
+                        dataset_qc_passed = True
                                 
-                                if not v['qc_passed']:
-                                    dataset_qc_passed = False
-                                
-                                datamanager.checkin_fq_file_staging(
-                                    st.session_state["jwt_auth_header"],
-                                    v['id'],
-                                    v['name'],
-                                    v['bucket'],
-                                    v['key'],
-                                    v['upload_path'],
-                                    v['qc_passed'],
-                                    v['read_type'],
-                                    v['read_length'],
-                                    v['num_reads'],
-                                    v['qc_phred_mean'],
-                                    v['qc_phred'],
-                                    v['size_mb'],
-                                    v['md5_checksum'],
-                                    v['pipeline_version']
-                                )
+                        # Update FqFiles
+                        for v in read_fq_map.values():
                             
-                            # Create FqDataset
+                            if not v['qc_passed']:
+                                dataset_qc_passed = False
                             
-                            # Define Read PKs
-                            fq_file_r1 = None
-                            fq_file_r2 = None
-                            fq_file_i1 = None
-                            fq_file_i2 = None
-                            
-                            if 'R1' in read_fq_map:
-                                fq_file_r1 = read_fq_map['R1']['id']
-                            if 'R2' in read_fq_map:
-                                fq_file_r2 = read_fq_map['R2']['id']
-                            if 'I1' in read_fq_map:
-                                fq_file_i1 = read_fq_map['I1']['id']
-                            if 'I2' in read_fq_map:
-                                fq_file_i2 = read_fq_map['I2']['id']
-                            
-                            if fq_file_r1 and fq_file_r2:
-                                paired_end = True
-                            else:
-                                paired_end = False
-                            if fq_file_i1 or fq_file_i2:
-                                index_read = True
-                            else:
-                                index_read = False
-                                      
-                            fq_pk = datamanager.create_fq_dataset(
+                            datamanager.checkin_fq_file_staging(
                                 st.session_state["jwt_auth_header"],
-                                name = name,
-                                description = description,
-                                qc_passed=dataset_qc_passed,
-                                index_read=index_read,
-                                fq_file_r1=fq_file_r1,
-                                fq_file_r2=fq_file_r2,
-                                fq_file_i1=fq_file_i1,
-                                fq_file_i2=fq_file_i2,
-                                paired_end=paired_end,
-                                project=project_ids,
-                                metadata=metadata
+                                v['id'],
+                                v['name'],
+                                v['bucket'],
+                                v['key'],
+                                v['upload_path'],
+                                v['qc_passed'],
+                                v['read_type'],
+                                v['read_length'],
+                                v['num_reads'],
+                                v['qc_phred_mean'],
+                                v['qc_phred'],
+                                v['size_mb'],
+                                v['md5_checksum'],
+                                v['pipeline_version']
                             )
-                            
-                            # Upload Attachments
-                            for file_name, file_byte in zip(file_names, file_bytes):
-                                datamanager.create_fq_attachment(file_name,
-                                                                    file_byte,
-                                                                    fq_pk)
-                            
-                            del st.session_state['fq_data_staging']
-                            st.cache_data.clear()
-                            st.rerun()
+                        
+                        # Create FqDataset
+                        
+                        # Define Read PKs
+                        fq_file_r1 = None
+                        fq_file_r2 = None
+                        fq_file_i1 = None
+                        fq_file_i2 = None
+                        
+                        if 'R1' in read_fq_map:
+                            fq_file_r1 = int(read_fq_map['R1']['id'])
+                        if 'R2' in read_fq_map:
+                            fq_file_r2 = int(read_fq_map['R2']['id'])
+                        if 'I1' in read_fq_map:
+                            fq_file_i1 = int(read_fq_map['I1']['id'])
+                        if 'I2' in read_fq_map:
+                            fq_file_i2 = int(read_fq_map['I2']['id'])
+                        
+                        if fq_file_r1 and fq_file_r2:
+                            paired_end = True
+                        else:
+                            paired_end = False
+                        if fq_file_i1 or fq_file_i2:
+                            index_read = True
+                        else:
+                            index_read = False
+                        
+                        fq_dataset_select.paired_end = paired_end
+                        fq_dataset_select.index_read = index_read
+                        fq_dataset_select.fq_file_r1 = fq_file_r1
+                        fq_dataset_select.fq_file_r2 = fq_file_r2
+                        fq_dataset_select.fq_file_i1 = fq_file_i1
+                        fq_dataset_select.fq_file_i2 = fq_file_i2
+                        fq_dataset_select.valid_to = None
+                        fq_dataset_select.valid_from = None
+                        fq_dataset_select.created = None
+                        fq_dataset_select.updated = None
+                        
+                        fq_dataset_select.qc_passed = dataset_qc_passed
+                        
+                        endpoint = uiconfig.ENDPOINT_CONFIG['fq_dataset']
+                        extensions.model_to_put_request(
+                            endpoint = endpoint,
+                            pk = int(fq_dataset_id),
+                            base_model=fq_dataset_select,
+                            headers=st.session_state['jwt_auth_header']
+                        )
+                    
+                del st.session_state['fq_data_staging']
+                st.cache_data.clear()
+                st.rerun()
+                
         
 # region Batch Check In
 @st.dialog('Batch Check In Datasets', width='large')
 def bulk_checkin_df(fq_files_staging_df: pd.DataFrame,
                     projects_owner_group: pd.DataFrame,
+                    fq_datasets_empty: pd.DataFrame,
                     reference_fq_dataset_names: pd.Series):
     
     reference_fq_dataset_names = reference_fq_dataset_names.str.lower()
     reference_fq_dataset_names = reference_fq_dataset_names.tolist()
+
+    empty_dataset_names = fq_datasets_empty['name'].str.lower()
+    empty_dataset_names = empty_dataset_names.tolist()
     
     # Group by datasets and check in each dataset if fastq files are valid
-    fq_files_staging_df = fq_files_staging_df.copy()    
+    fq_files_staging_df = fq_files_staging_df.copy()
+    
+    # What is exact format here?
     fq_files_staging_datasets = fq_files_staging_df.groupby('dataset')
 
     total_input_datasets = len(fq_files_staging_datasets)
@@ -457,35 +602,45 @@ def bulk_checkin_df(fq_files_staging_df: pd.DataFrame,
                 st.warning('Datasets Excluded: NA in read types')
                 na_in_read_types_warning = True
             continue # consider warning
+        
         # Check if read types are unique
         elif fq_files['read_type'].duplicated().any():
             if not duplicated_read_types_warning:
                 st.warning('Datasets Excluded: Duplicated read types')
                 duplicated_read_types_warning = True
             continue
+        
         # Check if dataset name is no yet used and adreres to naming conventions
         elif dataset.lower() in reference_fq_dataset_names:
-            if not dataset_exists_warning:
-                st.warning('Datasets Excluded: Dataset with identical name exists')
-                dataset_exists_warning = True
-            continue
+            
+            # Check if dataset is empty
+            if not dataset.lower() in empty_dataset_names:                       
+                if not dataset_exists_warning:
+                    st.warning('Datasets Excluded: Dataset with identical name exists')
+                    dataset_exists_warning = True
+                continue
+        
         # Empty dataset name
         elif dataset == '':
             if not empty_dataset_name_warning:
                 st.warning('Datasets Excluded: Dataset Name Empty')
                 empty_dataset_name_warning = True    
             continue
+        
+        # Check if characters in dataset are valid
         elif not extensions.validate_charset(dataset):
             if not invalid_dataset_chars_warning:
                 st.warning('Datasets Excluded: Invalid Dataset Name')
                 invalid_dataset_chars_warning = True
             continue
+        
         # Check if fq file names are valid
         elif not all([extensions.validate_charset(fq) for fq in fq_files['name']]):
             if not invalid_fq_file_name_warning:
                 st.warning('Datasets Excluded: Invalid Fastq File Name')
                 invalid_fq_file_name_warning = True
             continue
+        
         elif not all([fq != '' for fq in fq_files['name']]):
             if not empty_fq_file_name_warning:
                 st.warning('Datasets Excluded: Empty Fastq File Name')
@@ -578,7 +733,6 @@ def bulk_checkin_df(fq_files_staging_df: pd.DataFrame,
                     
                     # CONTINUE HERE
                     
-                    
                     # Spacer Container
                     st.container(height = 100, border = False)
                     st.button(':material/arrow_forward:', use_container_width=True, type='primary', on_click=add_selected_datasets, args = (fq_datasets_show, fq_avail_df.selection['rows']))
@@ -670,22 +824,57 @@ def bulk_checkin_df(fq_files_staging_df: pd.DataFrame,
                             index_read = True
                         else:
                             index_read = False
+                                                
+                        # Check if dataset name is in existing group
+                        if dataset_name in empty_dataset_names:
+                            
+                            fq_dataset_id = fq_datasets_empty.loc[
+                                fq_datasets_empty['name'] == dataset_name,'id'
+                            ].values[0]
+                   
+                            fq_dataset = datamanager.get_fq_dataset_detail(
+                                st.session_state["jwt_auth_header"],
+                                fq_dataset_id=fq_dataset_id
+                            )
+                            
+                            fq_dataset.qc_passed = dataset_qc_passed
+                            fq_dataset.fq_file_r1 = fq_file_r1
+                            fq_dataset.fq_file_r2 = fq_file_r2
+                            fq_dataset.fq_file_i1 = fq_file_i1
+                            fq_dataset.fq_file_i2 = fq_file_i2
+                            fq_dataset.paired_end = paired_end
+                            fq_dataset.index_read = index_read
+                            fq_dataset.valid_to = None
+                            fq_dataset.valid_from = None
+                            fq_dataset.created = None
+                            fq_dataset.updated = None
+                            
+                            fq_dataset.qc_passed = dataset_qc_passed
                         
-                        # Create FqDataset
-                        fq_pk = datamanager.create_fq_dataset(
-                            st.session_state["jwt_auth_header"],
-                            name = dataset_name,
-                            description = '',
-                            qc_passed=dataset_qc_passed,
-                            index_read=index_read,
-                            fq_file_r1=fq_file_r1,
-                            fq_file_r2=fq_file_r2,
-                            fq_file_i1=fq_file_i1,
-                            fq_file_i2=fq_file_i2,
-                            paired_end=paired_end,
-                            project=project_ids,
-                            metadata=dataset_metadata
-                        )
+                            endpoint = uiconfig.ENDPOINT_CONFIG['fq_dataset']
+                            extensions.model_to_put_request(
+                                endpoint = endpoint,
+                                pk = int(fq_dataset_id),
+                                base_model=fq_dataset,
+                                headers=st.session_state['jwt_auth_header']
+                            )
+                            
+                        else:
+                            # Create FqDataset
+                            fq_pk = datamanager.create_fq_dataset(
+                                st.session_state["jwt_auth_header"],
+                                name = dataset_name,
+                                description = '',
+                                qc_passed=dataset_qc_passed,
+                                index_read=index_read,
+                                fq_file_r1=fq_file_r1,
+                                fq_file_r2=fq_file_r2,
+                                fq_file_i1=fq_file_i1,
+                                fq_file_i2=fq_file_i2,
+                                paired_end=paired_end,
+                                project=project_ids,
+                                metadata=dataset_metadata
+                            )
                 
                 del st.session_state['fq_data_staging']
                 del st.session_state['available_staging']
@@ -857,6 +1046,8 @@ else:
 
 # Get fqdataset names for owner group
 fq_dataset_names_owner_group = datamanager.get_fq_dataset_owner_group(st.session_state["jwt_auth_header"])['name']
+fq_dataset_empty = datamanager.get_fq_dataset_empty(st.session_state["jwt_auth_header"])
+
 projects_owner_group = datamanager.get_project_owner_group(st.session_state["jwt_auth_header"])[['id', 'name', 'dataset_metadata_keys']]
 
 # Get number of running jobs in QC queue
@@ -907,6 +1098,7 @@ if fq_files_staging.shape[0] > 0:
             if st.button('Batch Check In', use_container_width=True, type='primary'):
                 bulk_checkin_df(fq_files_staging,
                                 projects_owner_group,
+                                fq_dataset_empty,
                                 fq_dataset_names_owner_group)
                 
             if st.button(':material/delete_forever: Delete All', use_container_width=True, type='primary'):
@@ -917,7 +1109,11 @@ if fq_files_staging.shape[0] > 0:
                 staging_help()
             
     with col4s:
-        if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
+        if st.button(':material/refresh:',
+                     key='refresh_projects',
+                     help='Refresh Page',
+                     type='tertiary',
+                    use_container_width = True):
             if 'fq_data_staging' in st.session_state:
                 del st.session_state['fq_data_staging']
             extensions.refresh_page()
@@ -959,8 +1155,13 @@ if fq_files_staging.shape[0] > 0:
         
         with col1:
             if st.button("Check In", key=f"checkin_{ix}", type = 'primary', help='Validate and Register Dataset'):
+                
+                if 'preexist_dataset_name' in st.session_state:
+                    del st.session_state['preexist_dataset_name']
+                
                 checkin_df(fq_file_df,
                         projects_owner_group,
+                        fq_dataset_empty,
                         fq_dataset_names_owner_group)
             
             with st.popover(':material/delete_forever:', help="Delete FASTQ Files"):
