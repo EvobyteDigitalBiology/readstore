@@ -44,8 +44,6 @@ st.markdown(
     """,
     unsafe_allow_html=True)
 
-
-
 # Methods
 
 # region Create User
@@ -79,9 +77,9 @@ def create_user(reference_user_names: pd.Series,
                                help = 'Name must only contain 0-9 a-z A-Z. @ - _characters',
                                type = 'password')
     
-    # owner_group_name = st.selectbox("Select Group",
-    #                            options = reference_owner_group_names,
-    #                            help = 'A Group shares Datasets and Projects')
+    repeat_password = st.text_input("Repeat Password",
+                                 help = 'Name must only contain 0-9 a-z A-Z. @ - _characters',
+                                 type = 'password')
     
     owner_group_name = uiconfig.DEFAULT_OWNER_GROUP
     
@@ -112,6 +110,8 @@ def create_user(reference_user_names: pd.Series,
                 st.error('Password: Only 0-9 a-z A-Z. @ - _ characters allowed')
             elif len(password) < 8:
                 st.error('Password: Minimum 8 characters')
+            elif password != repeat_password:
+                st.error('Passwords do not match')
             elif email != '' and not extensions.validate_charset(email):
                 st.error('Email: Only 0-9 a-z A-Z. @ - _ characters allowed')
             elif email != '' and not extensions.validate_email(email):
@@ -126,7 +126,8 @@ def create_user(reference_user_names: pd.Series,
                                         email,
                                         password,
                                         owner_group_name,
-                                        staging)            
+                                        staging)
+                     
                 st.cache_data.clear()
                 st.rerun()
 
@@ -137,7 +138,6 @@ def update_user(row_ix: int,
                  appusers_df: pd.DataFrame,
                  reference_user_names: pd.Series,
                  reference_owner_group_names: pd.Series):
-    
     
     appusers_df_select = appusers_df.iloc[row_ix,:]
     
@@ -247,17 +247,27 @@ def delete_users(row_ixes: List[int],
                                                          owner=appuser_id)
         appuser_fq_file = datamanager.get_fq_file_owner(headers=st.session_state['jwt_auth_header'],
                                                   owner=appuser_id)
+        appuser_projects = datamanager.get_project_owner(headers=st.session_state['jwt_auth_header'],
+                                                         owner=appuser_id)
         
         num_fq_datasets = len(appuser_fq_datasets)
         num_fq_files = len(appuser_fq_file)
+        num_projects = len(appuser_projects)
         
-        if num_fq_datasets > 0 or num_fq_files > 0:
+        if num_fq_datasets > 0:
+            st.warning(f'User {appuser_name}: {num_fq_datasets} Datasets Found for User.')
+            found_attached = True
 
-            st.warning(f'User {appuser_name}: {num_fq_datasets} Datasets and {num_fq_files} FASTQ Files Found for User.')
+        if num_fq_files > 0:
+            st.warning(f'User {appuser_name}: {num_fq_files} FASTQ Files Found for User.')
+            found_attached = True
+            
+        if num_projects > 0:
+            st.warning(f'User {appuser_name}: {num_projects} Projects Found for User.')
             found_attached = True
 
     if found_attached:
-        st.warning(f'Are you sure you want to delete associated Datasets and FASTQ Files for selected Users?')
+        st.warning(f'Are you sure you want to delete associated Projects, Datasets and FASTQ Files for selected Users?')
     
     _, col2c = st.columns([9,3])
     
@@ -265,18 +275,8 @@ def delete_users(row_ixes: List[int],
         if st.button('Confirm', type ='primary', key='ok_delete_user', use_container_width=True):
             
             # Check if user is owner of a fq_dataset or fq_file, if true, skip delete and issue warning
-            for appuser_id, appuser_name in zip(appusers_delete['id_user'], appusers_delete['username']):
-                
-                # Check if user is owner of fq_dataset or fq_file
-                appuser_fq_datasets = datamanager.get_fq_dataset(headers=st.session_state['jwt_auth_header'],
-                                                                 owner=appuser_id)
-                appuser_fq_file = datamanager.get_fq_file_owner(headers=st.session_state['jwt_auth_header'],
-                                                          owner=appuser_id)
-                
-                for fq_file_id in appuser_fq_file['id']:
-                    datamanager.delete_fq_file(fq_file_id)
-                else:
-                    datamanager.delete_user(appuser_id)
+            for appuser_id, appuser_name in zip(appusers_delete['id_user'], appusers_delete['username']):                
+                datamanager.delete_user(appuser_id)
             else:
                 st.cache_data.clear()
                 st.rerun()
@@ -294,6 +294,10 @@ def reset_password(row_ix: int,
                             help = 'Password must only contain 0-9 a-z A-Z. @ - _characters',
                             type = 'password')
     
+    repeat_password = st.text_input("Repeat Password",
+                                    help = 'Password must only contain 0-9 a-z A-Z. @ - _characters',
+                                    type = 'password')
+    
     _, col2c = st.columns([9,3])
     
     # TODO: Only allowed for own user
@@ -304,6 +308,8 @@ def reset_password(row_ix: int,
                 st.error('Password: Only 0-9 a-z A-Z. @ - _ characters allowed')
             elif len(password) < 8:
                 st.error('Password: Minimum 8 characters')
+            elif password != repeat_password:
+                st.error('Password do not match')
             else:
                 datamanager.update_user(st.session_state['jwt_auth_header'],
                                         int(appusers_df_select['id_user']),
@@ -316,8 +322,39 @@ def reset_password(row_ix: int,
                                         appusers_df_select['token'])            
                 st.cache_data.clear()
                 st.rerun()
+
+
+@st.dialog('Transfer Owner')
+def transfer_owner(row_ix: List[int], 
+                  appusers_df: pd.DataFrame):
+
+    source_owner_id = appusers_df.iloc[row_ix,:]['id_user']
+    source_owner_name = appusers_df.iloc[row_ix,:]['username']
     
-  
+    dest_appusers = appusers_df.loc[appusers_df['id_user'] != source_owner_id,:]
+    dest_appusers_names = dest_appusers['username']
+    
+    st.write(f'Select new User to transfer ownerships of selected User **{source_owner_name}**')
+    
+    dest_user_select = st.selectbox('Choose User', options = dest_appusers_names)
+    
+    _, col2c = st.columns([9,3])
+    
+    with col2c:
+        if st.button('Confirm', type ='primary', key='ok_update_owner', use_container_width=True):
+            
+            dest_owner_id = dest_appusers.loc[
+                dest_appusers['username'] == dest_user_select,'id_user'
+            ]
+            
+            datamanager.transfer_owner(
+                source_owner_id,
+                dest_owner_id
+            )
+            
+            st.cache_data.clear()
+            st.rerun()
+
 # Data
 
 owner_groups = datamanager.get_owner_group(headers=st.session_state['jwt_auth_header'])
@@ -344,7 +381,7 @@ appusers_overview['id_user_str'] = appusers_overview['id_user'].astype(str)
 tab1 = st.tabs([":blue-background[**Users**]"])[0]
 
 with tab1:
-            
+
     col1, col2, _, col3 = st.columns([3,3,5,1])
     
     with col1:
@@ -354,15 +391,6 @@ with tab1:
                             placeholder='Search Users',
                             key = 'search_users',
                             label_visibility = 'collapsed')
-    
-    # with col2:
-        
-    #     og_filter = st.multiselect('Filter Groups',
-    #                                options = appusers_og_names,
-    #                                help = 'Filter for Groups',
-    #                                placeholder = 'Filter Groups',
-    #                                label_visibility = 'collapsed')
-    
     
     with col3:
     
@@ -388,18 +416,11 @@ with tab1:
          appusers_overview['id_user_str'].str.contains(search_value_users, case=False)),:
     ]
     
-    # #  Group Filter
-    # if len(og_filter) > 0:    
-    #     appusers_overview = appusers_overview.loc[
-    #         appusers_overview['name'].isin(og_filter),:
-    #     ]
-    
     # Dynamically adjust height of dataframe
     if len(appusers_overview) < 14:
         appuser_df_height = None
     else:
         appuser_df_height = 500
-    
     
     appusers_select = st.dataframe(appusers_overview,
                         column_config = col_config_user,
@@ -408,22 +429,25 @@ with tab1:
                         on_select = 'rerun',
                         height = appuser_df_height)
             
-    col4a, col5a, col6a, col7a, _ = st.columns([1.75,1.75,1.75,2.5, 4.25])
+    col4a, col5a, col6a, col7a, col8a, _ = st.columns([1.75,1.75,1.75,2.0, 2.0, 2.75])
     
     if len(appusers_select.selection['rows']) == 1:
         update_disabled = False
         delete_disabled = False
         reset_pwd_disabled = False
+        transfer_owner_disabled = False
         selection_user = appusers_select.selection['rows']
     elif len(appusers_select.selection['rows']) > 1:
         update_disabled = True
         delete_disabled = False
         reset_pwd_disabled = True
+        transfer_owner_disabled = True
         selection_user = appusers_select.selection['rows']
     else:
         update_disabled = True
         delete_disabled = True
         reset_pwd_disabled = True
+        transfer_owner_disabled = True
         selection_user = []
     
     with col4a:
@@ -446,4 +470,9 @@ with tab1:
     with col7a:    
         if st.button('Reset Password', key='reset_password', disabled = reset_pwd_disabled, use_container_width=True, help = 'New Password for selected User'):
             reset_password(row_ix=selection_user[0],
+                            appusers_df=appusers_overview)
+            
+    with col8a:
+        if st.button('Transfer Owner', key='transfer_owner', disabled = transfer_owner_disabled, use_container_width=True, help = 'Transfer Ownership for selected user'):
+            transfer_owner(row_ix=selection_user[0],
                             appusers_df=appusers_overview)
