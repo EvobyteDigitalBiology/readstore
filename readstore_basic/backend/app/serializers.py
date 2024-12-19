@@ -164,6 +164,11 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+class TransferOwnerSerializer(serializers.Serializer):
+    
+    source_owner_id = serializers.PrimaryKeyRelatedField(queryset = User.objects.all())
+    dest_owner_id = serializers.PrimaryKeyRelatedField(queryset = User.objects.all())
+    
 
 class FqFileRStoreURLSerializer(serializers.Serializer):
     
@@ -200,7 +205,21 @@ class FqFileCLISerializer(serializers.Serializer):
     creator = serializers.CharField()
     upload_path = serializers.CharField()
     md5_checksum = serializers.CharField()
+
+class FqFileCLIUploadSerializer(serializers.Serializer):
     
+    name = serializers.CharField(max_length=200,trim_whitespace=True)
+    read_type = serializers.CharField(max_length=10,trim_whitespace=True)
+    qc_passed = serializers.BooleanField()
+    read_length = serializers.IntegerField()
+    num_reads = serializers.IntegerField()
+    size_mb = serializers.IntegerField()
+    qc_phred_mean = serializers.FloatField()
+    qc_phred = serializers.JSONField()
+    upload_path = serializers.CharField()
+    md5_checksum = serializers.CharField()
+    staging = serializers.BooleanField()
+    pipeline_version = serializers.CharField()
 
 class FqDatasetSerializer(serializers.ModelSerializer):
 
@@ -254,6 +273,22 @@ class FqDatasetCLIDetailSerializer(serializers.Serializer):
     attachments = serializers.ListField(child=serializers.CharField())
     pro_data = serializers.ListField(child=serializers.JSONField())
 
+
+class FqDatasetCLIUploadSerializer:
+    
+    name = serializers.CharField(max_length=200)
+    description = serializers.CharField()
+    qc_passed = serializers.BooleanField()
+    paired_end = serializers.BooleanField()
+    index_read = serializers.BooleanField()
+    project_ids = serializers.ListField(child=serializers.IntegerField())
+    project_names = serializers.ListField(child=serializers.CharField())
+    fq_file_r1 = serializers.IntegerField(allow_null=True)
+    fq_file_r2 = serializers.IntegerField(allow_null=True)
+    fq_file_i1 = serializers.IntegerField(allow_null=True)
+    fq_file_i2 = serializers.IntegerField(allow_null=True)
+    metadata = serializers.JSONField()
+    
 
 class FqAttachmentListSerializer(serializers.ModelSerializer):
     
@@ -338,7 +373,14 @@ class ProjectCLIDetailSerializer(serializers.Serializer):
     creator = serializers.CharField(source='owner.username', read_only=True)
     attachments = serializers.ListField(child=serializers.CharField())
     metadata = serializers.JSONField()
+
+class ProjectCLIUploadSerializer(serializers.Serializer):   
     
+    id = serializers.PrimaryKeyRelatedField(read_only=True)
+    name = serializers.CharField(max_length=200)
+    description = serializers.CharField()
+    metadata = serializers.JSONField()
+    dataset_metadata_keys = serializers.JSONField()
     
 class PwdSerializer(serializers.Serializer):
     """
