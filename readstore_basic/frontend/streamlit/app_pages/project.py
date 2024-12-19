@@ -69,11 +69,15 @@ if 'selected_collab' in st.session_state:
 # Set sesstion state for downloaing attachments
 if not 'project_select_id' in st.session_state:
     st.session_state['project_select_id'] = None
-    
+
+if not 'metadata_select' in st.session_state:
+    st.session_state['metadata_select'] = pd.DataFrame()
+
 def update_attachment_select():
     if st.session_state['project_select_id']:
         pid = st.session_state['project_select_id']
         st.session_state[f'download_attachments_select_{pid}'] = st.session_state['attachment_details_df']
+
 
 # Assign and remove datasets to project
 def add_selected_datasets(fq_datasets, selected_rows):
@@ -109,6 +113,18 @@ def remove_selected_datasets(fq_datasets, selected_rows):
         # Filter out prev selected ID
         st.session_state['selected'] = st.session_state['selected'].loc[
             ~st.session_state['selected']['id'].isin(select_dataset_r['id']),:]
+
+
+def filter_df_by_metadata_filter(df: pd.DataFrame, filter_session_prefix = 'project_meta_filter_'):
+    
+    for k in st.session_state:
+        if k.startswith(filter_session_prefix):
+            meta_key = k.replace(filter_session_prefix, '')
+            values = st.session_state[k]
+            if values != []:
+                df = df.loc[df[meta_key].isin(values),:]
+            
+    return df
 
 # region Create Project
 
@@ -293,11 +309,11 @@ def create_project(reference_project_names: pd.Series,
         
         st.write(' ')
         
-        st.write('Attach files to the project.')
+        st.write('Attach files to the Project.')
         
         uploaded_files = st.file_uploader(
             "Choose Files to Upload",
-            help = "Upload attachments for the dataset. Attachments can be any file type.",
+            help = "Upload attachments for the Project. Attachments can be any file type.",
             accept_multiple_files=True
         )
         
@@ -768,7 +784,6 @@ def update_project(project_select_df: pd.DataFrame,
                         st.cache_data.clear()
                         st.rerun()
               
-
 #region Export Project
 @st.dialog('Export Projects')            
 def export_project(project_view: pd.DataFrame):
@@ -846,7 +861,7 @@ projects['id_str'] = projects['id_project'].astype(str)
 #region UI
 
 # Navbar
-col1, col2, col3, col4, col5 = st.columns([3,3,2.5,2.75,0.75], vertical_alignment='center')
+col1, col2, col3, col4, col5 = st.columns([3,4.75,2.5, 1,0.75], vertical_alignment='center')
 
 with col1:
 
@@ -856,11 +871,42 @@ with col1:
                         key = 'search_projects',
                         label_visibility = 'collapsed')
 
-with col4:
+with col3:
     st.toggle("Metadata", key='show_metadata', help='Switch to Projects Metadata View')
 
+# Dynamic list of checkboxes with distinct values
+with col4:
+    
+    metadata_select = st.session_state['metadata_select']
+    
+    if metadata_select.empty:
+        metadata_filter_disabled = True
+    else:
+        metadata_filter_disabled = False
+
+    with st.popover(':material/filter_alt:',
+                    help='Filter Metadata',
+                    disabled = metadata_filter_disabled):
+        
+        st.write('Filter Metadata Columns')
+        
+        for k in metadata_select.columns:
+            
+            options = metadata_select[k].dropna().tolist()
+            
+            st.multiselect(label = k,
+                            options = options,
+                            label_visibility = 'collapsed',
+                            key = f'project_meta_filter_{k}',
+                            placeholder = f'Filter {k}')
+
 with col5:
-    if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
+    if st.button(':material/refresh:',
+                 key='refresh_projects',
+                 help='Refresh Page',
+                 type='tertiary',
+                 use_container_width = True):
+        
         on_click = extensions.refresh_page()
     
 
@@ -894,6 +940,16 @@ projects_show = projects_show.loc[
      projects_show['id_str'].str.contains(search_value_projects, case=False)),:
 ]
 
+# Filter out meta columns from selected view which are all None
+
+# Remove those meta cols from projects_show which are all None
+meta_cols_all_none = projects_show.loc[:,metadata.columns].isna().all()
+meta_cols_all_none = meta_cols_all_none[meta_cols_all_none].index
+meta_cols_show = list(filter(lambda x: x not in meta_cols_all_none, metadata.columns))
+st.session_state['metadata_select'] = projects_show[meta_cols_show]
+
+# Search by metadata filter
+projects_show = filter_df_by_metadata_filter(projects_show)
 
 # Dynamically adjust height of dataframe
 if st.session_state['show_details']:
@@ -907,12 +963,6 @@ else:
     # Full Height for 14 rows
     project_df_height = 500
 
-# Filter out meta columns from selected view which are all None
-
-# Remove those meta cols from projects_show which are all None
-meta_cols_all_none = projects_show.loc[:,metadata.columns].isna().all()
-meta_cols_all_none = meta_cols_all_none[meta_cols_all_none].index
-
 # Remove all columns which are all None
 projects_show = projects_show.drop(columns=meta_cols_all_none)
 
@@ -920,7 +970,6 @@ projects_show = projects_show.drop(columns=meta_cols_all_none)
 if st.session_state.show_metadata:
     # How selected projects show only metadata for subset
     # Show all meatadata columns which are not all None
-    meta_cols_show = list(filter(lambda x: x not in meta_cols_all_none, metadata.columns))
     show_cols = ['id_project', 'name_project', 'name_og'] + meta_cols_show
     
     # Highlight somehow
@@ -928,12 +977,15 @@ if st.session_state.show_metadata:
 
     col_config_meta.update(metadata_col_config)
     col_config = col_config_meta
-else:
+    
+else:    
     show_cols = projects.columns.tolist()
     col_config = col_config_user
+    
 
 # For formatting, replace None with empty string
 projects_show = projects_show.fillna('')
+projects_show = projects_show.sort_values(by='id_project')
 
 # TODO Change naming here
 projects_select = st.dataframe(projects_show[show_cols],
