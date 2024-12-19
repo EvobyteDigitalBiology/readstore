@@ -38,6 +38,7 @@ from uidataclasses import FqQueue
 from uidataclasses import FqFileUploadApp
 from uidataclasses import InvalidPath
 from uidataclasses import ProData
+from uidataclasses import TransferOwner
 
 #region basic functions
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
@@ -112,6 +113,20 @@ def get_project_collab(headers: dict) -> pd.DataFrame:
     df = extensions.get_request_to_df(endpoint, Project, headers=headers)
     
     return df
+
+
+@st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
+def get_project_owner(headers: dict, owner: int) -> pd.DataFrame:
+    
+    query_params = {'owner' : owner}
+    
+    df = extensions.get_request_to_df(uiconfig.ENDPOINT_CONFIG['project'],
+                                      Project,
+                                      headers=headers,
+                                      query_params=query_params)
+    
+    return df
+
 
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
 def get_my_owner_group(headers: dict) -> pd.DataFrame:
@@ -278,6 +293,18 @@ def get_fq_dataset_detail(headers: dict, fq_dataset_id: int) -> Tuple[pd.DataFra
         FqDataset,
         headers=headers
     )
+    
+    return fq_dataset
+
+# Add empty fastq requests
+@st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
+def get_fq_dataset_empty(headers: dict) -> pd.DataFrame:
+    
+    endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['fq_dataset'], 'empty/')
+    df = extensions.get_request_to_df(endpoint,
+                                    FqDataset,
+                                    headers=headers)
+    return df
 
 def get_license_key(headers: dict) -> pd.DataFrame:
     
@@ -640,27 +667,27 @@ def get_fq_dataset_meta_overview(headers: dict) -> Tuple[pd.DataFrame,pd.DataFra
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
 def get_pro_data_meta_overview(headers: dict) -> Tuple[pd.DataFrame,pd.DataFrame]:
         
-        pro_data_owner_group = get_pro_data_owner_group(headers)
-        
-        return_cols =[
-            'fq_dataset',
-            'id',
-            'name',
-            'description',
-            'data_type',
-            'version',
-            'created',
-            'valid_to',
-            'owner_username',
-            'upload_path',
-        ]
-        
-        metadata = pro_data_owner_group.pop('metadata')
-        metadata = pd.DataFrame(metadata.tolist())
-        
-        pro_data_owner_group = pro_data_owner_group[return_cols]
-        
-        return pro_data_owner_group, metadata
+    pro_data_owner_group = get_pro_data_owner_group(headers)
+    
+    return_cols =[
+        'fq_dataset',
+        'id',
+        'name',
+        'description',
+        'data_type',
+        'version',
+        'created',
+        'valid_to',
+        'owner_username',
+        'upload_path',
+    ]
+    
+    metadata = pro_data_owner_group.pop('metadata')
+    metadata = pd.DataFrame(metadata.tolist())
+    
+    pro_data_owner_group = pro_data_owner_group[return_cols]
+    
+    return pro_data_owner_group, metadata
 
 
 #region  CREATE
@@ -851,7 +878,32 @@ def create_fq_attachment(filename: str,
         headers=st.session_state['jwt_auth_header'],
         method='data'
     )
+
+def create_pro_data(headers: dict,
+                    name: str,
+                    data_type: str,
+                    description: str,
+                    upload_path: str,
+                    metadata: dict,
+                    fq_dataset: int):
+                    
+    pro_data = ProData(
+        name = name,
+        data_type = data_type,
+        description = description,
+        upload_path = upload_path,
+        metadata = metadata,
+        fq_dataset = fq_dataset
+    )
+
+    endpoint = uiconfig.ENDPOINT_CONFIG['pro_data']
     
+    extensions.model_to_post_request(
+        endpoint = endpoint,
+        base_model=pro_data,
+        headers=headers,
+    )
+            
 
 def create_license_key(headers: dict, key: str, seats: int, expiration_date: datetime.datetime):
     
@@ -914,6 +966,24 @@ def user_reset_password(old_pwd: str, new_pwd: str) -> bool:
     else:
         return True
 
+def transfer_owner(source_owner_id: int, dest_owner_id: int):
+    
+    source_owner_id = int(source_owner_id)
+    dest_owner_id = int(dest_owner_id)
+    
+    endpoint = os.path.join(uiconfig.BACKEND_API_ENDPOINT, 'transfer_owner/')
+    
+    transfer_owner = TransferOwner(
+        source_owner_id = source_owner_id,
+        dest_owner_id = dest_owner_id
+    )
+    
+    extensions.model_to_post_request(
+        endpoint = endpoint,
+        base_model = transfer_owner,
+        headers=st.session_state['jwt_auth_header']
+    )
+    
 
 def update_owner_group(owner_group_id: int, name: str):
     
@@ -927,7 +997,7 @@ def update_owner_group(owner_group_id: int, name: str):
         headers=st.session_state['jwt_auth_header']
     )
 
-    
+
 def update_user(headers: dict,
                 pk_id: int,
                 username: str,
@@ -937,7 +1007,7 @@ def update_user(headers: dict,
                 staging: bool,
                 is_active: bool,
                 token: str):
-        
+    
     # Get owner_group_id
     owner_groups = get_owner_group(headers)
     owner_group_id = owner_groups.loc[
@@ -1099,7 +1169,6 @@ def update_fq_dataset(fq_dataset_id: int,
         headers=st.session_state['jwt_auth_header']
     )
     
-
 def checkin_fq_file_staging(headers: dict,
                             fq_file_id: int,
                             name: str,
@@ -1161,7 +1230,6 @@ def update_fq_file(fq_file: FqFile):
     )
 
 #region DELETE
-
 def delete_owner_group(headers: dict,
                     owner_group_name: str):
     
