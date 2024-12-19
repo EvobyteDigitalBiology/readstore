@@ -1,0 +1,328 @@
+openapi: 3.0.3
+info:
+  title: ReadStore Basic External REST API
+  description: OpenAPI 3.0.3 specification for the ReadStore Basic external REST API.
+  version: 1.0.0
+
+servers:
+  - url: https://127.0.0.1:8000/api_x_v1/
+    description: External REST API for Local ReadStore server. Port can vary by deployment.
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: Username and user token required for authentication.
+
+security:
+  - BasicAuth: []
+
+paths:
+  /api_x_v1/auth_token/:
+    post:
+      summary: Endpoint to validate user credentials through HTTP Basic Authentication.
+      responses:
+        '200':
+          description: Valid credentials
+        '401':
+          description: Invalid credentials
+  
+  /api_x_v1/project/:
+    get:
+      summary: List all projects
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:          
+              schema:
+                $ref: '#/components/schemas/Project'
+
+    post:
+      summary: Create a new project
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: description
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: metadata
+          in: query
+          required: true
+          schema:
+            type: dict
+          description: Key-value dict of metadata
+        - name: dataset_metadata_keys
+          in: query
+          required: true
+          schema:
+            type: dict
+          description: Key-value dict of keys
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:          
+              schema:
+                $ref: '#/components/schemas/Project'
+      
+  /api_x_v1/project/{pk}/:
+    get:
+      summary: Retrieve a project by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Project retrieved successfully
+          content:
+            application/json:          
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          description: Project not found
+
+    delete:
+      summary: Delete a project by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Project deleted successfully
+        '404':
+          description: Project not found
+
+  /api_x_v1/project_attachment/:
+    get:
+      summary: List all project attachments
+      responses:
+        '200':
+          description: List of project attachments
+          content:
+            application/json:          
+              schema:
+                $ref: '#/components/schemas/ProjectAttachment'
+    post:
+      summary: Create a new project attachment
+      responses:
+        '201':
+          description: Project attachment created successfully
+
+  /api_x_v1/project_attachment/{pk}/:
+    get:
+      summary: Retrieve a project attachment by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        '200':
+          description: Project attachment retrieved successfully
+          content:
+            application/json:          
+              schema:
+                $ref: '#/components/schemas/ProjectAttachment'
+
+        '404':
+          description: Project attachment not found
+    delete:
+      summary: Delete a project attachment by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Project attachment deleted successfully
+        '404':
+          description: Project attachment not found
+
+  /api_x_v1/fq_attachment/:
+    get:
+      summary: List all fq attachments
+      responses:
+        '200':
+          description: List of fq attachments
+    post:
+      summary: Create a new fq attachment
+      responses:
+        '201':
+          description: Fq attachment created successfully
+
+  /api_x_v1/fq_attachment/{pk}/:
+    get:
+      summary: Retrieve an fq attachment by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fq attachment retrieved successfully
+        '404':
+          description: Fq attachment not found
+    delete:
+      summary: Delete an fq attachment by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Fq attachment deleted successfully
+        '404':
+          description: Fq attachment not found
+
+  /api_x_v1/fq_file/:
+    get:
+      summary: List all fq files
+      responses:
+        '200':
+          description: List of fq files
+    post:
+      summary: Create a new fq file
+      responses:
+        '201':
+          description: Fq file created successfully
+
+  /api_x_v1/fq_file/{pk}/:
+    get:
+      summary: Retrieve an fq file by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fq file retrieved successfully
+        '404':
+          description: Fq file not found
+    delete:
+      summary: Delete an fq file by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Fq file deleted successfully
+        '404':
+          description: Fq file not found
+
+  /api_x_v1/fq_dataset/:
+    get:
+      summary: List all fq datasets
+      responses:
+        '200':
+          description: List of fq datasets
+    post:
+      summary: Create a new fq dataset
+      responses:
+        '201':
+          description: Fq dataset created successfully
+
+# Header
+
+  /api_x_v1/fq_dataset/{pk}/:
+    get:
+      summary: Retrieve an fq dataset by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fq dataset retrieved successfully
+        '404':
+          description: Fq dataset not found
+    delete:
+      summary: Delete an fq dataset by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Fq dataset deleted successfully
+        '404':
+          description: Fq dataset not found
+
+  /api_x_v1/fq_file_upload/:
+    post:
+      summary: Upload an fq file
+      responses:
+        '201':
+          description: Fq file uploaded successfully
+
+components:
+  schemas:
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        metadata:
+          type: dict
+        dataset_metadata_keys:
+          type: dict
+    ProjectAttachment:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        owner:
+          type: integer
+        owner_username:
+          type: string
+        created:
+          type: string
+        updated:
+          type: string
+        valid_from:
+          type: string
+        valid_to:
+          type: string
+        metadata:
+          type: dict
+        owner_group:
+          type: integer
+        collaborators:
+          type: list
