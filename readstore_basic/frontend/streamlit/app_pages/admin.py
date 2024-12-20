@@ -84,7 +84,7 @@ def create_user(reference_user_names: pd.Series,
     owner_group_name = uiconfig.DEFAULT_OWNER_GROUP
     
     staging = st.checkbox("Staging Permissions",
-                          help = "Enables FASTQ File Upload",)
+                          help = "Enables Create, Upload and Delete of FASTQ, Projects, Datasets via CLI and SKD")
     
     _ , col2c = st.columns([9,3], vertical_alignment='center')
     
@@ -168,7 +168,7 @@ def update_user(row_ix: int,
     owner_group_name = uiconfig.DEFAULT_OWNER_GROUP
     
     staging = st.checkbox("Staging Permissions",
-                          help = "Enables FASTQ File Upload",
+                          help = "Enables Create, Upload and Delete of FASTQ, Projects, Datasets via CLI and SKD",
                           value = staging_old)
     
     is_active = st.checkbox("User Is Active",
@@ -394,7 +394,11 @@ with tab1:
     
     with col3:
     
-        if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
+        if st.button(':material/refresh:',
+                     key='refresh_projects',
+                     type='tertiary',
+                     help='Refresh Page',
+                     use_container_width=True):
             on_click = extensions.refresh_page()
         
     col_config_user = {
@@ -404,8 +408,8 @@ with tab1:
             'name' : None,
             'email' : st.column_config.TextColumn('Mail'),
             'is_active' : st.column_config.Column('Active', help = "Account Active or Disabled"),
-            'token' : st.column_config.Column('Token', help = 'Token for CLI/SDK Access'),
-            'staging' : st.column_config.Column('Staging', help = 'Enables FASTQ File Upload'),
+            'token' : st.column_config.Column('Token', help = 'Token for CLI/SDK access'),
+            'staging' : st.column_config.Column('Staging', help = 'Create and Delete via CLI/SDK'),
             'date_joined' : st.column_config.DateColumn('Created'),
             'id_user_str' : None
         }
@@ -468,11 +472,11 @@ with tab1:
                           appusers_df=appusers_overview)
     
     with col7a:    
-        if st.button('Reset Password', key='reset_password', disabled = reset_pwd_disabled, use_container_width=True, help = 'New Password for selected User'):
+        if st.button('Reset Password', key='reset_password', disabled = reset_pwd_disabled, use_container_width=True, help = 'New password for selected User'):
             reset_password(row_ix=selection_user[0],
                             appusers_df=appusers_overview)
             
     with col8a:
-        if st.button('Transfer Owner', key='transfer_owner', disabled = transfer_owner_disabled, use_container_width=True, help = 'Transfer Ownership for selected user'):
+        if st.button('Transfer Owner', key='transfer_owner', disabled = transfer_owner_disabled, use_container_width=True, help = 'Transfer ownership for selected user'):
             transfer_owner(row_ix=selection_user[0],
                             appusers_df=appusers_overview)
