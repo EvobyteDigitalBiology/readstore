@@ -108,5 +108,8 @@ urlpatterns.extend([
     path('api_x_v1/fq_dataset/', ext_views.FqDatasetExt.as_view()),
     path('api_x_v1/fq_dataset/<pk>/', ext_views.FqDatasetExt.as_view()),
     
+    path('api_x_v1/pro_data/', ext_views.ProDataExt.as_view()),
+    path('api_x_v1/pro_data/<pk>/', ext_views.ProDataExt.as_view()),
+    
     path('api_x_v1/fq_file_upload/', ext_views.FqFileUploadExt.as_view()),
 ])
