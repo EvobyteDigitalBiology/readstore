@@ -274,7 +274,7 @@ class FqDatasetCLIDetailSerializer(serializers.Serializer):
     pro_data = serializers.ListField(child=serializers.JSONField())
 
 
-class FqDatasetCLIUploadSerializer:
+class FqDatasetCLIUploadSerializer(serializers.Serializer):
     
     name = serializers.CharField(max_length=200)
     description = serializers.CharField()
