@@ -1,6 +1,7 @@
 #!/usr/bin/env python3  
 
 import argparse
+import importlib.metadata
 import os
 import sys
 import string
@@ -14,6 +15,7 @@ import random
 import pathlib
 import socket
 import base64
+
 import pandas as pd
 
 # Define version, check case if readstore is installed as package or run from source
@@ -80,6 +82,68 @@ def _get_path(path: str):
 def _is_port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('localhost', port)) == 0
+
+def validate_requirements():
+    """Validate package requirements
+    
+    Check if requirements specified in requirements.txt are
+    found in current python environment.
+    
+    Print error message if not
+    """
+    
+    print("Validate Requirements for ReadStore Basic Server")
+    
+    if not os.path.exists('requirements.txt'):
+        sys.stderr.write('ERROR: requirements.txt not found in current directory!\n')
+        return False
+    
+    requirements = []
+    with open('requirements.txt', 'r') as fh:
+        for line in fh:
+            if '==' in line:
+                package, version = line.strip().split('==')
+                requirements.append((package.lower(), version))
+    
+    # List of installed packages
+    distributions = importlib.metadata.distributions()
+    
+    installed_versions = {}
+    for dist in distributions:
+        pkg_name = dist.metadata['Name'].lower()
+        pkg_version = dist.version
+        
+        installed_versions[pkg_name] = pkg_version
+        
+    # Check if all requirements are installed
+    for package, version in requirements:
+        if package in installed_versions:
+            pkg_version = installed_versions[package]
+            
+            pkg_version_split = pkg_version.split('.')
+            req_version_split = version.split('.')
+            
+            #Compare max 2 version digits
+            min_len = min(len(pkg_version_split), len(req_version_split), 2)
+            
+            for i in range(min_len):
+                # Case that package version is lower than required version
+                if int(pkg_version_split[i]) < int(req_version_split[i]):
+                    sys.stderr.write(f'ERROR: Package {package} version {pkg_version} is lower than required version {version}!\n')
+                    return False
+                elif int(pkg_version_split[i]) > int(req_version_split[i]):
+                    break
+                # Case that both versions are equal, continue loop, if loop ends, package version is equal to required version, OK
+                else:
+                    continue    
+        else:
+            sys.stderr.write(f'ERROR: Package {package} not found in current Python environment!\n')
+            return False
+
+    print("All package requirements found.")
+    
+    return True    
+
 
 def run_rs_server(db_directory: str,
                   db_backup_directory: str,
@@ -363,7 +427,7 @@ def run_db_export(db_directory: str,
     try:
         subprocess.check_call([python_exec, '--version'])
     except:
-        logger.error(f'ERROR: Python not found in PATH!')
+        print(f'ERROR: Python not found in PATH!')
         return
     
     config_path = os.path.join(config_directory, 'readstore_server_config.yaml')
@@ -483,8 +547,13 @@ def main():
     django_port = args.django_port
     streamlit_port = args.streamlit_port
     debug = args.debug
-            
+
     version = args.version
+    
+    # Check if requirements are met
+    if not validate_requirements():
+        print('Install requirements specified in requirements.txt')
+        return
     
     if 'export_run' in args:
         
@@ -554,7 +623,7 @@ def main():
             print('ERROR: --log_directory is required')
             return
         
-        # Define logger    
+        #Define logger    
         run_rs_server(db_directory,
                     db_backup_directory,
                     log_directory,
