@@ -99,9 +99,12 @@ def filter_df_by_metadata_filter(df: pd.DataFrame, filter_session_prefix = 'fq_d
         if k.startswith(filter_session_prefix):
             meta_key = k.replace(filter_session_prefix, '')
             values = st.session_state[k]
-            if values != []:
-                df = df.loc[df[meta_key].isin(values),:]
             
+            # Add this if to check in case that project_show was updated
+            if meta_key in df:            
+                if values != []:
+                    df = df.loc[df[meta_key].isin(values),:]
+
     return df
 
 
@@ -491,6 +494,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                     
                     datamanager.delete_fq_dataset(fq_dataset_id)
                     
+                    
                     st.cache_data.clear()
                     st.rerun()
             
@@ -834,7 +838,7 @@ def update_many_datasets(selected_fq_dataset: pd.DataFrame,
                     with st.spinner('Deleting Datasets...'):
                         
                         _ = [datamanager.delete_fq_dataset(fq_id) for fq_id in selected_fq_dataset['id']]
-                        
+                    
                     st.cache_data.clear()
                     st.rerun()
 
@@ -1274,7 +1278,7 @@ with col5:
         
         for k in metadata_select.columns:
             
-            options = metadata_select[k].dropna().tolist()
+            options = metadata_select[k].dropna().unique().tolist()
             
             st.multiselect(label = k,
                             options = options,
@@ -1338,20 +1342,15 @@ if projects_filter:
             fq_datasets_show['project_names'].apply(lambda x: any([p in x for p in projects_filter])),:
             ]
 
-        
+st.session_state['fq_metadata_select'] = fq_datasets_show[fq_metadata.columns]
+
 # Filter out meta columns from selected view which are all None
+fq_datasets_show = filter_df_by_metadata_filter(fq_datasets_show)
 
 # Remove those meta cols from projects_show which are all None
 fq_meta_cols_all_none = fq_datasets_show.loc[:,fq_metadata.columns].isna().all()
 fq_meta_cols_all_none = fq_meta_cols_all_none[fq_meta_cols_all_none].index
 fq_meta_cols_show = list(filter(lambda x: x not in fq_meta_cols_all_none, fq_metadata.columns))
-st.session_state['fq_metadata_select'] = fq_datasets_show[fq_meta_cols_show]
-
-# Search by metadata filter
-fq_datasets_show = filter_df_by_metadata_filter(fq_datasets_show)
-
-fq_datasets_show = fq_datasets_show.drop(columns=fq_meta_cols_all_none)
-
 
 # Add metadata
 if st.session_state.show_fq_metadata:
