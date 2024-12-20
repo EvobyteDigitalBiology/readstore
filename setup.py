@@ -19,16 +19,16 @@ setup(
     ],
     python_requires='>=3.10',
     install_requires=[
-        'Django>=5.1',
-        'djangorestframework>=3.15',
-        'djangorestframework-simplejwt>=5.3',
+        'Django>=5.1.4',
+        'djangorestframework>=3.15.1',
+        'djangorestframework-simplejwt>=5.3.1',
         'requests>=2.32.3',
         'gunicorn>=23.0.0',
         'pysam>=0.22.1',
         'pyyaml>=6.0.2',
-        'streamlit>=1.39.0',
-        'pydantic>=2.9',
-        'pandas>=2.2'
+        'streamlit>=1.41.0',
+        'pydantic>=2.10.3',
+        'pandas>=2.2.3'
     ],
     entry_points={
         'console_scripts': [
