@@ -403,6 +403,7 @@ def run_db_export(db_directory: str,
     
     # Validate paths
     db_directory = _get_path(db_directory)
+    config_directory = _get_path(config_directory)
     export_directory = _get_path(export_directory)
     
     # Check permissions for db_directory and db_backup_directory
