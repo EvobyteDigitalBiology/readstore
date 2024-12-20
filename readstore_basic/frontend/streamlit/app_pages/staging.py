@@ -342,6 +342,8 @@ def checkin_df(fq_file_df: pd.DataFrame,
         with col:
             if st.button('Confirm', key='confirm_checkin', type = 'primary', use_container_width=True):
                 
+                checkin_complete = False
+                
                 if create_mode:
                     
                     # Remove na values from metadata key column
@@ -462,6 +464,8 @@ def checkin_df(fq_file_df: pd.DataFrame,
                                     datamanager.create_fq_attachment(file_name,
                                                                         file_byte,
                                                                         fq_pk)
+                                
+                                checkin_complete = True
                     
                 else:
                     
@@ -555,10 +559,13 @@ def checkin_df(fq_file_df: pd.DataFrame,
                             base_model=fq_dataset_select,
                             headers=st.session_state['jwt_auth_header']
                         )
+                        
+                        checkin_complete = True
                     
-                del st.session_state['fq_data_staging']
-                st.cache_data.clear()
-                st.rerun()
+                if checkin_complete:
+                    del st.session_state['fq_data_staging']
+                    st.cache_data.clear()
+                    st.rerun()
                 
         
 # region Batch Check In
@@ -1241,7 +1248,11 @@ else:
                 staging_help()
             
     with col4f:
-        if st.button(':material/refresh:', key='refresh_projects', help='Refresh Page'):
+        if st.button(':material/refresh:',
+                     key='refresh_projects',
+                     help='Refresh Page',
+                     type='tertiary',
+                     use_container_width = True):
             if 'fq_data_staging' in st.session_state:
                 del st.session_state['fq_data_staging']
             extensions.refresh_page()
