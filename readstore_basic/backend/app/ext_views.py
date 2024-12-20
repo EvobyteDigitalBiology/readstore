@@ -94,9 +94,7 @@ class FqFileExt(APIView):
             
             if not FqFile.objects.filter(pk=pk).exists():
                 return Response({'detail' : 'FqFile not found'}, status=400)
-            
-            print("H")
-            
+
             qset = FqFile.objects.filter(pk=pk).all()            
             
             # Add creator name as attribute
