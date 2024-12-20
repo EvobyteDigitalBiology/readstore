@@ -83,6 +83,8 @@ class EndpointTest():
         
         res = requests.post(self.endpoint, json=data, auth=self.auth)
         
+        print(res.status_code)
+        
         if self.verbose:
             print(res.json())
         
@@ -175,7 +177,7 @@ class EndpointTestManager():
             if endpoint_test.has_operation(HTTPOperations.DETAIL):
                 endpoint_test.get_detail_request()
 
-    def run_put_request(self):
+    def run_put_requests(self):
         
         if self.verbose:
             print("Running PUT requests")
@@ -196,7 +198,7 @@ class EndpointTestManager():
     def run_all_operations(self):
         
         self.run_post_requests()
-        self.run_put_request()
+        self.run_put_requests()
         self.run_get_requests()
         self.run_detail_requests()
         self.run_delete_requests()
