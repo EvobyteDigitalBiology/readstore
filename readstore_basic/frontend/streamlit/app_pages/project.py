@@ -120,9 +120,11 @@ def filter_df_by_metadata_filter(df: pd.DataFrame, filter_session_prefix = 'proj
     for k in st.session_state:
         if k.startswith(filter_session_prefix):
             meta_key = k.replace(filter_session_prefix, '')
-            values = st.session_state[k]
-            if values != []:
-                df = df.loc[df[meta_key].isin(values),:]
+            # Add this if to check in case that project_show was updated
+            if meta_key in df:
+                values = st.session_state[k]
+                if values != []:
+                    df = df.loc[df[meta_key].isin(values),:]
             
     return df
 
@@ -500,6 +502,7 @@ def update_project(project_select_df: pd.DataFrame,
                             ):
                 if st.button('Confirm', key='delete_project'):
                     
+                    # Reset metadata selection if projects change
                     datamanager.delete_project(project_id)
                     
                     st.cache_data.clear()
@@ -892,7 +895,7 @@ with col4:
         
         for k in metadata_select.columns:
             
-            options = metadata_select[k].dropna().tolist()
+            options = metadata_select[k].dropna().unique().tolist()
             
             st.multiselect(label = k,
                             options = options,
@@ -941,15 +944,15 @@ projects_show = projects_show.loc[
 ]
 
 # Filter out meta columns from selected view which are all None
+st.session_state['metadata_select'] = projects_show[metadata.columns]
+
+# Search by metadata filter
+projects_show = filter_df_by_metadata_filter(projects_show)
 
 # Remove those meta cols from projects_show which are all None
 meta_cols_all_none = projects_show.loc[:,metadata.columns].isna().all()
 meta_cols_all_none = meta_cols_all_none[meta_cols_all_none].index
 meta_cols_show = list(filter(lambda x: x not in meta_cols_all_none, metadata.columns))
-st.session_state['metadata_select'] = projects_show[meta_cols_show]
-
-# Search by metadata filter
-projects_show = filter_df_by_metadata_filter(projects_show)
 
 # Dynamically adjust height of dataframe
 if st.session_state['show_details']:
