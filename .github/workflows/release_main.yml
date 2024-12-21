@@ -1,0 +1,43 @@
+name: Create Release on Push to Main
+
+on:
+  push:
+    branches:
+      - main  # Triggers on pushes to the main branch
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+    # Step 2: Get the latest tag
+      - name: Get Latest Tag
+        id: get_tag
+        run: |
+          TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "Latest tag: $TAG"
+          echo "tag=$TAG" >> $GITHUB_ENV
+
+    # Step 3: Create GitHub Release
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ env.tag }}
+          release_name: Release ${{ env.tag }}
+          body: |
+            ReadStore Basic ${{ env.tag }}.
+
+            README
+            [README.md](https://github.com/JonathanAlles/readstore-basic/blob/main/docs/README.md)
+
+            Changelog
+            [CHANGELOG.md](https://github.com/JonathanAlles/readstore-basic/blob/main/CHANGELOG.md)
+
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
