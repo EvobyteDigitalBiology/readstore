@@ -1,8 +1,14 @@
+![GitHub Release](https://img.shields.io/github/v/release/EvobyteDigitalBiology/readstore)
+![PyPI - Version](https://img.shields.io/pypi/v/readstore-basic)
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+
+
 # ReadStore Basic
 
 This README introduces ReadStore Data Platform, the lean solution for managing NGS and omics data.
 
-You find a full documenation at 
+Full **Documentation** https://evobytedigitalbiology.github.io/readstore/
+
 
 **Please read and follow the instructions carefully**. In particular the [Security, Permissions and Backup](#backup) section contains important information related to data security and backup.
 
