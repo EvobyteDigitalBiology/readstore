@@ -41,6 +41,8 @@ jobs:
 
   release-build:
     runs-on: ubuntu-latest
+    needs:
+      - create-release
 
     steps:
       - uses: actions/checkout@v4
