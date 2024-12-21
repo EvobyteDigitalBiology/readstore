@@ -1,6 +1,6 @@
 # ReadStore Basic
 
-This README introduces ReadStore Data Platform, the lean solution for managing FASTQ and NGS data.
+This README introduces ReadStore Data Platform, the lean solution for managing NGS and omics data.
 
 You find a full documenation at 
 
