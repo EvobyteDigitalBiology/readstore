@@ -7,8 +7,7 @@
 
 This README introduces ReadStore Data Platform, the lean solution for managing NGS and omics data.
 
-Full **Documentation** https://evobytedigitalbiology.github.io/readstore/
-
+The full **ReadStore Basic documentation** is available [here](https://evobytedigitalbiology.github.io/readstore/) 
 
 **Please read and follow the instructions carefully**. In particular the [Security, Permissions and Backup](#backup) section contains important information related to data security and backup.
 
@@ -29,6 +28,7 @@ Happy analysis :)
     - [Advanced Server Configuration](#advancedconfig)
     - [Configure systemd service](#systemd)
     - [Export Database to File](#export_dump)
+- [ReadStore API](#api)
 - [Usage](#usage)
     1. [Account Settings](#account_settings)
     2. [Upload Files](#upload_files)
@@ -362,6 +362,46 @@ options:
 Example `readstore export --db-directory /path/to/db --config-directory /path/to/config --export_directory /path/to/export_files`
 
 The tables are exported as `.csv` and `.json` files. Project and Datasets attachment files are exported in their original file format, each in a separate folder for each Project or Dataset.
+
+## ReadStore API<a id="api"></a>
+
+The **ReadStore Basis** server provides a RESTful API for accessing resources via HTTP requests.  
+This API extends the functionalities of the ReadStore CLI as well as the Python and R SDKs.
+
+### API Endpoint
+By default, the API is accessible at:  
+`http://127.0.0.1:8000/api_x_v1/`
+
+### Authentication
+Users must authenticate using their username and token via the Basic Authentication scheme.
+
+### Example Usage
+Below is an example demonstrating how to use the ReadStore CLI to retrieve an overview of Projects by sending an HTTP `GET` request to the `project/` endpoint.  
+In this example, the username is `testuser`, and the token is `0dM9qSU0Q5PLVgDrZRftzw`. You can find your token in the ReadStore settings.
+
+```bash
+curl -X GET -u testuser:0dM9qSU0Q5PLVgDrZRftzw http://localhost:8000/api_x_v1/project/
+```
+
+#### Example Reponse
+
+A successful HTTP response returns a JSON-formatted string describing the project(s) in the ReadStore database. Example response:
+
+```
+[{
+  "id": 4,
+  "name": "TestProject99",
+  "metadata": {
+    "key1": "value1",
+    "key2": "value2"
+  },
+  "attachments": []
+}]
+```
+
+### Documentation
+
+Comprehensive [API documentation](https://evobytedigitalbiology.github.io/readstore/rest_api/) is available in the ReadStore Basic Docs.
 
 ## Usage
 
