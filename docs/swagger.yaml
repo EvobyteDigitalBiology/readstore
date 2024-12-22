@@ -1,0 +1,649 @@
+openapi: 3.1.0
+
+info:
+  title: ReadStore Basic External REST API
+  description: >
+    OpenAPI 3.1.0 specification for the ReadStore Basic external REST API.
+    This API can be access from program code to automate generation, update and retrieval of elements in ReadStore
+  version: 1.0.0
+  contact:
+  name: EVOBYTE Digital Biology
+  url: https://www.evo-byte.com/contact
+  email: info@evo-byte.com
+servers:
+  - url: https://127.0.0.1:8000/api_x_v1/
+    description: External REST API for Local ReadStore server. Port can vary by deployment.
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: Username and user token required for authentication.
+
+security:
+  - BasicAuth: []
+
+paths:
+  /api_x_v1/auth_token/:
+    post:
+      summary: Endpoint to validate user credentials through HTTP Basic Authentication.
+      responses:
+        '200':
+          description: Valid credentials
+        '401':
+          description: Invalid credentials
+  
+  /api_x_v1/project/:
+    get:
+      summary: List all projects
+      parameters:
+          - name: project_name
+            in: query
+            required: false
+            schema:
+              type: string
+          - name: project_id
+            in: query
+            required: false
+            schema:
+              type: integer
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:          
+              schema:
+                $ref: '#/components/schemas/ProjectArray'
+          
+
+    post:
+      summary: Create a new project
+
+      requestBody:
+        required: true
+        content:
+          application/json:          
+            schema:
+              $ref: '#/components/schemas/ProjectPost'
+
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:          
+              schema:
+                $ref: '#/components/schemas/ProjectArray'
+      
+  /api_x_v1/project/{pk}/:
+    get:
+      summary: Retrieve a project by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Project retrieved successfully
+          content:
+            application/json:          
+              schema:
+                $ref: '#/components/schemas/ProjectArray'
+        '404':
+          description: Project not found
+
+    delete:
+      summary: Delete a project by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Project deleted successfully
+        '404':
+          description: Project not found
+
+  /api_x_v1/project_attachment/:
+    get:
+      summary: List of project attachments or project attachment object including "body" field
+
+      parameters:
+      - name: project_name
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: project_id
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: attachment_name
+        in: query
+        required: true
+        schema:
+          type: string
+
+      responses:
+        '200':
+          description: List of project attachments or project attachment object including "body" field
+          content:
+            application/json:          
+              schema:
+                $ref: '#/components/schemas/ProjectAttachmentObject'
+
+  /api_x_v1/project_attachment/{pk}/:
+    get:
+      summary: Retrieve a project attachment by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        '200':
+          description: Project attachment retrieved successfully
+          content:
+            application/json:          
+              schema:
+                $ref: '#/components/schemas/ProjectAttachmentObject'
+
+
+  /api_x_v1/fq_dataset/:
+      get:
+        summary: List all fq datasets
+
+        parameters:
+        - name: project_name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: project_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: dataset_name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+
+        responses:
+          '200':
+            description: List of fq datasets
+            content:
+              application/json:          
+                schema:
+                  $ref: '#/components/schemas/FqDataset'
+      post:
+        summary: Create a new fq dataset
+        responses:
+          '201':
+            description: Fq dataset created successfully
+            content:
+              application/json:          
+                schema:
+                  $ref: '#/components/schemas/FqDatasetPost'
+
+  /api_x_v1/fq_dataset/{pk}/:
+    get:
+      summary: Retrieve an fq dataset by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fq dataset retrieved successfully
+          content:
+              application/json:          
+                schema:
+                  $ref: '#/components/schemas/FqDatasetDetail'
+        '404':
+          description: Fq dataset not found
+    
+    delete:
+      summary: Delete an fq dataset by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Fq dataset deleted successfully
+        '404':
+          description: Fq dataset not found
+
+
+  /api_x_v1/fq_attachment/:
+    get:
+      summary: List all fq attachments
+      description: List of fq attachments. Specifying a dataset_name or dataset_id plus attachment_name returns a single fq attachment object including "body" field (s. detail view).
+
+      parameters:
+      - name: dataset_name
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: dataset_id
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: attachment_name
+        in: query
+        required: true
+        schema:
+          type: string
+
+      responses:
+        '200':
+          description: List of fq attachments
+          content:
+              application/json:          
+                schema:
+                  $ref: '#/components/schemas/FqDatasetAttachment'
+          
+
+  /api_x_v1/fq_attachment/{pk}/:
+    get:
+      summary: Retrieve an fq attachment by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fq attachment retrieved successfully
+          content:
+              application/json:          
+                schema:
+                  $ref: '#/components/schemas/FqDatasetAttachmentDetail'
+
+
+  /api_x_v1/fq_file_upload/:
+    post:
+      summary: Upload an fq file
+
+      requestBody:
+        required: true
+        content:
+          application/json:          
+            schema:
+              $ref: '#/components/schemas/FqFileUpload'
+
+      responses:
+        '201':
+          description: Fq file uploaded successfully
+
+
+  /api_x_v1/fq_file/:
+    get:
+      summary: List all fq files
+      responses:
+        '200':
+          description: List of fq files
+          content:
+              application/json:          
+                schema:
+                  $ref: '#/components/schemas/FqFile'
+
+    post:
+      summary: Create a new fq file
+      
+      requestBody:
+        required: true
+        content:
+          application/json:          
+            schema:
+              $ref: '#/components/schemas/FqFilePost'
+      
+      responses:
+        '201':
+          description: Fq file created successfully
+
+  /api_x_v1/fq_file/{pk}/:
+    get:
+      summary: Retrieve an fq file by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fq file retrieved successfully
+          content:
+              application/json:          
+                schema:
+                  $ref: '#/components/schemas/FqFile'
+
+    delete:
+      summary: Delete an fq file by ID
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fq file deleted successfully
+        '404':
+          description: Fq file not found
+
+  
+
+components:
+  schemas:
+    ProjectArray:
+      type: array
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        metadata:
+          type: dict
+        dataset_metadata_keys:
+          type: dict
+    
+    ProjectPost:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        metadata:
+          type: dict
+        dataset_metadata_keys:
+          type: dict
+    
+    ProjectAttachmentArray:
+      type: array
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        owner:
+          type: integer
+        created:
+          type: string
+        updated:
+          type: string
+        valid_from:
+          type: string
+        valid_to:
+          type: string
+        project:
+          type: integer
+        size_mb:
+          type: integer
+        filetype:
+          type: string
+
+    ProjectAttachmentObject:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        owner:
+          type: integer
+        created:
+          type: string
+        updated:
+          type: string
+        valid_from:
+          type: string
+        valid_to:
+          type: string
+        project:
+          type: integer
+        size_mb:
+          type: integer
+        filetype:
+          type: string
+        body:
+          type: string
+
+    FqDataset:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        qc_passed:
+          type: boolean
+        paired_end:
+          type: boolean
+        index_read:
+          type: boolean
+        project_ids:
+          type: array
+        project_names:
+          type: array
+        metadata:
+          type: dict
+        attachments:
+          type: array
+        pro_data:
+          type: array
+
+    FqDatasetDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        qc_passed:
+          type: boolean
+        paired_end:
+          type: boolean
+        index_read:
+          type: boolean
+        project_ids:
+          type: array
+        project_names:
+          type: array
+        created:
+          type: string
+        fq_file_r1:
+          type: integer
+        fq_file_r2:
+          type: integer
+        fq_file_i1:
+          type: integer
+        fq_file_i2:
+          type: integer
+        metadata:
+          type: dict
+        attachments:
+          type: array
+        pro_data:
+          type: array
+
+    FqDatasetPost:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        qc_passed:
+          type: boolean
+        paired_end:
+          type: boolean
+        index_read:
+          type: boolean
+        project_ids:
+          type: array
+        project_names:
+          type: array
+        fq_file_r1:
+          type: integer
+        fq_file_r2:
+          type: integer
+        fq_file_i1:
+          type: integer
+        fq_file_i2:
+          type: integer
+        metadata:
+          type: dict
+
+    FqDatasetAttachment:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        owner:
+          type: integer
+        created:
+          type: string
+        updated:
+          type: string
+        valid_from:
+          type: string
+        valid_to:
+          type: string
+        fq_dataset:
+          type: integer
+        size_mb:
+          type: integer
+        filetype:
+          type: string
+
+    FqDatasetAttachmentDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        owner:
+          type: integer
+        created:
+          type: string
+        updated:
+          type: string
+        valid_from:
+          type: string
+        valid_to:
+          type: string
+        fq_dataset:
+          type: integer
+        size_mb:
+          type: integer
+        filetype:
+          type: string
+        body:
+          type: string
+
+    FqFileUpload:
+      type: object
+      properties:
+        fq_file_path:
+          type: string
+        fq_file_name:
+          type: string
+        read_type:
+          type: string
+
+    FqFile:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        read_type:
+          type: string
+        qc_passed:
+          type: boolean
+        read_length:
+          type: integer
+        num_reads:
+          type: integer
+        size_mb:
+          type: integer  
+        qc_phred_mean:
+          type: number
+          format: float
+        creator:
+          type: string
+        upload_path:
+          type: string
+        md5_checksum:
+          type: string
+
+    FqFilePost:
+      type: object
+      properties:
+        name:
+          type: string
+        read_type:
+          type: string
+        qc_passed:
+          type: boolean
+        read_length:
+          type: integer
+        num_reads:
+          type: integer
+        size_mb:
+          type: integer  
+        qc_phred_mean:
+          type: number
+          format: float
+        qc_phred:
+          type: dict
+        upload_path:
+          type: string
+        md5_checksum:
+          type: string
+        staging:
+          type: boolean
+        pipeline_version:
+          type: string

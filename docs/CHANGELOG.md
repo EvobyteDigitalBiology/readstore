@@ -1,5 +1,23 @@
 # Changelog
 
+### v1.3.0 - 2024-12-20
+
+### Added
+
+- Create API Endpoints to create, update, and delete Projects, Datasets, FASTQ files via the CLI
+- Crete Datasets from ReadStore Web App
+- Options to check-in staged FASTQ Files to existing Datasets
+- Attachent also work for Batch Import 
+- Add new filter options for metadata
+- Option to transfer ownership of objects like datasets between users
+
+### Changed
+- Re-enter new password required when changing or resetting User passwords
+- Align formatting of Project and Dataset dialogs
+- Update streamlit settings to 1.41
+
+### Removed
+
 ### v1.2.0 - 2024-12-01
 
 ### Added
@@ -16,7 +34,7 @@
 - Update streamlit settings to 1.40
 
 ### Removed
-- Deprecate /token API mechanism
+- Deprecate/token API mechanism
 
 ### v1.1.0 - 2024-11-14
 
