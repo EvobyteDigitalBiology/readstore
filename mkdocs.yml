@@ -6,6 +6,7 @@ theme:
   name: "material"
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - toc.integrate
     - search.suggest
@@ -38,9 +39,7 @@ plugins:
 nav:
   - Home: index.md
   - Readme: readme.md
-  - API Reference:
-    - OpenAPI 3: rest_api.md
-  - About: about.md
+  - API Reference: rest_api.md
   
 extra_css:
   - stylesheets/extra.css
