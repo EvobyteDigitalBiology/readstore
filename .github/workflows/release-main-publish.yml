@@ -1,0 +1,57 @@
+name: Create Release on New Tag
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger the workflow on push events for tags like v1.0.0, v2.0.0, etc.
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Git
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+      # Step 3: Create GitHub Release
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: ReadStore Basic ${{ github.ref_name }}
+          body: |
+            ReadStore Basic ${{ github.ref_name }}.
+
+            ReadStore is a platform for storing, managing, and integrating omics data. It speeds up analysis and offers a simple way of managing and sharing NGS omics datasets, metadata and processed data (Processed Data). Built-in project and metadata management structures your workflows and a collaborative user interface enhances teamwork — so you can focus on generating insights.
+
+            **Description**
+
+            ReadStore Basic enables you to manage NGS data from your local Linux environment and can be set up in a few minutes. It comprises a local web server and web app that you can connect to via your browser to explore and edit your NGS experiments.
+
+            To upload FASTQ files and Processed Data from the command line into the ReadStore database, you’ll also need to install the ReadStore CLI.
+
+            Logging into the ReadStore web app via the browser requires a user account. User accounts are created from the Admin account, which is setup by default.
+
+            ReadStore Basic provides a shared work environment for all registered users. Users can collaborate on editing datasets, projects, metadata, and attachments, with shared access to all resources. This facilitates cross-functional projects, connecting data analysts and experimental researchers.
+
+            The ReadStore database can be accessed programmatically using the Command-Line Interface (CLI) or Python & R SDKs. This facilitates easy integration into bioinformatics pipelines and downstream analysis workflows.
+
+            **Getting Started**
+            Please read and follow the installation instructions described in the README.
+
+            **Documentation**
+            You can find the full documentation for the ReadStore ecosystem [here](https://evobytedigitalbiology.github.io/readstore/).
+
+            **Changelog**
+            [CHANGELOG.md](https://github.com/EvobyteDigitalBiology/readstore/blob/main/docs/CHANGELOG.md)
+
+          draft: false
+          prerelease: false
