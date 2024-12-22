@@ -31,7 +31,7 @@ jobs:
             ReadStore Basic ${{ github.ref_name }}.
 
             README
-            [README.md](https://github.com/JonathanAlles/readstore-basic/blob/main/docs/README.md)
+            [readme.md](https://github.com/JonathanAlles/readstore-basic/blob/main/docs/readme.md)
 
             Changelog
             [CHANGELOG.md](https://github.com/JonathanAlles/readstore-basic/blob/main/CHANGELOG.md)
