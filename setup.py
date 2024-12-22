@@ -7,7 +7,7 @@ setup(
     author="Jonathan Alles",
     author_email="Jonathan.Alles@evo-byte.com",
     description="ReadStore Basic Is A Python Package For Managing FASTQ Files and NGS Projects",
-    long_description=open("docs/README.md").read(),
+    long_description=open("docs/readme.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/EvobyteDigitalBiology/readstore",
     packages=find_packages(exclude=["readstore_basic.backend.app.migrations"]),
