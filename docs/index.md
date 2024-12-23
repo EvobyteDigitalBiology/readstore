@@ -23,6 +23,8 @@ Before proceeding, you need to obtain a <a href=https://evo-byte.com/readstore-f
 #### Installation
 Follow the installation steps described in the README section. Make sure to review and follow the points related to security and permissions management.
 
+For technical questions or problems with the install please contact <a href="mailto:support@evo-byte.com">support@evo-byte.com</a>
+
 ## Tutorials & How-Tos
 
 We support you getting started with ReadStore with a YouTube playlist containing easy-to-follow examples for the basic functionalities, blog posts with step-by-step instructions and more in-depth information in the Readme files.
