@@ -276,8 +276,8 @@ class FqDatasetCLIDetailSerializer(serializers.Serializer):
 
 class FqDatasetCLIUploadSerializer(serializers.Serializer):
     
-    name = serializers.CharField(max_length=200)
-    description = serializers.CharField()
+    name = serializers.CharField(max_length=200, trim_whitespace=True)
+    description = serializers.CharField(allow_blank=True)
     qc_passed = serializers.BooleanField()
     paired_end = serializers.BooleanField()
     index_read = serializers.BooleanField()
@@ -363,7 +363,6 @@ class ProjectCLISerializer(serializers.Serializer):
     metadata = serializers.JSONField()
     attachments = serializers.ListField(child=serializers.CharField())
 
-    
 class ProjectCLIDetailSerializer(serializers.Serializer):
 
     id = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -377,8 +376,8 @@ class ProjectCLIDetailSerializer(serializers.Serializer):
 class ProjectCLIUploadSerializer(serializers.Serializer):   
     
     id = serializers.PrimaryKeyRelatedField(read_only=True)
-    name = serializers.CharField(max_length=200)
-    description = serializers.CharField()
+    name = serializers.CharField(max_length=200, trim_whitespace=True)
+    description = serializers.CharField(allow_blank=True)
     metadata = serializers.JSONField()
     dataset_metadata_keys = serializers.JSONField()
     
