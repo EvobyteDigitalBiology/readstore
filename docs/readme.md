@@ -17,7 +17,7 @@ Start with the ReadStore Intro and **Tutorials**: https://www.youtube.com/@evoby
 
 Blog posts and How-Tos: https://evo-byte.com/blog/
 
-For general questions reach out to info@evo-byte.com
+For general questions reach out to info@evo-byte.com or in case of technical problems to support@evo-byte.com
 
 Happy analysis :)
 
@@ -365,7 +365,7 @@ The tables are exported as `.csv` and `.json` files. Project and Datasets attach
 
 ## ReadStore API<a id="api"></a>
 
-The **ReadStore Basis** server provides a RESTful API for accessing resources via HTTP requests.  
+The **ReadStore Basic** server provides a RESTful API for accessing resources via HTTP requests.  
 This API extends the functionalities of the ReadStore CLI as well as the Python and R SDKs.
 
 ### API Endpoint
