@@ -54,6 +54,9 @@ jobs:
       - name: Build release distributions
         run: |
           # NOTE: put your own distribution build steps here.
+          
+          cp requirements.txt readstore_basic/requirements.txt
+
           python -m pip install build
           python -m build
 
