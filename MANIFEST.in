@@ -1,6 +1,7 @@
 include LICENSE requirements.txt
 include docs/readme.md
 include readstore_basic/readstore_server_config.yaml
+include readstore_basic/requirements.txt
 
 include readstore_basic/frontend/streamlit/.streamlit/config.toml
 include readstore_basic/frontend/streamlit/static/*
