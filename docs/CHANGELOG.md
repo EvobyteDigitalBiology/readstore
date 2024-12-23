@@ -1,5 +1,18 @@
 # Changelog
 
+### v1.3.2 - 2024-12-23
+
+### Changed
+- Require update Django Rest Framework
+
+### Bugfix
+- Install Process Validation of Requirements
+
+### v1.3.2 - 2024-12-21
+
+### Bugfix
+- Install Process
+
 ### v1.3.0 - 2024-12-20
 
 ### Added
