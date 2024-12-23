@@ -1,5 +1,10 @@
 # Changelog
 
+### v1.3.3 - 2024-12-23
+
+### Bugfix
+- Install Process Validation of Requirements
+
 ### v1.3.2 - 2024-12-23
 
 ### Changed
