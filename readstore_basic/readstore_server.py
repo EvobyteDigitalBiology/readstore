@@ -94,12 +94,14 @@ def validate_requirements():
     
     print("Validate Requirements for ReadStore Basic Server")
     
-    if not os.path.exists('requirements.txt'):
+    requirements_path = os.path.join(BASE_DIR, 'requirements.txt')
+
+    if not os.path.exists(requirements_path):
         sys.stderr.write('ERROR: requirements.txt not found in current directory!\n')
         return False
     
     requirements = []
-    with open('requirements.txt', 'r') as fh:
+    with open(requirements_path, 'r') as fh:
         for line in fh:
             if '==' in line:
                 package, version = line.strip().split('==')
