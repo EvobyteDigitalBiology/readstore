@@ -9,7 +9,7 @@ This README introduces ReadStore Data Platform, the lean solution for managing N
 
 The full **ReadStore Basic documentation** is available [here](https://evobytedigitalbiology.github.io/readstore/) 
 
-**Please read and follow the instructions carefully**. In particular the [Security, Permissions and Backup](#backup) section contains important information related to data security and backup.
+**Please read and follow the instructions carefully**. In particular the [Security, Permissions and Backup](#backup) section contains important information related to data security and backup. In case of problems with the install or information on different Linux distributions, please check the separate [Installation Guide](installation.md).
 
 You need a license key for using ReadStore Basic, please check the [ReadStore website](https://evo-byte.com/readstore-get-started/) for more information or reach out to license@evo-byte.com
 
@@ -111,13 +111,26 @@ If you need a ReadStore version with more advanced permission and group manageme
 
 ## Installation
 
+**NOTE** Check the [Installation Guide](installation.md) for more information and common sources of errors or contact support@evo-byte.com in case of technical problems. We will certainly find a solution.
+
 ### 1. Install the ReadStore Basic Server
 
-You need Python version 3.10 or higher to install ReadStore
-
-`pip3 install readstore-basic`
+You need **Python version 3.10 or higher** to install ReadStore.
 
 You can perform the install in a conda or venv virtual environment to simplify package management.
+This is recommended to avoid potential conflicts in the required Python dependencies.
+
+Here is an example how to setup a virtual environment using the venv module:
+
+`python -m venv .venv`
+
+`source .venv/bin/activate`
+
+This provides you with a clean virtual environment avoiding potential issues with resolving Python dependencies. 
+
+Next install the ReadStore Basic server.
+
+`pip3 install readstore-basic`
 
 A local install is also possible
 
