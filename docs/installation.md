@@ -131,7 +131,7 @@ source .venv/bin/activate
 
 pip3 install readstore-basic
 
-readstore-basic --db-directory readstore_dir --db-backup-directory readstore_backup_dir --log-directory readstore_log_dir
+readstore-server --db-directory readstore_dir --db-backup-directory readstore_backup_dir --log-directory readstore_log_dir
 ```
 
 ### Debian 12
@@ -152,7 +152,7 @@ source .venv/bin/activate
 
 pip3 install readstore-basic
 
-readstore-basic --db-directory readstore_dir --db-backup-directory readstore_backup_dir --log-directory readstore_log_dir
+readstore-server --db-directory readstore_dir --db-backup-directory readstore_backup_dir --log-directory readstore_log_dir
 ```
 
 ### Amazon Linux 2023
@@ -172,5 +172,5 @@ source .venv/bin/activate
 
 pip3 install readstore-basic
 
-readstore-basic --db-directory readstore_dir --db-backup-directory readstore_backup_dir --log-directory readstore_log_dir
+readstore-server --db-directory readstore_dir --db-backup-directory readstore_backup_dir --log-directory readstore_log_dir
 ```
