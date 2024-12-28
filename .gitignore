@@ -183,6 +183,7 @@ pipeline/*/.local/*
 .bash_history
 
 readstore_basic/backend/app/migrations/*
+readstore_basic/requirements.txt
 
 #venv
 rs/*
