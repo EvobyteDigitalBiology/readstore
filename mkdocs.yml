@@ -39,6 +39,7 @@ plugins:
 nav:
   - Home: index.md
   - Readme: readme.md
+  - Installation: installation.md
   - Changelog: CHANGELOG.md
   - API Reference: rest_api.md
 
