@@ -28,7 +28,8 @@ setup(
         'pyyaml>=6.0.2',
         'streamlit>=1.41.0',
         'pydantic>=2.10.3',
-        'pandas>=2.2.3'
+        'pandas>=2.2.3',
+        'openpyxl>=3.1.5'
     ],
     entry_points={
         'console_scripts': [
