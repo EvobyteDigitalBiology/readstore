@@ -110,8 +110,8 @@ class ProjectAttachmentPost(BaseModel):
 class FqFile(BaseModel):
     id: int
     name: str
-    bucket: str
-    key: str
+    bucket: Optional[str] = None
+    key: Optional[str] = None
     upload_path: str
     qc_passed: bool
     read_type: str
