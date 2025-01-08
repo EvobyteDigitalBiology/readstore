@@ -4,10 +4,12 @@ from collections import defaultdict
 import os
 import sys
 import datetime
+from typing import List, Tuple
 
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import DjangoModelPermissions
+from rest_framework.serializers import ValidationError
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -91,7 +93,6 @@ class FqFileExt(APIView):
 
         # Get read type for fq file
         if pk:
-            
             if not FqFile.objects.filter(pk=pk).exists():
                 return Response({'detail' : 'FqFile not found'}, status=400)
 
@@ -124,44 +125,19 @@ class FqFileExt(APIView):
         if serializer.is_valid():
             
             owner = request.user
-            
-            # Validate that read type is valid
-            read_type = serializer.validated_data.get('read_type')
-
-            upload_path = serializer.validated_data.get('upload_path')
-                        
-            # Validate that qc phred is a valid dict
-            qc_phred = serializer.validated_data.get('qc_phred')
-            qc_phred_index_pos = list(qc_phred.keys())
-            qc_phred_values = list(qc_phred.values())
-            
-            if not all([x.isnumeric() for x in qc_phred_index_pos]):
-                return Response({'detail' : 'Invalid qc_phred index values. Must be numeric string'}, status=400)
-            if not all(isinstance(x, float) for x in qc_phred_values):
-                return Response({'detail' : 'Invalid qc_phred values. Must be float'}, status=400)
-                
-            if not read_type in ['R1', 'R2', 'I1', 'I2']:
-                return Response({'detail' : 'Invalid read type'}, status=400)
-
-            # Check that file path is found
-            if not os.path.exists(upload_path):
-                return Response({'detail' : 'File not found'}, status=400)
-            elif not os.access(upload_path, os.R_OK):
-                return Response({'detail' : 'No Read Permission'}, status=400)
-            
             # Option: Check for file extension
             
             # Create FqFile
             
             fq_file = FqFile.objects.create(name=serializer.validated_data.get('name'),
-                                            read_type=read_type,
+                                            read_type=serializer.validated_data.get('read_type'),
                                             qc_passed=serializer.validated_data.get('qc_passed'),
                                             read_length=serializer.validated_data.get('read_length'),
                                             num_reads=serializer.validated_data.get('num_reads'),
                                             size_mb=serializer.validated_data.get('size_mb'),
                                             qc_phred_mean=serializer.validated_data.get('qc_phred_mean'),
-                                            qc_phred=qc_phred,
-                                            upload_path=upload_path,
+                                            qc_phred=serializer.validated_data.get('qc_phred'),
+                                            upload_path=serializer.validated_data.get('upload_path'),
                                             md5_checksum=serializer.validated_data.get('md5_checksum'),
                                             owner=owner,
                                             pipeline_version=serializer.validated_data.get('pipeline_version'),
@@ -174,47 +150,28 @@ class FqFileExt(APIView):
             return Response(serializer.errors, status=400)
         
         
-    def put(self, request, pk):
-      
+    def put(self, request, *args, **kwargs):
+        
         serializer = FqFileCLIUploadSerializer(data=request.data)
       
         if serializer.is_valid():
             
+            pk = self.kwargs.get('pk')
+            
+            if pk is None:
+                return Response({'detail' : 'Provide pk'}, status=400)
+            
             fq_file = get_object_or_404(FqFile, pk=pk)
             
-            # Validate that read type is valid
-            read_type = serializer.validated_data.get('read_type')
-
-            upload_path = serializer.validated_data.get('upload_path')
-                        
-            # Validate that qc phred is a valid dict
-            qc_phred = serializer.validated_data.get('qc_phred')
-            qc_phred_index_pos = list(qc_phred.keys())
-            qc_phred_values = list(qc_phred.values())
-            
-            if not all([x.isnumeric() for x in qc_phred_index_pos]):
-                return Response({'detail' : 'Invalid qc_phred index values. Must be numeric string'}, status=400)
-            if not all(isinstance(x, float) for x in qc_phred_values):
-                return Response({'detail' : 'Invalid qc_phred values. Must be float'}, status=400)
-                
-            if not read_type in ['R1', 'R2', 'I1', 'I2']:
-                return Response({'detail' : 'Invalid read type'}, status=400)
-
-            # Check that file path is found
-            if not os.path.exists(upload_path):
-                return Response({'detail' : 'File not found'}, status=400)
-            elif not os.access(upload_path, os.R_OK):
-                return Response({'detail' : 'No Read Permission'}, status=400)
-      
             fq_file.name = serializer.validated_data.get('name')
-            fq_file.read_type = read_type
+            fq_file.read_type = serializer.validated_data.get('read_type')
             fq_file.qc_passed = serializer.validated_data.get('qc_passed')
             fq_file.read_length = serializer.validated_data.get('read_length')
             fq_file.num_reads = serializer.validated_data.get('num_reads')
             fq_file.size_mb = serializer.validated_data.get('size_mb')
             fq_file.qc_phred_mean = serializer.validated_data.get('qc_phred_mean')
-            fq_file.qc_phred = qc_phred
-            fq_file.upload_path = upload_path
+            fq_file.qc_phred = serializer.validated_data.get('qc_phred')
+            fq_file.upload_path = serializer.validated_data.get('upload_path')
             fq_file.md5_checksum = serializer.validated_data.get('md5_checksum')
             fq_file.pipeline_version = serializer.validated_data.get('pipeline_version')
             fq_file.staging = serializer.validated_data.get('staging')
@@ -261,7 +218,9 @@ class FqFileUploadExt(APIView):
             filepath = os.path.abspath(filepath)
             fq_name = request.data.get('fq_file_name', None)
             read_type = request.data.get('read_type', None)
-                        
+            
+            # Validation could move to serializer
+            
             # Check if file exists and read permissions
             if not os.path.exists(filepath):
                 return Response({'detail' : 'File not found'}, status=400)
@@ -326,6 +285,111 @@ class FqDatasetExt(APIView):
         if self.request.method in ['POST', 'PUT', 'DELETE']:
             view_permissions.append(RSClientHasStaging())
         return view_permissions
+    
+    # validation functions shared for post and put
+    def _get_project_ids(self, validated_data: dict) -> List[int]:
+        """Validate project ids and names and return list of project ids
+
+        Returned project_ids are set as M2M field in FqDataset
+
+        Args:
+            validated_data (dict): validated data from serializer
+
+        Raises:
+            ValidationError: If project_ids or project_names are not found
+
+        Returns:
+            List[int]: List of project ids
+        """
+        
+        project_ids = validated_data.get('project_ids') # List of project ids or empty list
+        project_names = validated_data.get('project_names') # List of project names or empty list
+        
+        # Check if projects exists and unify project_ids and project_names to ids
+        if len(project_ids) > 0:
+            qset = Project.objects.filter(id__in=project_ids).all()
+            project_ids_qset = list(qset.values_list('id', flat=True))
+            
+            if set(project_ids) != set(project_ids_qset):
+                diff_ids = set(project_ids) - set(project_ids_qset)
+                raise ValidationError({'detail' : f'Project IDs not found {diff_ids}'}, code=400)
+        
+        # Check if project names exists and unify project_ids and project_names to ids
+        project_ids_from_names = []
+        if len(project_names) > 0:
+            qset = Project.objects.filter(name__in=project_names).all()
+            project_names_qset = list(qset.values_list('name', flat=True))
+            
+            if set(project_names) != set(project_names_qset):
+                diff_names = set(project_names) - set(project_names_qset)
+                raise ValidationError({'detail' : f'Project Names not found {diff_names}'}, code=400)
+            else:
+                project_ids_from_names = list(qset.values_list('id', flat=True))
+        project_ids = list(set(project_ids + project_ids_from_names))
+
+        return project_ids
+    
+    def _get_fq_file_fks(self, validated_data: dict) -> Tuple:
+        """Validate FqFile foreign keys and return FqFile objects
+            Check if FqFile PKs exists and if FqFiles are already attached to another dataset
+
+        Args:
+            validated_data (dict): validated data from serializer
+
+        Raises:
+            ValidationError: If FqFile PKs are not found or FqFiles are already attached to another dataset
+        
+        Returns:
+            Tuple: Tuple of FqFile objects or None
+            Order FqFile R1, FqFile R2, FqFile I1, FqFile I2
+        """
+        
+        # Could be forteign key fields
+        fq_file_r1 = validated_data.get('fq_file_r1')
+        fq_file_r2 = validated_data.get('fq_file_r2')
+        fq_file_i1 = validated_data.get('fq_file_i1')
+        fq_file_i2 = validated_data.get('fq_file_i2')
+        
+        # Check if fq files exists
+        # Then check if fq files are already attached to another dataset    
+        if fq_file_r1:
+            if not FqFile.objects.filter(pk=fq_file_r1).exists():
+                raise ValidationError({'detail' : 'FqFile R1 not found'}, code=400)
+            else:
+                fq_file_r1 = FqFile.objects.get(pk=fq_file_r1)
+                
+                if fq_file_r1.has_fq_dataset():
+                    raise ValidationError({'detail' : 'FqFile R1 already attached to another dataset'}, code=400)
+
+        if fq_file_r2:
+            if not FqFile.objects.filter(pk=fq_file_r2).exists():
+                raise ValidationError({'detail' : 'FqFile R2 not found'}, code=400)
+            else:
+                fq_file_r2 = FqFile.objects.get(pk=fq_file_r2)
+                
+                if fq_file_r2.has_fq_dataset():
+                    raise ValidationError({'detail' : 'FqFile R2 already attached to another dataset'}, code=400)
+
+        if fq_file_i1:
+            if not FqFile.objects.filter(pk=fq_file_i1).exists():
+                raise ValidationError({'detail' : 'FqFile I1 not found'}, code=400)
+            else:
+                fq_file_i1 = FqFile.objects.get(pk=fq_file_i1)
+                
+                if fq_file_i1.has_fq_dataset():
+                    raise ValidationError({'detail' : 'FqFile I1 already attached to another dataset'}, code=400)
+                
+        if fq_file_i2:
+            if not FqFile.objects.filter(pk=fq_file_i2).exists():
+                raise ValidationError({'detail' : 'FqFile I2 not found'}, code=400)
+            else:
+                fq_file_i2 = FqFile.objects.get(pk=fq_file_i2)
+                
+                if fq_file_i2.has_fq_dataset():
+                    raise ValidationError({'detail' : 'FqFile I2 already attached to another dataset'}, code=400)
+
+        return fq_file_r1, fq_file_r2, fq_file_i1, fq_file_i2
+    
     
     def get(self, request, pk=None):
         
@@ -483,68 +547,20 @@ class FqDatasetExt(APIView):
         # Validate the Serializer
         serializer = FqDatasetCLIUploadSerializer(data=request.data)
         
-        
         if serializer.is_valid():
             
             owner = request.user
             owner_group = owner.appuser.owner_group
             
             name = serializer.validated_data.get('name')
-            project_ids = serializer.validated_data.get('project_ids')
-            project_names = serializer.validated_data.get('project_names')
             
-            fq_file_r1 = serializer.validated_data.get('fq_file_r1')
-            fq_file_r2 = serializer.validated_data.get('fq_file_r2')
-            fq_file_i1 = serializer.validated_data.get('fq_file_i1')
-            fq_file_i2 = serializer.validated_data.get('fq_file_i2')
+            project_ids = self._get_project_ids(serializer.validated_data)
             
             # Check if fq file with this name exists
             if FqDataset.objects.filter(name=name).exists():
                 return Response({'detail' : 'FqDataset with this name exists'}, status=400)
             
-            # Check if projects exists and unify project_ids and project_names to ids
-            if len(project_ids) > 0:
-                qset = Project.objects.filter(id__in=project_ids).all()
-                project_ids_qset = list(qset.values_list('id', flat=True))
-                
-                if set(project_ids) != set(project_ids_qset):
-                    diff_ids = set(project_ids) - set(project_ids_qset)
-                    return Response({'detail' : f'Project IDs not found {diff_ids}'}, status=400)
-            
-            # Check if project names exists and unify project_ids and project_names to ids
-            project_ids_from_names = []
-            if len(project_names) > 0:
-                qset = Project.objects.filter(name__in=project_names).all()
-                project_names_qset = list(qset.values_list('name', flat=True))
-                
-                if set(project_names) != set(project_names_qset):
-                    diff_names = set(project_names) - set(project_names_qset)
-                    return Response({'detail' : f'Project Names not found {diff_names}'}, status=400)
-                else:
-                    project_ids_from_names = list(qset.values_list('id', flat=True))
-            project_ids = list(set(project_ids + project_ids_from_names))
-            
-            # Check if fq files exists
-            if fq_file_r1:
-                if not FqFile.objects.filter(pk=fq_file_r1).exists():
-                    return Response({'detail' : 'FqFile R1 not found'}, status=400)
-                else:
-                    fq_file_r1 = FqFile.objects.get(pk=fq_file_r1)
-            if fq_file_r2:
-                if not FqFile.objects.filter(pk=fq_file_r2).exists():
-                    return Response({'detail' : 'FqFile R2 not found'}, status=400)
-                else:
-                    fq_file_r2 = FqFile.objects.get(pk=fq_file_r2)
-            if fq_file_i1:
-                if not FqFile.objects.filter(pk=fq_file_i1).exists():
-                    return Response({'detail' : 'FqFile I1 not found'}, status=400)
-                else:
-                    fq_file_i1 = FqFile.objects.get(pk=fq_file_i1)
-            if fq_file_i2:
-                if not FqFile.objects.filter(pk=fq_file_i2).exists():
-                    return Response({'detail' : 'FqFile I2 not found'}, status=400)
-                else:
-                    fq_file_i2 = FqFile.objects.get(pk=fq_file_i2)
+            fq_file_r1, fq_file_r2, fq_file_i1, fq_file_i2 = self._get_fq_file_fks(serializer.validated_data)
             
             # Create FqDataset
             fq_dataset = FqDataset.objects.create(name=name,
@@ -585,57 +601,9 @@ class FqDatasetExt(APIView):
             if FqDataset.objects.filter((~Q(pk=pk)) & Q(name=name)).exists():
                 return Response({'detail' : 'FqDataset with this name already exists'}, status=400)
             
-            project_ids = serializer.validated_data.get('project_ids')
-            project_names = serializer.validated_data.get('project_names')
+            project_ids = self._get_project_ids(serializer.validated_data)
             
-            fq_file_r1 = serializer.validated_data.get('fq_file_r1')
-            fq_file_r2 = serializer.validated_data.get('fq_file_r2')
-            fq_file_i1 = serializer.validated_data.get('fq_file_i1')
-            fq_file_i2 = serializer.validated_data.get('fq_file_i2')
-            
-            # Check if projects exists and unify project_ids and project_names to ids
-            if len(project_ids) > 0:
-                qset = Project.objects.filter(id__in=project_ids).all()
-                project_ids_qset = list(qset.values_list('id', flat=True))
-                
-                if set(project_ids) != set(project_ids_qset):
-                    diff_ids = set(project_ids) - set(project_ids_qset)
-                    return Response({'detail' : f'Project IDs not found {diff_ids}'}, status=400)
-            
-            # Check if project names exists and unify project_ids and project_names to ids
-            project_ids_from_names = []
-            if len(project_names) > 0:
-                qset = Project.objects.filter(name__in=project_names).all()
-                project_names_qset = list(qset.values_list('name', flat=True))
-                
-                if set(project_names) != set(project_names_qset):
-                    diff_names = set(project_names) - set(project_names_qset)
-                    return Response({'detail' : f'Project Names not found {diff_names}'}, status=400)
-                else:
-                    project_ids_from_names = list(qset.values_list('id', flat=True))
-            project_ids = list(set(project_ids + project_ids_from_names))
-            
-            # Check if fq files exists
-            if fq_file_r1:
-                if not FqFile.objects.filter(pk=fq_file_r1).exists():
-                    return Response({'detail' : 'FqFile R1 not found'}, status=400)
-                else:
-                    fq_file_r1 = FqFile.objects.get(pk=fq_file_r1)
-            if fq_file_r2:
-                if not FqFile.objects.filter(pk=fq_file_r2).exists():
-                    return Response({'detail' : 'FqFile R2 not found'}, status=400)
-                else:
-                    fq_file_r2 = FqFile.objects.get(pk=fq_file_r2)
-            if fq_file_i1:
-                if not FqFile.objects.filter(pk=fq_file_i1).exists():
-                    return Response({'detail' : 'FqFile I1 not found'}, status=400)
-                else:
-                    fq_file_i1 = FqFile.objects.get(pk=fq_file_i1)
-            if fq_file_i2:
-                if not FqFile.objects.filter(pk=fq_file_i2).exists():
-                    return Response({'detail' : 'FqFile I2 not found'}, status=400)
-                else:
-                    fq_file_i2 = FqFile.objects.get(pk=fq_file_i2)
+            fq_file_r1, fq_file_r2, fq_file_i1, fq_file_i2 = self._get_fq_file_fks(serializer.validated_data)
             
             # Update entry
             fq_dataset.name = name
