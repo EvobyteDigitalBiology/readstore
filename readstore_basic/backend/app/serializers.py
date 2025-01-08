@@ -3,9 +3,13 @@
 """
     Module containing serializers for the Django REST API.
 """
+
+import os
 import base64
+import string
 
 from rest_framework import serializers
+from rest_framework.serializers import ValidationError
 
 from .models import AppUser
 from .models import OwnerGroup
@@ -19,6 +23,50 @@ from .models import ProData
 
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
+
+from settings.base import VALID_READ_TYPE
+from settings.base import METADATA_RESERVED_KEYS
+
+
+# Validation Functions
+def _validate_charset(query_str: str) -> bool:
+    """
+    Validate charset for query string
+
+    Args:
+        query_str (str): Query string to validate
+
+    Returns:
+        bool: 
+    """
+    
+    allowed = string.digits + string.ascii_lowercase + string.ascii_uppercase + '_-.@'
+    allowed = set(allowed)
+    
+    return set(query_str) <= allowed
+
+
+def _validate_metadata(metadata: dict):
+    """
+    Validate metadata dict
+
+    Ensure keys are non-empty, valid charset and not reserved
+
+    Args:
+        metadata (dict): Metadata dict to validate
+
+    Raises:
+        rsexceptions.ReadStoreError: If key is invalid
+    """
+    
+    for key, value in metadata.items():
+        if key == '':
+            raise ValidationError({'detail' : 'Empty metadata key'}, code=400)
+        if not _validate_charset(key):
+            raise ValidationError({'detail' : 'Invalid character in metadata key. Must be alphanumeric or _-.@'}, code=400)
+        if key in METADATA_RESERVED_KEYS:
+            raise ValidationError({'detail' : f'Reserved Keyword not allowed in metadata key: {key}'}, code=400)
+
 
 # Additional Fields
 class BinarySerializerField(serializers.Field):
@@ -34,7 +82,6 @@ class BinarySerializerField(serializers.Field):
         # Takes incoming base64 encoded UTF8 string and decodes to bytes
         # return base64.b64decode(value.encode('utf-8'))
         return base64.b64decode(value)
-
 
 class GroupSerializer(serializers.ModelSerializer):
     
@@ -190,6 +237,7 @@ class FqFileSerializer(serializers.ModelSerializer):
         model = FqFile
         fields = '__all__'
 
+    # TODO: Add validations for fields
 
 class FqFileCLISerializer(serializers.Serializer):
     
@@ -221,6 +269,46 @@ class FqFileCLIUploadSerializer(serializers.Serializer):
     staging = serializers.BooleanField()
     pipeline_version = serializers.CharField()
 
+    def validate(self, attrs):
+        
+        # Perform validation of phred
+        
+        # Validate that read type is valid
+        read_type = attrs.get('read_type')
+
+        upload_path = attrs.get('upload_path')
+                    
+        # Validate that qc phred is a valid dict
+        qc_phred = attrs.get('qc_phred')
+        qc_phred_index_pos = list(qc_phred.keys())
+        qc_phred_values = list(qc_phred.values())
+        
+        if not all([x.isnumeric() for x in qc_phred_index_pos]):
+            raise ValidationError({'detail' : 'Invalid qc_phred index values. Must be numeric string'}, code=400)
+        if not all(isinstance(x, float) for x in qc_phred_values):
+            raise ValidationError({'detail' : 'Invalid qc_phred values. Must be float'}, code=400)
+        if not qc_phred_index_pos[0] == '0':
+            raise ValidationError({'detail' : 'qc_phred index must start with 0'}, code=400)
+        # Check that qc_phred index is continuous
+        
+        qc_phred_index_int = [int(x) for x in qc_phred_index_pos]
+        if not qc_phred_index_int == list(range(0, len(qc_phred_index_int))):
+            raise ValidationError({'detail' : 'qc_phred index must be continuous'}, code=400)
+        # Check that qc_phred_values are > 0
+        if not all([x > 0 for x in qc_phred_values]):
+            raise ValidationError({'detail' : 'qc_phred values must be > 0'}, code=400)
+            
+        if not read_type in VALID_READ_TYPE:
+            raise ValidationError({'detail' : 'Invalid read type'}, code=400)
+
+        # Check that file path is found
+        if not os.path.exists(upload_path):
+            raise ValidationError({'detail' : 'File not found'}, code=400)
+        elif not os.access(upload_path, os.R_OK):
+            raise ValidationError({'detail' : 'No Read Permission'}, code=400)
+        
+        return attrs
+
 class FqDatasetSerializer(serializers.ModelSerializer):
 
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -238,6 +326,7 @@ class FqDatasetSerializer(serializers.ModelSerializer):
             "owner": {"read_only": True},
         }
 
+    # TODO: Add validations for fields, e.g. metadata
 
 class FqDatasetCLISerializer(serializers.Serializer):
 
@@ -288,8 +377,16 @@ class FqDatasetCLIUploadSerializer(serializers.Serializer):
     fq_file_i1 = serializers.IntegerField(allow_null=True)
     fq_file_i2 = serializers.IntegerField(allow_null=True)
     metadata = serializers.JSONField()
+        
+    def validate(self, attrs):
+        
+        # # Perform validation of metadata
+        metadata = attrs.get('metadata')
+        _validate_metadata(metadata)
+        
+        return attrs
     
-
+        
 class FqAttachmentListSerializer(serializers.ModelSerializer):
     
     class Meta:
@@ -335,6 +432,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "owner": {"read_only": True},
         }
 
+    # TODO: Add validations for fields, e.g. metadata
 
 class ProjectAttachmentListSerializer(serializers.ModelSerializer):
     
@@ -380,6 +478,19 @@ class ProjectCLIUploadSerializer(serializers.Serializer):
     description = serializers.CharField(allow_blank=True)
     metadata = serializers.JSONField()
     dataset_metadata_keys = serializers.JSONField()
+    
+    def validate(self, attrs):
+        
+        # # Perform validation of metadata
+        metadata = attrs.get('metadata')
+        _validate_metadata(metadata)
+        
+        # Validate dataset_metadata_keys
+        # Must be keys with empty values
+        dataset_metadata_keys = attrs.get('dataset_metadata_keys')
+        _validate_metadata(dataset_metadata_keys)
+        
+        return attrs
     
 class PwdSerializer(serializers.Serializer):
     """
@@ -432,7 +543,15 @@ class ProDataUploadSerializer(serializers.Serializer):
     metadata = serializers.JSONField(required=False, default={})
     dataset_id = serializers.IntegerField(required=False)
     dataset_name = serializers.CharField(max_length=200,required=False)
+    
+    def validate(self, attrs):
         
+        # # Perform validation of metadata
+        metadata = attrs.get('metadata')
+        _validate_metadata(metadata)
+        
+        return attrs
+    
 class ProDataCLISerializer(serializers.Serializer):
 
     id = serializers.PrimaryKeyRelatedField(read_only=True)
