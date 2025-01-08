@@ -183,7 +183,23 @@ class FqFile(PipelineModel):
     class Meta:
         db_table = 'fq_file'
         #unique_together = ('bucket', 'key')
+    
+    def has_fq_dataset(self) -> bool:
+        """Check if FqFile is associated with FqDataset.
+
+        Check if FqFile is associated with FqDataset via OneToOneField.
         
+        Returns:
+            bool: True if FqFile is associated with FqDataset, False otherwise
+        """
+        fq_attributes = ['fq_file_r1', 'fq_file_r2', 'fq_file_i1', 'fq_file_i2']
+        for fq_attribute in fq_attributes:
+            if hasattr(self, fq_attribute):
+                return True
+        else:
+            return False
+        
+
 class Project(BasicModel):
     
     """
@@ -201,7 +217,7 @@ class Project(BasicModel):
         db_table = 'project'
         unique_together = ('name', 'owner_group')
         
-                
+            
 class ProjectAttachment(BinaryFileModel):
     
     """
