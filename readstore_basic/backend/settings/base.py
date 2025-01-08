@@ -177,6 +177,9 @@ VALID_READ1_SUFFIX = rs_config['global']['valid_read1_suffix'].split(',')
 VALID_READ2_SUFFIX = rs_config['global']['valid_read2_suffix'].split(',')
 VALID_INDEX1_SUFFIX = rs_config['global']['valid_index1_suffix'].split(',')
 VALID_INDEX2_SUFFIX = rs_config['global']['valid_index2_suffix'].split(',')
+VALID_READ_TYPE = rs_config['global']['valid_read_type'].split(',')
+
+METADATA_RESERVED_KEYS = rs_config['global']['metadata_reserved_keys'].split(',')
 
 FQ_QUEUE_NUM_WORKERS = rs_config['django']['fq_queue_num_workers']
 FQ_QUEUE_MAX_SIZE = rs_config['django']['fq_queue_maxsize']
