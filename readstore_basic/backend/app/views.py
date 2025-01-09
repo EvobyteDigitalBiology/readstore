@@ -20,12 +20,17 @@ import sys
 import datetime
 
 from rest_framework import viewsets
+from rest_framework import status
+
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import DjangoModelPermissions
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action
+
+from rest_framework_simplejwt.exceptions import AuthenticationFailed, InvalidToken, TokenError
+from rest_framework_simplejwt.views import TokenViewBase
 
 from .serializers import UserSerializer
 from .serializers import OwnerGroupSerializer
@@ -44,7 +49,8 @@ from .serializers import LicenseKeySerializer
 from .serializers import ProDataSerializer
 from .serializers import ProDataUploadSerializer
 from .serializers import TransferOwnerSerializer
-
+from .serializers import CustomTokenObtainPairSerializer
+from .serializers import InActiveUser
 
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
@@ -64,8 +70,27 @@ from .models import ProData
 
 from settings.base import VALID_FASTQ_EXTENSIONS
 
+# Custom Token Obtain Pair View for JWT
+class CustomTokenObtainPairView(TokenViewBase):
+    """
+    Takes a set of user credentials and returns an access and refresh JSON web
+    token pair to prove the authentication of those credentials.
 
-# Create your views here.
+    Returns HTTP 406 when user is inactive and HTTP 401 when login credentials are invalid.
+    """
+    serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except AuthenticationFailed:
+            raise InActiveUser()
+        except TokenError:
+            raise InvalidToken()
+
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
 class UserViewSet(viewsets.ModelViewSet):
     """
         Class View for User Model
