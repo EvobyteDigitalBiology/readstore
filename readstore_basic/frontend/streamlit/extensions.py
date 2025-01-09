@@ -196,6 +196,8 @@ def get_jwt_token(username: str, password: str) -> Tuple[str, str]:
         refresh_token = response.json()["refresh"]
 
         return access_token, refresh_token
+    elif response.status_code == 406:
+        raise exceptions.UIAppError("User is inactive")
     else:
         raise exceptions.UIAppError("Username/password is incorrect")
 
