@@ -42,6 +42,7 @@ router.register(r'pro_data', views.ProDataViewSet, basename='ProData')
 
 ext_router = routers.DefaultRouter()
 
+
 # URL patterns for app backend
 urlpatterns = [
     path('api_v1/', include(router.urls)),
@@ -76,7 +77,7 @@ urlpatterns = [
     path('api_v1/project_attachment/collab/', views.ProjectAttachmentViewSet.as_view({'get': 'collab'})),
     path('api_v1/project_attachment/project/<pk>/', views.ProjectAttachmentViewSet.as_view({'get': 'project'})),
 
-    path('api_v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api_v1/token/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api_v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api_v1/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     
