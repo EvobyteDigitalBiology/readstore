@@ -70,5 +70,5 @@ with col2:
                 
                 st.rerun()
                 
-            except exceptions.UIAppError:
-                st.error("Username/password is incorrect")
+            except exceptions.UIAppError as e:
+                st.error(e.message)
