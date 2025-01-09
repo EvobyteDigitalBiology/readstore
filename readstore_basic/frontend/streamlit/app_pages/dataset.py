@@ -31,6 +31,7 @@ if not extensions.user_auth_status():
 
 colh1, colh2 = st.columns([11,1], vertical_alignment='top')
 
+# Add username info top right
 with colh1:
     st.markdown(
         """
@@ -60,7 +61,7 @@ styles.adjust_button_height(25)
 
 # Set sesstion state for downloaing attachments
 
-# Session state for selecting datasets to attach
+# Session state for selecting datasets to attach to project
 if not 'dataset_select_id' in st.session_state:
     st.session_state['dataset_select_id'] = None
 
@@ -72,9 +73,11 @@ if not 'pro_data_show_archived_versions' in st.session_state:
 if not 'pro_data_new' in st.session_state:
     st.session_state['pro_data_new'] = None
 
+# Dataframe to hold metadata filter for datasets
 if not 'fq_metadata_select' in st.session_state:
     st.session_state['fq_metadata_select'] = pd.DataFrame()
 
+# Set selected ProData index for an activate dataset for download function
 def update_attachment_select():
     if st.session_state['dataset_select_id']:
         dataset_id = st.session_state['dataset_select_id']
@@ -85,6 +88,7 @@ def update_pro_data_select():
         dataset_id = st.session_state['dataset_select_id']
         st.session_state[f'download_pro_data_select_{dataset_id}'] = st.session_state['fq_prodata_details_df']
 
+
 def update_pro_data_show_archived():
     new_state = st.session_state['checkbox_pro_data_include_archive']
     st.session_state['pro_data_show_archived_versions'] = new_state
@@ -94,7 +98,21 @@ def update_pro_data_show_archived():
         del st.session_state[detail_fq_pro_data_key_name]
 
 def filter_df_by_metadata_filter(df: pd.DataFrame, filter_session_prefix = 'fq_dataset_meta_filter_'):
+    """Filter a DataFrame by metadata filter session state
+
+    For each key in session state check if it starts with filter_session_prefix
+    Parse metadata key and values to filter from session state and filter DataFrame
+    If values are defined perform filtering
+    Move to next key
     
+    Args:
+        df (pd.DataFrame): dataframe to filter
+        filter_session_prefix (str, optional): Key prefix to fetch metadata filter from session state.
+
+    Returns:
+        pd.DataFrame: Filtered DataFrame
+    """
+
     for k in st.session_state:
         if k.startswith(filter_session_prefix):
             meta_key = k.replace(filter_session_prefix, '')
@@ -112,16 +130,24 @@ def filter_df_by_metadata_filter(df: pd.DataFrame, filter_session_prefix = 'fq_d
 @st.dialog('Create Dataset', width='large')
 def create_dataset(reference_fq_dataset_names: pd.Series,
                     reference_project_names_df: pd.DataFrame):
+    """Create empty dataset
 
+    Args:
+        reference_fq_dataset_names (pd.Series): Existing names of fq_datasets
+        reference_project_names_df (pd.DataFrame): Existing names of projects
+    """
+    
+    
+    # Get reference dataset and project names
     reference_fq_dataset_names = reference_fq_dataset_names.str.lower()
     reference_fq_dataset_names = reference_fq_dataset_names.tolist()
 
-    # Get reference dataset names
-    # Get reference project names
+    # Set dataset name
     name = st.text_input("Dataset Name",
                         key='dataset_name',
                         help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).')
 
+    # Define Tabs
     tab1, tab2, tab3, tab4 = st.tabs([":blue-background[**Projects**]",
                                     ":blue-background[**Features**]",
                                     ":blue-background[**Attachments**]",
@@ -131,10 +157,11 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
     with tab1:
 
         with st.container(height=460, border=False):
-                    
+      
             project_options = sorted(reference_project_names_df['name'])
             st.write('Attach the Dataset to one or more Projects')
             
+            # Select project to attach dataset to
             project_names_select = st.multiselect("Select Projects",
                     project_options,
                     help = 'Attach the dataset to project(s).')
@@ -144,7 +171,7 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
 
         description = st.text_area("Enter Dataset Description",
                                     help = 'Description of the FASTQ Dataset.')
-        
+
         with st.container(border=True, height=315):
             
             col1c, col2c = st.columns([11,1], vertical_alignment='top')
@@ -155,18 +182,22 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
                 
                 with tab1c:
                     
-                    # Get metadata keys for selected projects
+                    # Get metadata keys which are inherited from selected projects(s)
                     metadata_keys = reference_project_names_df.loc[
                             reference_project_names_df['name'].isin(project_names_select),'dataset_metadata_keys'].to_list()
+                    
+                    # Flatten list of dicts to list of keys
                     metadata_keys = [list(m.keys()) for m in metadata_keys]
                     metadata_keys = itertools.chain.from_iterable(metadata_keys)
                     metadata_keys = sorted(list(set(metadata_keys)))
-                                
+
+                    # Define metadata json keys
                     fq_metadata = pd.DataFrame({
                         'key' : metadata_keys,
                         'value' : [''] * len(metadata_keys)
                     })
                     
+                    # Provide data editor to enter metadata
                     fq_metadata = fq_metadata.astype(str)
                     metadata_df = st.data_editor(
                         fq_metadata,
@@ -184,8 +215,10 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
                 with st.popover(':material/help:'):
                     st.write("Key-value pairs to store and group dataset metadata. For example 'species' : 'human'")
 
+    # TAB: Attachments
     with tab3:
-    
+        # Choose Files to Upload
+        
         st.write('Attach files to the Dataset.')
         
         uploaded_files = st.file_uploader(
@@ -196,8 +229,9 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
         
         st.write(' ')
     
+    # TAB: Create ProData Entries for Dataset
     with tab4:
-                        
+              
         st.write('Attach **Pro**cessed Data.')
 
         pro_data_name = st.text_input("Enter Name",
@@ -228,6 +262,7 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
                                         placeholder = "Enter Description",
                                         key = 'pro_description')
         
+        # Metadata for ProData
         with st.container(border=True):
             
             col1p, col2p = st.columns([11,1], vertical_alignment='top')
@@ -242,7 +277,8 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
                         'key' : [],
                         'value' : []
                     })
-                
+
+                    # Data Editor for Input
                     selected_fq_metadata = selected_fq_metadata.astype(str)
                     pro_metadata_df = st.data_editor(
                         selected_fq_metadata,
@@ -310,8 +346,7 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
                         }
                         
                         
-                        # Add validation logic 
-
+                        # Add ProData to session state
                         if not st.session_state['pro_data_new'] is None:
                             # Returns a list of dicts
                             pro_data_new = st.session_state['pro_data_new']
@@ -395,9 +430,9 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
                                                         dataset_id)
 
                     if not st.session_state['pro_data_new'] is None:
-                    
+
                         for pro_data_entry in st.session_state['pro_data_new']:
-                            
+
                             datamanager.create_pro_data(st.session_state["jwt_auth_header"],
                                                         name = pro_data_entry['name'],
                                                         data_type = pro_data_entry['data_type'],
@@ -418,6 +453,16 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                    selected_fq_pro_data: pd.DataFrame,
                     reference_fq_dataset_names: pd.Series,
                     reference_project_names_df: pd.DataFrame):
+    """Update dataset
+
+    Args:
+        selected_fq_dataset: Selected dataset to update
+        selected_fq_metadata: Selected metadata for dataset to update
+        selected_fq_attachments: Selected attachments for dataset to update
+        selected_fq_pro_data: Selected datasets ProData entries
+        reference_fq_dataset_names: Existing fq_datasets names 
+        reference_project_names_df: Existing projects names
+    """
     
     fq_dataset_input = selected_fq_dataset.copy()
         
@@ -455,11 +500,13 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
     for k, v in read_file_file_map.items():
         read_file_file_map[k] = datamanager.get_fq_file_detail(st.session_state["jwt_auth_header"], v)
     
+    # Define Name
     name = st.text_input("Dataset Name",
                          value=fq_dataset_name_old,
                          key='dataset_name',
                          help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).')
 
+    # Define Tabs
     tab_names = [read_long_map[rt] for rt in read_file_file_map.keys()]
     tab_names_format = [":blue-background[**Projects**]",
                         ":blue-background[**Features**]",
@@ -493,7 +540,6 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                 if st.button('Confirm', key='delete_fq_dataset'):
                     
                     datamanager.delete_fq_dataset(fq_dataset_id)
-                    
                     
                     st.cache_data.clear()
                     st.rerun()
@@ -1341,7 +1387,9 @@ if projects_filter:
         fq_datasets_show = fq_datasets_show.loc[
             fq_datasets_show['project_names'].apply(lambda x: any([p in x for p in projects_filter])),:
             ]
-
+        
+# Store metadata of those datasets remain after filtering for dataset_id/name and project
+# This is used to build a filter for metadata columns
 st.session_state['fq_metadata_select'] = fq_datasets_show[fq_metadata.columns]
 
 # Filter out meta columns from selected view which are all None
@@ -1402,8 +1450,10 @@ if len(fq_select.selection['rows']) == 1:
     selected_fq_dataset_ix = fq_datasets_show.iloc[[select_row],:].index[0] # Refers to original index
     
     fq_dataset_detail = fq_datasets.loc[selected_fq_dataset_ix,:]
-    fq_metadata_detail = fq_metadata.loc[selected_fq_dataset_ix,:]
+    fq_metadata_detail = fq_metadata.loc[selected_fq_dataset_ix,:] # Returns a series 
+    
     fq_metadata_detail = fq_metadata_detail.dropna().reset_index()
+    
     fq_metadata_detail.columns = ['key', 'value']
     
     fq_dataset_update = fq_dataset_detail.copy()
@@ -1685,7 +1735,8 @@ if show_project_details:
                 st.write('**Attachments**')
             
             with col2atta:
-            
+                
+                # Provide download button if attachment was selected
                 if fq_attach_select and len(fq_attach_select.selection['rows']) == 1:
                     
                     select_ix = fq_attach_select.selection['rows'][0]
@@ -1699,8 +1750,6 @@ if show_project_details:
                                     key='download_attachment')
             
                 else:        
-                    disable_download = True
-                    select_attachment_id = 0
 
                     st.button('Download',
                               disabled = True,
