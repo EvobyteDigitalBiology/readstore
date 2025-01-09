@@ -46,7 +46,7 @@ def _validate_charset(query_str: str) -> bool:
     return set(query_str) <= allowed
 
 
-def _validate_metadata(metadata: dict):
+def _validate_metadata(metadata: dict) -> dict:
     """
     Validate metadata dict
 
@@ -55,6 +55,9 @@ def _validate_metadata(metadata: dict):
     Args:
         metadata (dict): Metadata dict to validate
 
+    Returns:
+        dict: Validated metadata dict
+    
     Raises:
         rsexceptions.ReadStoreError: If key is invalid
     """
@@ -66,6 +69,12 @@ def _validate_metadata(metadata: dict):
             raise ValidationError({'detail' : 'Invalid character in metadata key. Must be alphanumeric or _-.@'}, code=400)
         if key in METADATA_RESERVED_KEYS:
             raise ValidationError({'detail' : f'Reserved Keyword not allowed in metadata key: {key}'}, code=400)
+        
+        # Replace None values with empty string
+        if value is None:
+            metadata[key] = ''
+    else:
+        return metadata
 
 
 # Additional Fields
@@ -271,15 +280,18 @@ class FqFileCLIUploadSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         
-        # Perform validation of phred
+        # Validate charset in name
+        name = attrs.get('name')
+        read_type = attrs.get('read_type')
+        upload_path = attrs.get('upload_path')
+        qc_phred = attrs.get('qc_phred')
+        
+        if not _validate_charset(name):
+            raise ValidationError({'detail' : 'Invalid character in name. Must be alphanumeric or _-.@'}, code=400)
         
         # Validate that read type is valid
-        read_type = attrs.get('read_type')
-
-        upload_path = attrs.get('upload_path')
                     
         # Validate that qc phred is a valid dict
-        qc_phred = attrs.get('qc_phred')
         qc_phred_index_pos = list(qc_phred.keys())
         qc_phred_values = list(qc_phred.values())
         
@@ -380,9 +392,14 @@ class FqDatasetCLIUploadSerializer(serializers.Serializer):
         
     def validate(self, attrs):
         
-        # # Perform validation of metadata
+        name = attrs.get('name')
         metadata = attrs.get('metadata')
-        _validate_metadata(metadata)
+        
+        if not _validate_charset(name):
+            raise ValidationError({'detail' : 'Invalid character in name. Must be alphanumeric or _-.@'}, code=400)
+        
+        # # Perform validation of metadata
+        metadata = _validate_metadata(metadata)
         
         return attrs
     
@@ -461,6 +478,7 @@ class ProjectCLISerializer(serializers.Serializer):
     metadata = serializers.JSONField()
     attachments = serializers.ListField(child=serializers.CharField())
 
+
 class ProjectCLIDetailSerializer(serializers.Serializer):
 
     id = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -470,6 +488,7 @@ class ProjectCLIDetailSerializer(serializers.Serializer):
     creator = serializers.CharField(source='owner.username', read_only=True)
     attachments = serializers.ListField(child=serializers.CharField())
     metadata = serializers.JSONField()
+
 
 class ProjectCLIUploadSerializer(serializers.Serializer):   
     
@@ -481,14 +500,19 @@ class ProjectCLIUploadSerializer(serializers.Serializer):
     
     def validate(self, attrs):
         
-        # # Perform validation of metadata
+        name = attrs.get('name')
         metadata = attrs.get('metadata')
-        _validate_metadata(metadata)
+        dataset_metadata_keys = attrs.get('dataset_metadata_keys')
+        
+        if not _validate_charset(name):
+            raise ValidationError({'detail' : 'Invalid character in name. Must be alphanumeric or _-.@'}, code=400)
+        
+        # # Perform validation of metadata
+        metadata = _validate_metadata(metadata)
         
         # Validate dataset_metadata_keys
         # Must be keys with empty values
-        dataset_metadata_keys = attrs.get('dataset_metadata_keys')
-        _validate_metadata(dataset_metadata_keys)
+        dataset_metadata_keys = _validate_metadata(dataset_metadata_keys)
         
         return attrs
     
@@ -546,9 +570,25 @@ class ProDataUploadSerializer(serializers.Serializer):
     
     def validate(self, attrs):
         
-        # # Perform validation of metadata
+        name = attrs.get('name')
+        data_type = attrs.get('data_type')
         metadata = attrs.get('metadata')
-        _validate_metadata(metadata)
+        upload_path = attrs.get('upload_path')
+
+        if not _validate_charset(name):
+            raise ValidationError({'detail' : 'Invalid character in name. Must be alphanumeric or _-.@'}, code=400)
+        
+        if not _validate_charset(data_type):
+            raise ValidationError({'detail' : 'Invalid character in data_type. Must be alphanumeric or _-.@'}, code=400)
+        
+        # Check that file path is found
+        if not os.path.exists(upload_path):
+            raise ValidationError({'detail' : 'File not found'}, code=400)
+        elif not os.access(upload_path, os.R_OK):
+            raise ValidationError({'detail' : 'No Read Permission'}, code=400)
+        
+        # # Perform validation of metadata
+        metadata = _validate_metadata(metadata)
         
         return attrs
     
