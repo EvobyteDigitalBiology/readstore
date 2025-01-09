@@ -10,6 +10,12 @@ import string
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
+from rest_framework import status
+
+from rest_framework_simplejwt.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.serializers import TokenObtainSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.settings import api_settings
 
 from .models import AppUser
 from .models import OwnerGroup
@@ -23,6 +29,7 @@ from .models import ProData
 
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
+from django.contrib.auth.models import update_last_login
 
 from settings.base import VALID_READ_TYPE
 from settings.base import METADATA_RESERVED_KEYS
@@ -91,6 +98,55 @@ class BinarySerializerField(serializers.Field):
         # Takes incoming base64 encoded UTF8 string and decodes to bytes
         # return base64.b64decode(value.encode('utf-8'))
         return base64.b64decode(value)
+
+# Extended JWT Auth Method
+ 
+class InActiveUser(AuthenticationFailed):
+    """HTTP Response for inactive user
+    """
+    status_code = status.HTTP_406_NOT_ACCEPTABLE
+    default_detail = "User is inactive"
+    default_code = 'user_is_inactive'
+
+class CustomTokenObtainPairSerializer(TokenObtainSerializer):
+    """Custom Serializer for JWT Token Obtain Pair 
+
+    Raises:
+        ValidationError: If username not in request json data
+        InActiveUser: If user is inactive
+
+    Returns:
+        data: Validated serialized data
+    """
+    
+    @classmethod
+    def get_token(cls, user):
+        return RefreshToken.for_user(user)
+
+    def validate(self, attrs):
+
+        # Try to get user and check if user is active
+        username = attrs.get(self.username_field)
+        if username is None:
+            raise ValidationError('No username provided')
+
+        user = User.objects.filter(username=username).first()
+        if user and (not user.is_active):
+            raise InActiveUser()
+
+        # This step sets the user
+        data = super().validate(attrs)
+        
+        refresh = self.get_token(self.user)
+
+        data['refresh'] = str(refresh)
+        data['access'] = str(refresh.access_token)
+
+        if api_settings.UPDATE_LAST_LOGIN:
+            update_last_login(None, self.user)
+
+        return data
+
 
 class GroupSerializer(serializers.ModelSerializer):
     
