@@ -10,9 +10,10 @@ For general questions reach out to info@evo-byte.com or in case of technical pro
 ## Table of Contents
 
 1. [Install](#install)
-2. [Python Versions and Dependency Management](#versions_dependencies)
-3. [Common Errors and Solutions](#errors)
-4. [Examples Installing ReadStore on Different Distributions](#examples)
+2. [Update](#update)
+3. [Python Versions and Dependency Management](#versions_dependencies)
+4. [Common Errors and Solutions](#errors)
+5. [Examples Installing ReadStore on Different Distributions](#examples)
 
 ## 1. Install<a id="install"></a>
 
@@ -55,7 +56,35 @@ You can also download and install the `readstore-basic` package by downloading t
 
 More information on how to install source packages can be found [here](https://packaging.python.org/en/latest/tutorials/installing-packages/).
 
-## 2. Python Versions and Dependency Management<a id="versions_dependencies"></a>
+## 2. Update<a id="update"></a>
+
+If you already have a running ReadStore Server and want to upgrade to a new version, follow these simple steps:
+
+**0. Backup Validation**
+
+Ensure that ReadStore database backups are in place and up-to-date (located in the --db-directory folder). Optionally, copy the latest backup file (.sqlite3) to a secure location for potential rollback.
+
+**1. Stop the Running Server**
+
+Stop the running server by terminating the server process or stopping the corresponding Linux service. This will not affect the data.
+
+**2. Update the ReadStore-Basic Python Package**
+
+Within the Python environment used to run the ReadStore Server, update the `readstore-basic` package by running the following command:
+
+`pip install readstore-basic --upgrade`
+
+After updating, verify that the new version is installed and the old version is removed:
+
+`readstore-server -v`
+
+This command should print the new version number.
+
+**3. Restart the Server**
+
+Restart the ReadStore Server with the same folder directories and settings as before the update.
+
+## 3. Python Versions and Dependency Management<a id="versions_dependencies"></a>
 
 ### Python version
 
@@ -78,7 +107,7 @@ In any cases you need to ensure that the `python3` command is available on you s
 
 Run the version command and make sure you see the right Python version. If your Python binary cannot be reached, it is possible to configure other paths or aliases in the config. Please get in touch for more information.
 
-## 3. Common Errors and Solutions<a id="errors"></a>
+## 4. Common Errors and Solutions<a id="errors"></a>
 
 ###  Wrong Python version
 
@@ -109,7 +138,7 @@ The venv environment can be installed using on your system using for instance th
 `source .venv/bin/activate`
 
 
-## 4. Examples Installing ReadStore on Different Distributions<a id="examples"></a>
+## 5. Example Install on different Distributions<a id="examples"></a>
 
 Here you can find a number of examples for setting up a ReadStore Basic server on different distributions. Those examples were tested on AWS EC2 Instances with different Linux distributions, starting from an empty environment.
 
