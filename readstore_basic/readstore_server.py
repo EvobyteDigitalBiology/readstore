@@ -120,7 +120,7 @@ def validate_requirements():
         pkg_version = dist.version
         
         installed_versions[pkg_name] = pkg_version
-        
+    
     # Check if all requirements are installed
     for package, version in requirements:
         if package in installed_versions:
@@ -263,7 +263,7 @@ def run_rs_server(db_directory: str,
             
     # Check if config file exists
     if not os.path.exists(config_path):    
-        # Copy over config file
+        # Copy over config file from readstore directory
         logger.info(f'Copy config file to {config_path}')
         shutil.copy(RS_CONFIG_PATH, os.path.join(config_directory, 'readstore_server_config.yaml'))
         os.chmod(config_path, 0o600)
@@ -274,6 +274,22 @@ def run_rs_server(db_directory: str,
     with open(config_path, "r") as f:
         rs_config = yaml.safe_load(f)
 
+    # If config file existed and does not contain all required fields, add them from new config file
+    # This is necessary for updates of the readstore_server_config.yaml file to not break existing configurations
+    # Get reference config file
+    with open(RS_CONFIG_PATH, "r") as f:
+        rs_ref_config = yaml.safe_load(f)
+    
+    # Add missing keys from reference config file to existing config file
+    # Nested call for 2-level json dictionary
+    for key in rs_ref_config:
+        if key in rs_config:
+            for sub_key in rs_ref_config[key]:
+                if sub_key not in rs_config[key]:
+                    rs_config[key][sub_key] = rs_ref_config[key][sub_key]
+        else:
+            rs_config[key] = rs_ref_config[key]
+    
     rs_config['streamlit']['port'] = streamlit_port    
     rs_config['global']['readstore_version'] = __version__
     
@@ -305,8 +321,6 @@ def run_rs_server(db_directory: str,
         os.chmod(secret_key_path, 0o600)
     else:
         logger.info(f'Secret Key already exists at {secret_key_path}')
-    
-    # TODO If set already
     
     # Export DJANGO_SETTINGS_MODULE
     os.environ['DJANGO_SETTINGS_MODULE'] = rs_config['django']['django_settings_module']
