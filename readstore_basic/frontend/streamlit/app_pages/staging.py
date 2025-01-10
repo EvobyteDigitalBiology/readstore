@@ -170,13 +170,13 @@ def checkin_df(fq_file_df: pd.DataFrame,
             
             if len(empty_dataset_names) > 0:
             
-                with st.popover('Select Existing', use_container_width=True):
-                    existing_dataset_select = st.selectbox('Select Existing',
-                                                        options=empty_dataset_names,
-                                                        index=None,
-                                                        label_visibility = 'collapsed',
-                                                        key = 'select_preexist_dataset',
-                                                        on_change = update_staging_mode)        
+                existing_dataset_select = st.selectbox('Select Existing',
+                                                    options=empty_dataset_names,
+                                                    index=None,
+                                                    placeholder='Select Existing',
+                                                    label_visibility = 'collapsed',
+                                                    key = 'select_preexist_dataset',
+                                                    on_change = update_staging_mode)        
         
         # region Project Tab
         tab_names = [read_long_map[rt] for rt in read_types]
@@ -969,6 +969,13 @@ def import_from_file():
                 elif not extensions.validate_charset(fq_name):
                     st.error('Error in FASTQ name found. Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces')
                     break
+                
+                # Check if corresponding upload path exists
+                upload_path = upload_template.loc[upload_template['FASTQFileName'] == fq_name, 'UploadPath'].iloc[0]
+                if not (os.path.exists(upload_path) and os.access(upload_path, os.R_OK)):
+                    st.error(f'{fq_name}: Upload Path not found or not accessible')
+                    break
+                
             else:
                 with st.container(border=True):
                     st.write('**FASTQ Files to Import**')
