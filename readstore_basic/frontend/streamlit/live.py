@@ -5,6 +5,10 @@ def vl(k: str):
     p1 = k.split('-')
     if len(p1) != 4:
         return False, '', 0
+    
+    if not all([len(x) == 5 for x in p1]):
+        return False, '', 0
+    
     p2 = p1[0]
     p3 = p1[1]
     p4 = p1[2]
