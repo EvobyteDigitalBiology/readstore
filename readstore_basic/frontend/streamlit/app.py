@@ -128,7 +128,7 @@ text-align: center;
 }
 </style>
 <div class="footer">
-<p>ReadStore Basic insert_version (c) 2024</p>
+<p>ReadStore Basic insert_version (c) 2024-2025</p>
 </div>
 """
 
