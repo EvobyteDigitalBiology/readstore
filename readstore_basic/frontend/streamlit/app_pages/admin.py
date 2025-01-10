@@ -71,14 +71,14 @@ def create_user(reference_user_names: pd.Series,
     
     email = st.text_input("Enter Email",
                                max_chars=150,
-                               help = 'Name must only contain 0-9 a-z A-Z. @ - _characters')
+                               help = 'Email must only contain 0-9 a-z A-Z. @ - _characters')
     
     password = st.text_input("Enter Password (min 8 characters)",
-                               help = 'Name must only contain 0-9 a-z A-Z. @ - _characters',
+                               help = 'Password must only contain 0-9 a-z A-Z. @ - _characters',
                                type = 'password')
     
     repeat_password = st.text_input("Repeat Password",
-                                 help = 'Name must only contain 0-9 a-z A-Z. @ - _characters',
+                                 help = 'Password must only contain 0-9 a-z A-Z. @ - _characters',
                                  type = 'password')
     
     owner_group_name = uiconfig.DEFAULT_OWNER_GROUP
@@ -162,7 +162,7 @@ def update_user(row_ix: int,
     
     email = st.text_input("Enter Email",
                                max_chars=150,
-                               help = 'Name must only contain 0-9 a-z A-Z. @ - _characters',
+                               help = 'Email must only contain 0-9 a-z A-Z. @ - _characters',
                                value = email_old)
     
     owner_group_name = uiconfig.DEFAULT_OWNER_GROUP
@@ -234,7 +234,6 @@ def delete_users(row_ixes: List[int],
                  use_container_width = True)
     
     # Check which owner groups has users attached
-    
     
     # Helper variable to check if all datasets to delete were processed to trigger rerun
     found_attached = False
