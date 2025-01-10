@@ -2,7 +2,6 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/readstore-basic)
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 
-
 # ReadStore Basic
 
 This README introduces ReadStore Data Platform, the lean solution for managing NGS and omics data.
@@ -25,8 +24,9 @@ Happy analysis :)
 - [Description](#description)
 - [Security, Permissions and Backup](#backup)
 - [Installation](#installation)
+    - [Update an existing ReadStore Server](#update)
     - [Advanced Server Configuration](#advancedconfig)
-    - [Configure systemd service](#systemd)
+    - [Configure systemd Service](#systemd)
     - [Export Database to File](#export_dump)
 - [ReadStore API](#api)
 - [Usage](#usage)
@@ -109,9 +109,11 @@ It is posible to **export** (dump) the database into `.json` and `.csv` files us
 
 If you need a ReadStore version with more advanced permission and group management, database server support, or customization for your infrastructure, please reach out.
 
-## Installation
+## Installation & Updates
 
 **NOTE** Check the [Installation Guide](installation.md) for more information and common sources of errors or contact support@evo-byte.com in case of technical problems. We will certainly find a solution.
+
+More information on [updating](#update) a running ReadStore server can be found below.
 
 ### 1. Install the ReadStore Basic Server
 
@@ -261,6 +263,38 @@ Check the status of your CLI config with
 `readstore configure list`
 
 You should see the credentials you entered.
+
+### Update an existing ReadStore Basic Server<a id="update"></a>
+
+If you already have a running ReadStore Server and want to upgrade to a new version, follow these simple steps:
+
+**0. Backup Validation**
+
+Ensure that ReadStore database backups are in place and up-to-date (located in the --db-directory folder). Optionally, copy the latest backup file (.sqlite3) to a secure location for potential rollback.
+
+**1. Stop the Running Server**
+
+Stop the running server by terminating the server process or stopping the corresponding Linux service. This will not affect the data.
+
+**2. Update the ReadStore-Basic Python Package**
+
+Within the Python environment used to run the ReadStore Server, update the `readstore-basic` package by running the following command:
+
+`pip install readstore-basic --upgrade`
+
+After updating, verify that the new version is installed and the old version is removed:
+
+`readstore-server -v`
+
+This command should print the new version number.
+
+**3. Restart the Server**
+
+Restart the ReadStore Server with the same folder directories and settings as before the update.
+
+**4. Continue Operations**
+
+Resume your work as usual. If you encounter any questions or issues, contact support@evo-byte.com.
 
 ### Advanced ReadStore Basic Server Configuration<a id="advancedconfig"></a>
 
