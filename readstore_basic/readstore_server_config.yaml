@@ -3,7 +3,7 @@ django:
   allowed_hosts: localhost,127.0.0.1,*
   api_version: api_v1
   backup_interval_hours: 24
-  backup_max_files: 3
+  backup_max_files: 2
   db_backup_dir: /home/jona/projects/evobyte/readstore-basic/test
   db_path: /home/jona/projects/evobyte/readstore-basic/test/readstore_db.sqlite3
   django_settings_module: settings.production
