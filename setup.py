@@ -21,7 +21,7 @@ setup(
     install_requires=[
         'Django>=5.1.4',
         'djangorestframework>=3.15.2',
-        'djangorestframework-simplejwt>=5.3.1',
+        'djangorestframework_simplejwt>=5.4.0',
         'requests>=2.32.3',
         'gunicorn>=23.0.0',
         'pysam>=0.22.1',
