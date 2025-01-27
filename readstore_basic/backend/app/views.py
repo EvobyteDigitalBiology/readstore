@@ -57,6 +57,7 @@ from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate
 
 from django.db.models import Q
+from django.db.models import F
 
 from .models import AppUser
 from .models import OwnerGroup
@@ -690,9 +691,6 @@ class FqDatasetViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
         
 
-
-
-
 class FqAttachmentViewSet(viewsets.ModelViewSet):
     """
         Class View for FqAttachment Model.
@@ -706,8 +704,12 @@ class FqAttachmentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated,
                         DjangoModelPermissions]
 
-    queryset = FqAttachment.objects.defer('body').all().order_by("-created")
-    
+    def get_queryset(self):
+        if self.action in ['list', 'fq_dataset']:
+            return FqAttachment.objects.all().order_by("-created")
+        else:
+            return FqAttachment.objects.annotate(body = F('attachment_body__body')).all()
+            
     def get_serializer_class(self):
         """Get Serializer Class
         
@@ -729,7 +731,8 @@ class FqAttachmentViewSet(viewsets.ModelViewSet):
         
         Args:
             serializer
-        """ 
+        """
+        
         serializer.save(owner=self.request.user)
     
     @action(detail=False, methods=['get'])
@@ -749,7 +752,6 @@ class FqAttachmentViewSet(viewsets.ModelViewSet):
             owner_group = request.user.appuser.owner_group
             
             qset = FqAttachment.objects \
-                    .defer('body') \
                     .filter(fq_dataset__owner_group=owner_group) \
                     .all() \
                     .distinct() \
@@ -778,7 +780,6 @@ class FqAttachmentViewSet(viewsets.ModelViewSet):
             username = request.user.username
             
             qset = FqAttachment.objects \
-                .defer('body') \
                 .filter(fq_dataset__project__collaborators__username=username) \
                 .all() \
                 .distinct() \
@@ -811,13 +812,13 @@ class FqAttachmentViewSet(viewsets.ModelViewSet):
             
             # In this case user is part of owner group
             if FqDataset.objects.filter(owner_group=owner_group, pk=pk).exists():
-                qset = FqAttachment.objects.defer('body').filter(fq_dataset_id=pk).all().order_by("-created")
+                qset = FqAttachment.objects.filter(fq_dataset_id=pk).all().order_by("-created")
                 serializer = FqAttachmentListSerializer(qset, many=True)        
                 return Response(serializer.data)
             
             # Check of FqDataset is part of project where user has collaborator access
             elif FqDataset.objects.filter(project__collaborators__username=request.user.username, pk=pk).exists():
-                qset = FqAttachment.objects.defer('body').filter(fq_dataset_id=pk).all().order_by("-created")
+                qset = FqAttachment.objects.filter(fq_dataset_id=pk).all().order_by("-created")
                 serializer = FqAttachmentListSerializer(qset, many=True)        
                 return Response(serializer.data)
             else:
@@ -856,7 +857,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):    
         serializer.save(owner=self.request.user)
     
-    
     @action(detail=False, methods=['get'])            
     def collab(self, request):
         
@@ -870,7 +870,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(qset, many=True)        
         return Response(serializer.data)
 
-    
     @action(detail=False, methods=['get'])
     def owner_group(self, request):
         
@@ -885,7 +884,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return Response({'detail' : 'User is not an appuser'}, status=400)
         
         
-
 class ProjectAttachmentViewSet(viewsets.ModelViewSet):
     """
         API endpoint that allows ProjectAttachments to be viewed or edited.
@@ -894,8 +892,12 @@ class ProjectAttachmentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated,
                         DjangoModelPermissions]
 
-    queryset = ProjectAttachment.objects.defer('body').all().order_by("-created")
-    
+    def get_queryset(self):
+        if self.action in ['list', 'project']:
+            return ProjectAttachment.objects.order_by("-created").all()
+        else:
+            return ProjectAttachment.objects.annotate(body = F('attachment_body__body')).all()
+
     def get_serializer_class(self):
         if self.action in ['list', 'project']:
             return ProjectAttachmentListSerializer
@@ -912,7 +914,6 @@ class ProjectAttachmentViewSet(viewsets.ModelViewSet):
             owner_group = request.user.appuser.owner_group
             
             qset = ProjectAttachment.objects \
-                .defer('body') \
                 .filter(project__owner_group=owner_group) \
                 .all() \
                 .distinct() \
@@ -929,7 +930,6 @@ class ProjectAttachmentViewSet(viewsets.ModelViewSet):
         if hasattr(request.user, 'appuser'):
             username = request.user.username
             qset = ProjectAttachment.objects \
-                .defer('body') \
                 .filter(project__collaborators__username=username) \
                 .all() \
                 .distinct() \
@@ -951,7 +951,6 @@ class ProjectAttachmentViewSet(viewsets.ModelViewSet):
             # In this case user is part of owner group
             if Project.objects.filter(owner_group=owner_group, pk=pk).exists():
                 qset = ProjectAttachment.objects \
-                    .defer('body') \
                     .filter(project_id=pk) \
                     .all() \
                     .order_by("-created")
@@ -962,7 +961,6 @@ class ProjectAttachmentViewSet(viewsets.ModelViewSet):
             # In this case user is collaborator
             elif Project.objects.filter(collaborators__username=request.user.username, pk=pk).exists():
                 qset = ProjectAttachment.objects \
-                    .defer('body') \
                     .filter(project_id=pk) \
                     .all() \
                     .order_by("-created")
@@ -973,8 +971,6 @@ class ProjectAttachmentViewSet(viewsets.ModelViewSet):
                 return Response({'detail' : 'User does not have permission to access project'}, status=400)
         else:
             return Response({'detail' : 'User is not an appuser'}, status=400)
-
-
 
 
 class LicenseKeyViewSet(viewsets.ModelViewSet):
