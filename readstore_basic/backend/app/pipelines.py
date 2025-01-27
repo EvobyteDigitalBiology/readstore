@@ -4,6 +4,7 @@ import gzip
 from typing import Tuple, List
 import numpy as np
 from itertools import islice
+from collections import defaultdict
 import hashlib
 import os
 import threading
@@ -43,16 +44,25 @@ def stage_fastq(fq_file_path: str, fq_name: str, owner: User, read_type: str):
     phred_qualities = []
     
     fq_cnt = 0
-    
+    phred_qualities = []
+    seq_lens_dict = defaultdict(int)
+
     try:
         with pysam.FastxFile(fq_file_path, persist = False) as fh:
             for entry in fh:
                 fq_cnt += 1
 
                 # TODO adapt for fastq files with very few reads
+                # Adapt based on file size
                 if (fq_cnt % 1000) == 0:
                     seq_len = len(entry.sequence)
+                    seq_lens_dict[seq_len] += 1
                     phred_qualities.append(entry.get_quality_array())
+        
+        seq_len = list(seq_lens_dict.keys())[np.argmax(seq_lens_dict.values())]
+        
+        # Filter quality arrays with different read length
+        phred_qualities = [phred for phred in phred_qualities if len(phred) == seq_len]
         
         phred_ar = np.array(phred_qualities)
         phred_ar = np.mean(phred_ar, axis=0)
