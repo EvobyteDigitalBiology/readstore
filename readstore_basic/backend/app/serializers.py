@@ -26,6 +26,7 @@ from .models import Project
 from .models import ProjectAttachment
 from .models import LicenseKey
 from .models import ProData
+from .models import AttachmentBody
 
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
@@ -463,22 +464,37 @@ class FqDatasetCLIUploadSerializer(serializers.Serializer):
 class FqAttachmentListSerializer(serializers.ModelSerializer):
     
     class Meta:
+        exclude = ['attachment_body']
         model = FqAttachment
-        exclude = ['body']
+
 
 class FqAttachmentSerializer(serializers.ModelSerializer):
-     
+    
+    # Create, detail, update
+    
     class Meta:
         model = FqAttachment
-        fields = '__all__'
+        exclude = ['attachment_body']
 
         extra_kwargs = {
             "owner": {"read_only": True},
         }
     
-    body = BinarySerializerField()
+    body = BinarySerializerField(required=False)
 
-
+    def create(self, validated_data) -> FqAttachment:
+        
+        # Get attachment body
+        body = validated_data.pop('body')
+        
+        attach_body = AttachmentBody.objects.create(body=body)
+        
+        fq_attachment = FqAttachment.objects.create(attachment_body=attach_body, **validated_data)
+        attach_body.save()
+        
+        return fq_attachment
+        
+        
 class ProjectSerializer(serializers.ModelSerializer):
     
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -511,20 +527,32 @@ class ProjectAttachmentListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ProjectAttachment
-        exclude = ['body']
+        exclude = ['attachment_body']
 
 
 class ProjectAttachmentSerializer(serializers.ModelSerializer):
-     
+    
     class Meta:
         model = ProjectAttachment
-        fields = '__all__'
+        exclude = ['attachment_body']
 
         extra_kwargs = {
             "owner": {"read_only": True},
         }
     
-    body = BinarySerializerField()
+    body = BinarySerializerField(required=False)
+    
+    def create(self, validated_data) -> FqAttachment:
+        
+        # Get attachment body
+        body = validated_data.pop('body')
+        
+        attach_body = AttachmentBody.objects.create(body=body)
+        
+        project_attachment = ProjectAttachment.objects.create(attachment_body=attach_body, **validated_data)
+        attach_body.save()
+        
+        return project_attachment
 
 
 class ProjectCLISerializer(serializers.Serializer):
