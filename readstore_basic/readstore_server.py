@@ -304,8 +304,10 @@ def run_rs_server(db_directory: str,
     # Define 
     if debug:
         rs_config['django']['django_settings_module'] = 'settings.development'
+        rs_config['django']['gunicorn_run'] = False
     else:
         rs_config['django']['django_settings_module'] = 'settings.production'
+        rs_config['django']['gunicorn_run'] = True
     
     with open(config_path, "w") as f:
         yaml.dump(rs_config, f)
