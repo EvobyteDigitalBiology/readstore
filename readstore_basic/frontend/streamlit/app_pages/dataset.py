@@ -1161,7 +1161,9 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
         elif export_selection == 'Datasets':
             
             # Get fq_attachments
+            # TODO: Speedup requesting view
             fq_attachments = datamanager.get_fq_dataset_attachments(st.session_state["jwt_auth_header"])
+            # Cast attachments to a list
             fq_attachments_list = fq_attachments.groupby('fq_dataset_id')['name'].apply(list)
             fq_attachments_list = fq_attachments_list.reset_index()
             fq_attachments_list.columns = ['fq_dataset_id', 'attachments']
@@ -1304,7 +1306,7 @@ with col4:
     
     st.toggle("Metadata",
               key='show_fq_metadata',
-              help='Switch to Datasets Metadata View')
+              help='Show Metadata View')
 
 # Dynamic list of checkboxes with distinct values
 with col5:
@@ -1343,7 +1345,7 @@ with col6:
 
 col_config_user = {
     'id': st.column_config.NumberColumn('ID'),
-    'name' : st.column_config.TextColumn('Name', help='FASTQ Dataset Name'),
+    'name' : st.column_config.TextColumn('Name', help='Dataset Name'),
     'project' : None,
     'project_names' : st.column_config.ListColumn('Projects', help='Projects the Dataset is associated with'),
     'owner_group_name' : None,
@@ -1363,7 +1365,7 @@ col_config_user = {
 
 col_config_meta = {
     'id': st.column_config.NumberColumn('ID'),
-    'name' : st.column_config.TextColumn('Name', help='FASTQ Dataset Name'),
+    'name' : st.column_config.TextColumn('Name', help='Dataset Name'),
     'project_names' : None,
     'owner_group_name' : None,
     'id_str' : None
@@ -1585,7 +1587,7 @@ with col_low_3:
 
 with col_low_4:    
    
-   on = st.toggle("Details",
+    on = st.toggle("Details",
                   key='show_details_dataset',
                   value=st.session_state['show_details'],
                   on_change = extensions.switch_show_details,
@@ -1595,13 +1597,21 @@ if show_project_details:
     
     st.divider()
     
-    tab1d, tab2d, tab3d, tab4d = st.tabs([':blue-background[**Features**]',
-                                   ':blue-background[**Projects**]',
-                                   ':blue-background[**Attachments**]',
-                                   ':blue-background[**ProData**]'])
+    dataset_detail_selection = st.segmented_control(
+            'Dataset Detail Selection',
+            ['Features', 'Projects', 'Attachments', 'ProData'],
+            key='dataset_detail_selection',
+            default='Features',
+            label_visibility = 'collapsed'
+        )
     
-    with tab1d:
+    # tab1d, tab2d, tab3d, tab4d = st.tabs([':blue-background[**Features**]',
+    #                                     ':blue-background[**Projects**]',
+    #                                     ':blue-background[**Attachments**]',
+    #                                     ':blue-background[**ProData**]'])
     
+    if dataset_detail_selection == 'Features':
+        
         col1d1, col2d1 = st.columns([7,5])
     
         with col1d1:
@@ -1685,7 +1695,7 @@ if show_project_details:
                             },
                             key='fq_metadata_details_df')
     
-    with tab2d:
+    if dataset_detail_selection == 'Projects':
         
         with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
             
@@ -1715,8 +1725,8 @@ if show_project_details:
                             key='fq_dataset_projects_df',
                             height = max_df_height)
             
-    with tab3d:
-    
+    if dataset_detail_selection == 'Attachments':
+        
         with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
             
             select_dataset_id = st.session_state['dataset_select_id']
@@ -1775,7 +1785,7 @@ if show_project_details:
                         key='fq_attachment_details_df',
                         height = max_df_height)
 
-    with tab4d:
+    if dataset_detail_selection == 'ProData':
         
         with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
             
