@@ -875,7 +875,7 @@ with col1:
                         label_visibility = 'collapsed')
 
 with col3:
-    st.toggle("Metadata", key='show_metadata', help='Switch to Projects Metadata View')
+    st.toggle("Metadata", key='show_metadata', help='Show Metadata View')
 
 # Dynamic list of checkboxes with distinct values
 with col4:
@@ -1113,15 +1113,24 @@ if show_project_details:
     
     st.divider()
     
-    detail_tab_names = [":blue-background[**Features**]",
-                        ":blue-background[**Datasets**]",
-                        ":blue-background[**Attachments**]"]
-    # Show Collaborators Tab only if project is owned by user's owner_group
+    # detail_tab_names = [":blue-background[**Features**]",
+    #                     ":blue-background[**Datasets**]",
+    #                     ":blue-background[**Attachments**]"]
+    # # Show Collaborators Tab only if project is owned by user's owner_group
 
-    detail_tabs = st.tabs(detail_tab_names)
+    # detail_tabs = st.tabs(detail_tab_names)
 
+    project_detail_selection = st.segmented_control(
+            'Project Detail Selection',
+            ['Features', 'Datasets', 'Attachments'],
+            key='project_detail_selection',
+            default='Features',
+            label_visibility = 'collapsed'
+        )
+    
+    
     #region Detail Features
-    with detail_tabs[0]:
+    if project_detail_selection == 'Features':
     
         col1d, col2d = st.columns([7,5])
         
@@ -1172,7 +1181,7 @@ if show_project_details:
                             key='metadata_details_df')
     
     #region Detail Datasets
-    with detail_tabs[1]:
+    if project_detail_selection == 'Datasets':
         
         with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
                 
@@ -1196,7 +1205,7 @@ if show_project_details:
                         height = max_df_height)
     
     #region Detail Attachments   
-    with detail_tabs[2]:
+    if project_detail_selection == 'Attachments':
         
         with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
             
