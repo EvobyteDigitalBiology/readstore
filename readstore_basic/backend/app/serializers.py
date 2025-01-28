@@ -560,6 +560,7 @@ class ProjectCLISerializer(serializers.Serializer):
     id = serializers.PrimaryKeyRelatedField(read_only=True)
     name = serializers.CharField(max_length=200)
     metadata = serializers.JSONField()
+    dataset_metadata_keys = serializers.JSONField()
     attachments = serializers.ListField(child=serializers.CharField())
 
 
@@ -570,9 +571,10 @@ class ProjectCLIDetailSerializer(serializers.Serializer):
     description = serializers.CharField()
     created = serializers.DateTimeField()
     creator = serializers.CharField(source='owner.username', read_only=True)
-    attachments = serializers.ListField(child=serializers.CharField())
     metadata = serializers.JSONField()
-
+    dataset_metadata_keys = serializers.JSONField()
+    attachments = serializers.ListField(child=serializers.CharField())
+    
 
 class ProjectCLIUploadSerializer(serializers.Serializer):   
     
