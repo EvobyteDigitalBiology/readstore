@@ -77,6 +77,9 @@ if not 'pro_data_new' in st.session_state:
 if not 'fq_metadata_select' in st.session_state:
     st.session_state['fq_metadata_select'] = pd.DataFrame()
 
+if not 'fq_details_segment_ix' in st.session_state:
+    st.session_state['fq_details_segment_ix'] = 0
+
 # Set selected ProData index for an activate dataset for download function
 def update_attachment_select():
     if st.session_state['dataset_select_id']:
@@ -88,6 +91,13 @@ def update_pro_data_select():
         dataset_id = st.session_state['dataset_select_id']
         st.session_state[f'download_pro_data_select_{dataset_id}'] = st.session_state['fq_prodata_details_df']
 
+def update_segment_default(segment_control_options):
+    
+    dataset_detail_selection = st.session_state['dataset_detail_selection']
+    
+    if dataset_detail_selection:
+        ix = segment_control_options.index(dataset_detail_selection)
+        st.session_state['fq_details_segment_ix'] = ix
 
 def update_pro_data_show_archived():
     new_state = st.session_state['checkbox_pro_data_include_archive']
@@ -96,35 +106,6 @@ def update_pro_data_show_archived():
     # Reset selection to avoid problems with old selection
     if detail_fq_pro_data_key_name in st.session_state:
         del st.session_state[detail_fq_pro_data_key_name]
-
-def filter_df_by_metadata_filter(df: pd.DataFrame, filter_session_prefix = 'fq_dataset_meta_filter_'):
-    """Filter a DataFrame by metadata filter session state
-
-    For each key in session state check if it starts with filter_session_prefix
-    Parse metadata key and values to filter from session state and filter DataFrame
-    If values are defined perform filtering
-    Move to next key
-    
-    Args:
-        df (pd.DataFrame): dataframe to filter
-        filter_session_prefix (str, optional): Key prefix to fetch metadata filter from session state.
-
-    Returns:
-        pd.DataFrame: Filtered DataFrame
-    """
-
-    for k in st.session_state:
-        if k.startswith(filter_session_prefix):
-            meta_key = k.replace(filter_session_prefix, '')
-            values = st.session_state[k]
-            
-            # Add this if to check in case that project_show was updated
-            if meta_key in df:            
-                if values != []:
-                    df = df.loc[df[meta_key].isin(values),:]
-
-    return df
-
 
 #region Create Dataset
 @st.dialog('Create Dataset', width='large')
@@ -1211,7 +1192,8 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
                 fq_datasets_meta = pd.concat([fq_datasets, fq_metadata], axis=1)
                 fq_datasets_meta = fq_datasets_meta.loc[fq_datasets_meta['id'].isin(selected_fq_ids),:]
                 
-                pro_data, pro_metadata = datamanager.get_pro_data_meta_overview(st.session_state["jwt_auth_header"])
+                pro_data, pro_metadata = datamanager.get_pro_data_meta_overview(st.session_state["jwt_auth_header"],
+                                                                                include_archived=export_include_archived)
                 
                 pro_data_meta = pd.concat([pro_data, pro_metadata], axis=1)
                 
@@ -1220,20 +1202,13 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
                                                         right_on='id',
                                                         suffixes=('', '_fq_dataset'))
                 
-                dataset_names = pro_data_meta_merge.pop('name_fq_dataset')
-                
-                pro_data_meta_merge = pro_data_meta_merge.drop(columns=['id_fq_dataset'])
+                pro_data_meta_merge = pro_data_meta_merge.drop(columns=['id_fq_dataset', 'name_fq_dataset'])
                 pro_data_meta_merge = pro_data_meta_merge.rename(columns={'owner_username' : 'creator',
-                                                                        'fq_dataset' : 'dataset_id'})
-                    
-                # Reorder columns to have all metadata at the end
-                pro_data_meta_merge.insert(1, 'dataset_name', dataset_names)
-                                 
-                if not export_include_archived:
-                    pro_data_meta_merge = pro_data_meta_merge.loc[
-                        pro_data_meta_merge['valid_to'].isna(),:]
-                    
-            
+                                                                        'fq_dataset' : 'dataset_id',
+                                                                        'fq_dataset_name' : 'dataset_name',
+                                                                        'project' : 'project_ids',
+                                                                        })
+                
             pro_data = datamanager.get_pro_data_owner_group(st.session_state["jwt_auth_header"])
             
             st.download_button('Download .csv',
@@ -1263,15 +1238,12 @@ fq_datasets, fq_metadata = datamanager.get_fq_dataset_meta_overview(st.session_s
 # Subset project names form fq_datasets overview, filter empty projects columns
 # Transform to pandas series and filter out all projects that are empty
 # Add 'No Project' and construct filter list
-fq_dataset_project_set = fq_datasets['project_names'].apply(lambda x: x != [])
-fq_dataset_project = fq_datasets.loc[fq_dataset_project_set, 'project_names']
-fq_dataset_project = fq_dataset_project.explode().unique()
-fq_dataset_project_filter = sorted(fq_dataset_project)
-fq_dataset_project_filter = [fq for fq in fq_dataset_project_filter if fq in my_project_names.tolist() ]
+
+fq_dataset_project_filter = extensions.project_filter_from_df(fq_datasets)
+fq_dataset_project_filter = [proj for proj in fq_dataset_project_filter if proj in my_project_names.tolist()]
 fq_dataset_project_filter.insert(0, 'No Project')
 
 # Reference project names 
-reference_owner_group_names = sorted(fq_datasets['owner_group_name'].unique())
 reference_project_names_df = project_owner_group[['id', 'name', 'dataset_metadata_keys']]
 # Subset dataset names those that are in the owner group
 reference_dataset_names = fq_datasets.loc[
@@ -1283,8 +1255,7 @@ fq_datasets['id_str'] = fq_datasets['id'].astype(str)
 
 # UI
 
-col1, col2, col3, col4, col5, col6 = st.columns([3,3,1.75,2.5,1 ,0.75], vertical_alignment='center')
-
+col1, col2, col3, col4, col5, col6 = st.columns([3,3,1.75,2,1.3,0.75], vertical_alignment='center')
 
 with col1:
     
@@ -1305,13 +1276,15 @@ with col2:
 with col4:
     
     st.toggle("Metadata",
-              key='show_fq_metadata',
-              help='Show Metadata View')
+              key='show_fq_metadata')
 
 # Dynamic list of checkboxes with distinct values
 with col5:
     
     metadata_select = st.session_state['fq_metadata_select']
+    
+    # Drop columns which are all N/A
+    metadata_select = metadata_select.dropna(axis=1, how='all')
     
     if metadata_select.empty:
         metadata_filter_disabled = True
@@ -1395,7 +1368,8 @@ if projects_filter:
 st.session_state['fq_metadata_select'] = fq_datasets_show[fq_metadata.columns]
 
 # Filter out meta columns from selected view which are all None
-fq_datasets_show = filter_df_by_metadata_filter(fq_datasets_show)
+fq_datasets_show = extensions.filter_df_by_metadata_filter(fq_datasets_show,
+                                                           filter_session_prefix = 'fq_dataset_meta_filter_')
 
 # Remove those meta cols from projects_show which are all None
 fq_meta_cols_all_none = fq_datasets_show.loc[:,fq_metadata.columns].isna().all()
@@ -1429,7 +1403,6 @@ else:
 
 # For formatting, replace None with empty string
 fq_datasets_show = fq_datasets_show.fillna('')
-
 
 fq_select = st.dataframe(fq_datasets_show[show_cols],
                         column_config = col_config,
@@ -1472,11 +1445,11 @@ if len(fq_select.selection['rows']) == 1:
         st.session_state["jwt_auth_header"],
         fq_dataset_id = fq_dataset_detail_id
     )
-        
+    
     if st.session_state['show_details']:
-        show_project_details = True
+        show_details = True
     else:
-        show_project_details = False
+        show_details = False
     
     update_disabled = False
     update_one = True
@@ -1508,7 +1481,7 @@ elif len(fq_select.selection['rows']) > 1:
     fq_dataset_update = fq_dataset_detail.copy()
     fq_metadata_update_many = fq_metadata_detail_many.copy()
     
-    show_project_details = False
+    show_details = False
     update_disabled = False
     update_one = False
     
@@ -1520,7 +1493,7 @@ elif len(fq_select.selection['rows']) > 1:
     st.session_state['dataset_select_id'] = None
     
 else:
-    show_project_details = False
+    show_details = False
     update_disabled = True
     update_one = False
     
@@ -1593,16 +1566,21 @@ with col_low_4:
                   on_change = extensions.switch_show_details,
                   help='Show Details for selected Dataset')
 
-if show_project_details:
+if show_details:
     
     st.divider()
     
+    segment_control_options = ['Features', 'Projects', 'Attachments', 'ProData']
+    segment_default = segment_control_options[st.session_state['fq_details_segment_ix']]
+    
     dataset_detail_selection = st.segmented_control(
             'Dataset Detail Selection',
-            ['Features', 'Projects', 'Attachments', 'ProData'],
+            segment_control_options,
             key='dataset_detail_selection',
-            default='Features',
-            label_visibility = 'collapsed'
+            default=segment_default,
+            label_visibility = 'collapsed',
+            on_change = update_segment_default,
+            args = (segment_control_options,)
         )
     
     # tab1d, tab2d, tab3d, tab4d = st.tabs([':blue-background[**Features**]',
