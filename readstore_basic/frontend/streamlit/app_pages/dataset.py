@@ -118,7 +118,6 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
         reference_project_names_df (pd.DataFrame): Existing names of projects
     """
     
-    
     # Get reference dataset and project names
     reference_fq_dataset_names = reference_fq_dataset_names.str.lower()
     reference_fq_dataset_names = reference_fq_dataset_names.tolist()
@@ -129,10 +128,9 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
                         help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).')
 
     # Define Tabs
-    tab1, tab2, tab3, tab4 = st.tabs([":blue-background[**Projects**]",
+    tab1, tab2, tab3 = st.tabs([":blue-background[**Projects**]",
                                     ":blue-background[**Features**]",
-                                    ":blue-background[**Attachments**]",
-                                    ":blue-background[**ProData**]"])
+                                    ":blue-background[**Attachments**]"])
 
     # TAB: Features: Project
     with tab1:
@@ -211,142 +209,142 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
         st.write(' ')
     
     # TAB: Create ProData Entries for Dataset
-    with tab4:
+    # with tab4:
               
-        st.write('Attach **Pro**cessed Data.')
+    #     st.write('Attach **Pro**cessed Data.')
 
-        pro_data_name = st.text_input("Enter Name",
-                                        max_chars=150,
-                                        help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
-                                        label_visibility = "collapsed",
-                                        placeholder = "Enter Name",
-                                        key = 'pro_data_name')
+    #     pro_data_name = st.text_input("Enter Name",
+    #                                     max_chars=150,
+    #                                     help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
+    #                                     label_visibility = "collapsed",
+    #                                     placeholder = "Enter Name",
+    #                                     key = 'pro_data_name')
         
-        pro_data_type = st.text_input("Enter Data Type",
-                                        max_chars=150,
-                                        help = 'Data Type, e.g. gene_count. \nName must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
-                                        label_visibility = "collapsed",
-                                        placeholder = "Enter Data Type",
-                                        key = 'pro_data_type')
+    #     pro_data_type = st.text_input("Enter Data Type",
+    #                                     max_chars=150,
+    #                                     help = 'Data Type, e.g. gene_count. \nName must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
+    #                                     label_visibility = "collapsed",
+    #                                     placeholder = "Enter Data Type",
+    #                                     key = 'pro_data_type')
         
-        pro_upload_path = st.text_input("Enter Upload Path",
-                                        max_chars=1000,
-                                        help = 'Path to File to Upload',
-                                        label_visibility = "collapsed",
-                                        placeholder = "Path to ProData File",
-                                        key = 'pro_upload_path')
+    #     pro_upload_path = st.text_input("Enter Upload Path",
+    #                                     max_chars=1000,
+    #                                     help = 'Path to File to Upload',
+    #                                     label_visibility = "collapsed",
+    #                                     placeholder = "Path to ProData File",
+    #                                     key = 'pro_upload_path')
         
-        pro_description = st.text_area("Enter Description",
-                                        help = 'Description of the FASTQ Dataset.',
-                                        height = 68,
-                                        label_visibility = "collapsed",
-                                        placeholder = "Enter Description",
-                                        key = 'pro_description')
+    #     pro_description = st.text_area("Enter Description",
+    #                                     help = 'Description of the FASTQ Dataset.',
+    #                                     height = 68,
+    #                                     label_visibility = "collapsed",
+    #                                     placeholder = "Enter Description",
+    #                                     key = 'pro_description')
         
-        # Metadata for ProData
-        with st.container(border=True):
+    #     # Metadata for ProData
+    #     with st.container(border=True):
             
-            col1p, col2p = st.columns([11,1], vertical_alignment='top')
+    #         col1p, col2p = st.columns([11,1], vertical_alignment='top')
                     
-            with col1p:
+    #         with col1p:
                 
-                tab1p = st.tabs([":blue-background[**Metadata**]"])[0]
+    #             tab1p = st.tabs([":blue-background[**Metadata**]"])[0]
                 
-                with tab1p:
+    #             with tab1p:
                     
-                    selected_fq_metadata = pd.DataFrame({
-                        'key' : [],
-                        'value' : []
-                    })
+    #                 selected_fq_metadata = pd.DataFrame({
+    #                     'key' : [],
+    #                     'value' : []
+    #                 })
 
-                    # Data Editor for Input
-                    selected_fq_metadata = selected_fq_metadata.astype(str)
-                    pro_metadata_df = st.data_editor(
-                        selected_fq_metadata,
-                        use_container_width=True,
-                        hide_index=True,
-                        column_config = {
-                            'key' : st.column_config.TextColumn('Key'),
-                            'value' : st.column_config.TextColumn('Value')
-                        },
-                        num_rows ='dynamic',
-                        key = 'create_pro_data_metadata_df'
-                    )
+    #                 # Data Editor for Input
+    #                 selected_fq_metadata = selected_fq_metadata.astype(str)
+    #                 pro_metadata_df = st.data_editor(
+    #                     selected_fq_metadata,
+    #                     use_container_width=True,
+    #                     hide_index=True,
+    #                     column_config = {
+    #                         'key' : st.column_config.TextColumn('Key'),
+    #                         'value' : st.column_config.TextColumn('Value')
+    #                     },
+    #                     num_rows ='dynamic',
+    #                     key = 'create_pro_data_metadata_df'
+    #                 )
             
-            with col2p:
-                with st.popover(':material/help:'):
-                    st.write("Key-value pairs to store and group dataset metadata.")
+    #         with col2p:
+    #             with st.popover(':material/help:'):
+    #                 st.write("Key-value pairs to store and group dataset metadata.")
         
-        col3, col4 = st.columns([3, 9])
+    #     col3, col4 = st.columns([3, 9])
         
-        # Need a session state to store ProData which should be added
+    #     # Need a session state to store ProData which should be added
         
-        with col3:
-            if st.button('Add ProData'):
+    #     with col3:
+    #         if st.button('Add ProData'):
                 
-                # Validate ProData
-                if pro_data_name == '':
-                    st.error("Please enter a ProData Name.")
-                elif not extensions.validate_charset(pro_data_name):
-                    st.error('ProData Name: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
-                elif pro_data_type == '':
-                    st.error("Please enter a ProData Data Type.")
-                elif not extensions.validate_charset(pro_data_type):
-                    st.error('ProData Data Type: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
-                elif pro_upload_path == '':
-                    st.error("Enter an upload path")
-                elif not os.path.isfile(pro_upload_path):
-                    st.error("Upload path for ProData File not found")
-                else:
+    #             # Validate ProData
+    #             if pro_data_name == '':
+    #                 st.error("Please enter a ProData Name.")
+    #             elif not extensions.validate_charset(pro_data_name):
+    #                 st.error('ProData Name: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
+    #             elif pro_data_type == '':
+    #                 st.error("Please enter a ProData Data Type.")
+    #             elif not extensions.validate_charset(pro_data_type):
+    #                 st.error('ProData Data Type: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
+    #             elif pro_upload_path == '':
+    #                 st.error("Enter an upload path")
+    #             elif not os.path.isfile(pro_upload_path):
+    #                 st.error("Upload path for ProData File not found")
+    #             else:
                     
-                    # Remove na values from metadata key column
-                    pro_metadata_df = pro_metadata_df.loc[~pro_metadata_df['key'].isna(),:]
-                    # Replace all None values with empty string
-                    pro_metadata_df = pro_metadata_df.fillna('')
+    #                 # Remove na values from metadata key column
+    #                 pro_metadata_df = pro_metadata_df.loc[~pro_metadata_df['key'].isna(),:]
+    #                 # Replace all None values with empty string
+    #                 pro_metadata_df = pro_metadata_df.fillna('')
                   
-                    # Validate ProData Metadata
-                    pro_metadata_keys = pro_metadata_df['key'].tolist()
-                    pro_metadata_values = pro_metadata_df['value'].tolist()
-                    pro_metadata_keys = [k.lower() for k in pro_metadata_keys]                  
+    #                 # Validate ProData Metadata
+    #                 pro_metadata_keys = pro_metadata_df['key'].tolist()
+    #                 pro_metadata_values = pro_metadata_df['value'].tolist()
+    #                 pro_metadata_keys = [k.lower() for k in pro_metadata_keys]                  
                     
-                    for k, v in zip(pro_metadata_keys, pro_metadata_values):                        
-                        if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-                            st.error(f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces')
-                            break
-                        if k in uiconfig.METADATA_RESERVED_KEYS:
-                            st.error(f'Metadata Key **{k}**: Reserved keyword, please choose another key')
-                            break
-                    else:
+    #                 for k, v in zip(pro_metadata_keys, pro_metadata_values):                        
+    #                     if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
+    #                         st.error(f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces')
+    #                         break
+    #                     if k in uiconfig.METADATA_RESERVED_KEYS:
+    #                         st.error(f'Metadata Key **{k}**: Reserved keyword, please choose another key')
+    #                         break
+    #                 else:
                         
-                        pro_data_entry = {
-                            'name' : pro_data_name,
-                            'data_type' : pro_data_type,
-                            'upload_path' : pro_upload_path,
-                            'description' : pro_description,
-                            'metadata' : {k:v for k,v in zip(pro_metadata_keys, pro_metadata_values)}
-                        }
+    #                     pro_data_entry = {
+    #                         'name' : pro_data_name,
+    #                         'data_type' : pro_data_type,
+    #                         'upload_path' : pro_upload_path,
+    #                         'description' : pro_description,
+    #                         'metadata' : {k:v for k,v in zip(pro_metadata_keys, pro_metadata_values)}
+    #                     }
                         
                         
-                        # Add ProData to session state
-                        if not st.session_state['pro_data_new'] is None:
-                            # Returns a list of dicts
-                            pro_data_new = st.session_state['pro_data_new']
-                            pro_data_new_names = [e['name'] for e in pro_data_new]  
+    #                     # Add ProData to session state
+    #                     if not st.session_state['pro_data_new'] is None:
+    #                         # Returns a list of dicts
+    #                         pro_data_new = st.session_state['pro_data_new']
+    #                         pro_data_new_names = [e['name'] for e in pro_data_new]  
                             
-                            if pro_data_name in pro_data_new_names:
-                                st.error("ProData Name already exists.")
-                            else:
-                                pro_data_new.append(pro_data_entry)
-                                st.session_state['pro_data_new'] = pro_data_new
-                        else:
-                            # Initialize ProData as list of dicts
-                            st.session_state['pro_data_new'] = [pro_data_entry]
+    #                         if pro_data_name in pro_data_new_names:
+    #                             st.error("ProData Name already exists.")
+    #                         else:
+    #                             pro_data_new.append(pro_data_entry)
+    #                             st.session_state['pro_data_new'] = pro_data_new
+    #                     else:
+    #                         # Initialize ProData as list of dicts
+    #                         st.session_state['pro_data_new'] = [pro_data_entry]
                                                     
-        with col4:
-            if not st.session_state['pro_data_new'] is None:
-                names = [e['name'] for e in st.session_state['pro_data_new']]
+    #     with col4:
+    #         if not st.session_state['pro_data_new'] is None:
+    #             names = [e['name'] for e in st.session_state['pro_data_new']]
                 
-                st.write('ProData added: ' + ', '.join(names))
+    #             st.write('ProData added: ' + ', '.join(names))
         
     _ , col_conf = st.columns([9,3])
 
