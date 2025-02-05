@@ -349,9 +349,14 @@ def get_fq_queue_jobs(headers: dict) -> int:
     return num_jobs
 
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
-def get_pro_data_owner_group(headers: dict) -> pd.DataFrame:
+def get_pro_data_owner_group(headers: dict, include_archived=False) -> pd.DataFrame:
     
     endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['pro_data'], 'owner_group/')
+    
+    # Query valid endpoint to return only valid pro_data
+    if not include_archived:
+        endpoint = endpoint + 'valid/'
+       
     df = extensions.get_request_to_df(endpoint, ProData, headers=headers)
     
     return df
@@ -480,6 +485,18 @@ def get_owner_group_appusers(headers: dict, owner_group_name: str | None = None)
         
         return og_users
 
+
+@st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
+def get_fq_dataset_appuser(headers: dict) -> pd.DataFrame:
+    
+    fq_datasets = get_fq_dataset_owner_group(headers)
+    collabs = get_fq_dataset_collab(headers)
+    
+    fq_datasets = pd.concat([fq_datasets, collabs], axis=0)
+
+    return fq_datasets
+
+
 # PROJECT
 
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
@@ -548,6 +565,27 @@ def get_project_collaborators(headers: dict, project_id: int) -> pd.DataFrame:
     
     return app_users  
 
+@st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
+def get_project_datasets_overview(headers: dict) -> pd.DataFrame:
+    
+    projects = get_project_appuser(headers)
+    fq_datasets = get_fq_dataset_appuser(headers)
+    
+    projects = projects[['id', 'name', 'description']]
+    projects.columns = ['project_id', 'project_name', 'project_description']
+    
+    fq_datasets = fq_datasets[['id', 'name', 'project']]
+    
+    print(fq_datasets)
+    
+    fq_datasets.columns = ['dataset_id', 'dataset_name', 'project_id']
+    fq_datasets = fq_datasets.explode('project_id')
+    datasets_projects = fq_datasets.merge(projects, on='project_id', how='left')
+    
+    return datasets_projects
+    
+
+# FASTQ Combined
 
 def infer_dataset(query: str) -> str:
     """Method to infer default dataset name from fq_file name
@@ -609,10 +647,11 @@ def get_fq_file_staging_overview(headers: dict) -> pd.DataFrame:
                          'md5_checksum',
                          'pipeline_version']]
     
-    
-    
     # Split Datasets into individual dfs
     return fq_files
+
+def _map_project_name(project, project_id):
+        return project.loc[project['id'] == project_id, 'name'].values[0]
 
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
 def get_fq_dataset_meta_overview(headers: dict) -> Tuple[pd.DataFrame,pd.DataFrame]:
@@ -647,14 +686,11 @@ def get_fq_dataset_meta_overview(headers: dict) -> Tuple[pd.DataFrame,pd.DataFra
     merge = pd.concat([fq_datasets_owner_group, fq_datasets_collab], axis=0, ignore_index=True)
     # Error comes when not all projects are shared 
     
-    def _map_project_name(project_id):
-        return projects_appuser.loc[projects_appuser['id'] == project_id, 'name'].values[0]
-    
     # Map project ids to project names, ONLY if appuser has access to project via owner_group or collab
     
     # Filter project ids
     merge['project'] = merge['project'].apply(lambda x: [i for i in x if i in projects_appuser_ids])
-    merge['project_names'] = merge['project'].apply(lambda x: [_map_project_name(i) for i in x])
+    merge['project_names'] = merge['project'].apply(lambda x: [_map_project_name(projects_appuser, i) for i in x])
     
     metadata = merge.pop('metadata')
     metadata = pd.DataFrame(metadata.tolist())
@@ -662,19 +698,27 @@ def get_fq_dataset_meta_overview(headers: dict) -> Tuple[pd.DataFrame,pd.DataFra
     merge = merge[return_cols]
     
     return merge, metadata
-    
+
+# PRO DATA Combined
 
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
-def get_pro_data_meta_overview(headers: dict) -> Tuple[pd.DataFrame,pd.DataFrame]:
+def get_pro_data_meta_overview(headers: dict, include_archived = False) -> Tuple[pd.DataFrame,pd.DataFrame]:
         
-    pro_data_owner_group = get_pro_data_owner_group(headers)
+    pro_data_owner_group = get_pro_data_owner_group(headers, include_archived)
+    
+    fq_datasets = get_fq_dataset_meta_overview(headers)[0]
+    fq_datasets = fq_datasets[['id', 'name', 'project', 'project_names']]
+    fq_datasets.columns = ['fq_dataset', 'fq_dataset_name', 'project', 'project_names']
     
     return_cols =[
-        'fq_dataset',
         'id',
         'name',
         'description',
         'data_type',
+        'fq_dataset',
+        'fq_dataset_name',
+        'project',
+        'project_names',
         'version',
         'created',
         'valid_to',
@@ -685,9 +729,11 @@ def get_pro_data_meta_overview(headers: dict) -> Tuple[pd.DataFrame,pd.DataFrame
     metadata = pro_data_owner_group.pop('metadata')
     metadata = pd.DataFrame(metadata.tolist())
     
+    pro_data_owner_group = pro_data_owner_group.merge(fq_datasets, on='fq_dataset') 
     pro_data_owner_group = pro_data_owner_group[return_cols]
     
     return pro_data_owner_group, metadata
+
 
 
 #region  CREATE
