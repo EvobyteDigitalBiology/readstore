@@ -1030,15 +1030,15 @@ class ProDataViewSet(viewsets.ModelViewSet):
         
         # Update last dataset
         # Versioning is developed into fq_dataset, name, owner_group 
-        q_last = ProData.objects.filter(valid_to=None,
-                                        name=name,
-                                        fq_dataset=fq_dataset).first()
+        q_last = ProData.objects.filter(name=name,
+                                        fq_dataset=fq_dataset).order_by('-version').first()
                 
         if q_last:
-            q_last.valid_to = datetime.datetime.now()
-            new_version = q_last.version + 1
+            if q_last.valid_to is None:
+                q_last.valid_to = datetime.datetime.now()
+                q_last.save()
             
-            q_last.save()
+            new_version = q_last.version + 1
         else:
             new_version = 1
         
@@ -1101,6 +1101,30 @@ class ProDataViewSet(viewsets.ModelViewSet):
             qset = ProData.objects.filter(fq_dataset__in=fq_datasets).all().order_by("-created")
             
             serializer = self.get_serializer(qset, many=True)        
+            return Response(serializer.data)
+        else:
+            return Response({'detail' : 'User is not an appuser'}, status=400)
+    
+    
+    @action(detail=False, methods=['get'])
+    def owner_group_valid(self, request):
+        """Get ProData for owner_group
+
+        Return ProData where user is part of owner_group
+        
+        Args:
+            request
+
+        Returns:
+            Response
+        """
+        
+        if hasattr(request.user, 'appuser'):
+            owner_group = request.user.appuser.owner_group
+            fq_datasets = FqDataset.objects.filter(owner_group=owner_group).all()
+            qset = ProData.objects.filter(fq_dataset__in=fq_datasets, valid_to=None).all().order_by("-created")
+            
+            serializer = self.get_serializer(qset, many=True)
             return Response(serializer.data)
         else:
             return Response({'detail' : 'User is not an appuser'}, status=400)
