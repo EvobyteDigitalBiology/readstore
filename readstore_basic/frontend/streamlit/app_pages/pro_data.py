@@ -82,15 +82,18 @@ def update_segment_default(segment_control_options):
 
 #region Create ProData
 @st.dialog('Create ProData Entry', width='large')
-def create_pro_data(ref_dataset_projects_df: pd.DataFrame):
+def create_pro_data(ref_dataset_projects_df: pd.DataFrame,
+                    ref_name_dataset_df: pd.DataFrame):
     """Create empty dataset
 
     Args:
-        ref_dataset_projects_df (pd.DataFrame): Reference dataframe with project dataset mapping
+        ref_dataset_projects_df: Reference dataframe with project dataset mapping
+        ref_name_dataset_df: Reference dataframe with ProData name and dataset mapping
     """
 
     ref_dataset_projects_df = ref_dataset_projects_df.copy()
-    
+    ref_name_dataset_df = ref_name_dataset_df.drop_duplicates()
+        
     # pass
     name = st.text_input("Pro Data Name",
                         key='pro_data_name',
@@ -199,7 +202,11 @@ def create_pro_data(ref_dataset_projects_df: pd.DataFrame):
     with col_conf:
         
         if st.button('Confirm', type ='primary', key='ok_create_pro_data', use_container_width=True):
-        
+            
+            ref_name_check = ref_name_dataset_df[
+                (ref_name_dataset_df['fq_dataset'] == dataset_id) & 
+                (ref_name_dataset_df['name'] == name)]
+            
             if name == '':
                 st.error("Please enter a ProData Name.")
             elif not extensions.validate_charset(name):
@@ -214,6 +221,9 @@ def create_pro_data(ref_dataset_projects_df: pd.DataFrame):
                 st.error("Upload path for ProData File not found")
             elif dataset_id is None:
                 st.error("Please select a dataset to attach ProData entry to.")
+            # Test dataset_id name combination exists
+            elif not ref_name_check.empty:
+                st.error("ProData Name already exists for selected Dataset. Use **Update** ProData instead.")
             else:
                 # Remove na values from metadata key column
                 metadata_df = metadata_df.loc[~metadata_df['key'].isna(),:]
@@ -729,7 +739,10 @@ with col_low_1:
                  help = 'Create new empty Dataset',
                  type='primary'):
         
-        create_pro_data(project_datasets)
+        ref_name_dataset_df = pro_data_overview[['name', 'fq_dataset']]
+        
+        create_pro_data(project_datasets,
+                        ref_name_dataset_df)
 
 with col_low_2:    
     
@@ -740,12 +753,10 @@ with col_low_2:
                  help = 'Update the selected Dataset'):
         
         if update_one:
-        
             update_pro_data(pro_data_update,
                             pro_data_metadata_update)
 
-        else:
-            
+        else:            
             update_many_pro_data(
                 pro_data_dataset_update
             )
@@ -850,6 +861,7 @@ if show_details:
                             key='project_details_df')
                 
         with col2d1:
+            
             with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
                 
                 st.write('**Metadata**')
