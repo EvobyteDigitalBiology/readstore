@@ -487,7 +487,7 @@ pro_data_project_filter.insert(0, 'No Project')
 # Add id string for search
 pro_data_overview['id_str'] = pro_data_overview['id'].astype(str)
 
-col1, col2, col3, col4, col5, col6 = st.columns([3,3,1.75,2,1.3,0.75], vertical_alignment='center')
+col1, col2, col3, col4, col5, col6 = st.columns([3,3,1.75,2.2,1.3,0.75], vertical_alignment='center')
 
 with col1:
     
@@ -728,7 +728,7 @@ else:
     export_select = pro_data_show
     
 
-col_low_1, col_low_2, col_low_3, _, col_low_4, col_low_5 = st.columns([1.75,1.75, 1.75, 1.5 ,2.25,3],
+col_low_1, col_low_2, col_low_3, _, col_low_4, col_low_5 = st.columns([1.75,1.75, 1.75, 1.0 ,2.75,3],
                                                           vertical_alignment = 'center')
 
 with col_low_1:
@@ -814,7 +814,7 @@ if show_details:
             
             with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
                 
-                col1atta, col2atta = st.columns([2,10])
+                col1atta, col2atta = st.columns([3,9])
                 
                 detail_format = pro_data_detail.copy()
                 upload_path = detail_format['upload_path']
