@@ -1253,7 +1253,7 @@ fq_datasets['id_str'] = fq_datasets['id'].astype(str)
 
 # UI
 
-col1, col2, col3, col4, col5, col6 = st.columns([3,3,1.75,2,1.3,0.75], vertical_alignment='center')
+col1, col2, col3, col4, col5, col6 = st.columns([3,3,1.75,2.2,1.3,0.75], vertical_alignment='center')
 
 with col1:
     
