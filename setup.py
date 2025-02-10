@@ -19,15 +19,15 @@ setup(
     ],
     python_requires='>=3.10',
     install_requires=[
-        'Django>=5.1.4',
+        'Django>=5.1.6',
         'djangorestframework>=3.15.2',
         'djangorestframework_simplejwt>=5.4.0',
         'requests>=2.32.3',
         'gunicorn>=23.0.0',
         'pysam>=0.22.1',
         'pyyaml>=6.0.2',
-        'streamlit>=1.41.0',
-        'pydantic>=2.10.3',
+        'streamlit>=1.42.0',
+        'pydantic>=2.10.6',
         'pandas>=2.2.3',
         'openpyxl>=3.1.5'
     ],

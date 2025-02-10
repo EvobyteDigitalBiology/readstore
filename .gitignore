@@ -189,3 +189,5 @@ readstore_basic/requirements.txt
 rs/*
 
 run*.sh
+
+.flake8

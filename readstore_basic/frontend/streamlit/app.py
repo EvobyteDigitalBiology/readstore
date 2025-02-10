@@ -60,6 +60,11 @@ dataset_page = st.Page("app_pages/dataset.py",
                         icon=":material/list:",
                         url_path = "dataset")
 
+pro_data_page = st.Page("app_pages/pro_data.py",
+                        title="ProData",
+                        icon=":material/insert_drive_file:",
+                        url_path = "pro_data")
+
 settings_page = st.Page("app_pages/settings.py",
                         title="Settings",
                         icon=":material/settings:",
@@ -102,7 +107,7 @@ if auth_status:
         if not 'owner_group' in st.session_state:
             st.session_state['owner_group'] = datamanager.get_my_owner_group(st.session_state["jwt_auth_header"])['name'].tolist()[0]
     
-        pages = [project_page, dataset_page]
+        pages = [project_page, dataset_page, pro_data_page]
     
         if 'staging' in user_groups:
             pages = pages + [staging_page]

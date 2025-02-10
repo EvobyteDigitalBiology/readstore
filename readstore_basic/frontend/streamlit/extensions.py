@@ -298,7 +298,71 @@ def validate_endpoints(endpoints: dict,
             if not check_rest_api_endpoint(v, auth=auth, headers=headers):    
                 raise exceptions.UIAppError(f"Endpoint {v} not found in registered endpoints.")
 
-#region CRUD functions
+# Filter Metadata
+
+def filter_df_by_metadata_filter(df: pd.DataFrame, filter_session_prefix: str):
+    """Filter a DataFrame by metadata filter session state
+
+    For each key in session state check if it starts with filter_session_prefix
+    Parse metadata key and values to filter from session state and filter DataFrame
+    If values are defined perform filtering
+    Move to next key
+
+    Args:
+        df (pd.DataFrame): dataframe to filter
+        filter_session_prefix (str): Key prefix to fetch metadata filter values from session state.
+
+    Returns:
+        pd.DataFrame: Filtered DataFrame
+    """
+
+    for k in st.session_state:
+        if k.startswith(filter_session_prefix):
+            meta_key = k.replace(filter_session_prefix, '')
+            values = st.session_state[k]
+            
+            # Add this if to check in case that project_show was updated
+            if meta_key in df:            
+                if values != []:
+                    df = df.loc[df[meta_key].isin(values),:]
+
+    return df
+
+
+def project_filter_from_df(df: pd.DataFrame) -> list:
+    """Project_filter from DataFrame
+
+    Extract project_names from DataFrame
+    Format and prepare filter list
+    
+    Dataframe must have project_names column
+    
+    Args:
+        df (pd.DataFrame): DataFrame with project_names column
+
+    Raises:
+        exceptions.UIAppError: _description_
+        AssertionError: _description_
+        AssertionError: _description_
+        AssertionError: _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    if not 'project_names' in df.columns:
+        raise exceptions.UIAppError('project_names column not found in DataFrame')
+
+    df_project_set = df['project_names'].apply(lambda x: x != [])
+    df_project = df.loc[df_project_set, 'project_names']
+    df_project = df_project.explode().unique()
+    df_project_filter = sorted(df_project)
+    df_project_filter = df_project_filter[::-1]
+
+    return df_project_filter
+    
+
+#region HTTP CRUD functions
 
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
 def get_request_to_df(endpoint: str,

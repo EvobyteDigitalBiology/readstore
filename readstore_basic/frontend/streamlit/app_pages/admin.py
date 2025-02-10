@@ -74,17 +74,17 @@ def create_user(reference_user_names: pd.Series,
                                help = 'Email must only contain 0-9 a-z A-Z. @ - _characters')
     
     password = st.text_input("Enter Password (min 8 characters)",
-                               help = 'Password must only contain 0-9 a-z A-Z. @ - _characters',
+                               help = 'Enter strong password containing letters, numbers and special characters',
                                type = 'password')
     
     repeat_password = st.text_input("Repeat Password",
-                                 help = 'Password must only contain 0-9 a-z A-Z. @ - _characters',
+                                 help = 'Enter strong password containing letters, numbers and special characters',
                                  type = 'password')
     
     owner_group_name = uiconfig.DEFAULT_OWNER_GROUP
     
     staging = st.checkbox("Staging Permissions",
-                          help = "Enables Create, Upload and Delete of FASTQ, Projects, Datasets via CLI and SKD")
+                          help = "Enables Create, Upload and Delete of FASTQ Files, Projects, Datasets via CLI and SKD")
     
     _ , col2c = st.columns([9,3], vertical_alignment='center')
     
@@ -106,8 +106,6 @@ def create_user(reference_user_names: pd.Series,
             elif username.lower() in reference_user_names:
                 # Check if group_name exists
                 st.error('Username exists')
-            elif not extensions.validate_charset(password):
-                st.error('Password: Only 0-9 a-z A-Z. @ - _ characters allowed')
             elif len(password) < 8:
                 st.error('Password: Minimum 8 characters')
             elif password != repeat_password:
@@ -290,11 +288,11 @@ def reset_password(row_ix: int,
     st.write("Set new Password for User Account")
     
     password = st.text_input("Enter Password (min 8 characters)",
-                            help = 'Password must only contain 0-9 a-z A-Z. @ - _characters',
+                            help = 'Enter strong password containing letters, numbers and special characters',
                             type = 'password')
     
     repeat_password = st.text_input("Repeat Password",
-                                    help = 'Password must only contain 0-9 a-z A-Z. @ - _characters',
+                                    help = 'Enter strong password containing letters, numbers and special characters',
                                     type = 'password')
     
     _, col2c = st.columns([9,3])
@@ -303,9 +301,7 @@ def reset_password(row_ix: int,
     with col2c:
         if st.button('Confirm', type ='primary', key='ok_reset_pwd', use_container_width=True):
             # Validate pwd
-            if not extensions.validate_charset(password):
-                st.error('Password: Only 0-9 a-z A-Z. @ - _ characters allowed')
-            elif len(password) < 8:
+            if len(password) < 8:
                 st.error('Password: Minimum 8 characters')
             elif password != repeat_password:
                 st.error('Password do not match')

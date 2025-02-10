@@ -73,12 +73,22 @@ if not 'project_select_id' in st.session_state:
 if not 'metadata_select' in st.session_state:
     st.session_state['metadata_select'] = pd.DataFrame()
 
+if not 'details_segment_ix' in st.session_state:
+    st.session_state['details_segment_ix'] = 0
+    
 def update_attachment_select():
     if st.session_state['project_select_id']:
         pid = st.session_state['project_select_id']
         st.session_state[f'download_attachments_select_{pid}'] = st.session_state['attachment_details_df']
 
-
+def update_segment_default(segment_control_options):
+    
+    project_detail_selection = st.session_state['project_detail_selection']
+    
+    if project_detail_selection:
+        ix = segment_control_options.index(project_detail_selection)
+        st.session_state['details_segment_ix'] = ix
+    
 # Assign and remove datasets to project
 def add_selected_datasets(fq_datasets, selected_rows):
                 
@@ -113,20 +123,6 @@ def remove_selected_datasets(fq_datasets, selected_rows):
         # Filter out prev selected ID
         st.session_state['selected'] = st.session_state['selected'].loc[
             ~st.session_state['selected']['id'].isin(select_dataset_r['id']),:]
-
-
-def filter_df_by_metadata_filter(df: pd.DataFrame, filter_session_prefix = 'project_meta_filter_'):
-    
-    for k in st.session_state:
-        if k.startswith(filter_session_prefix):
-            meta_key = k.replace(filter_session_prefix, '')
-            # Add this if to check in case that project_show was updated
-            if meta_key in df:
-                values = st.session_state[k]
-                if values != []:
-                    df = df.loc[df[meta_key].isin(values),:]
-            
-    return df
 
 # region Create Project
 
@@ -419,9 +415,7 @@ def update_project(project_select_df: pd.DataFrame,
     select_project_attachments = datamanager.get_project_attachments(st.session_state["jwt_auth_header"],
                                                                      project_id)
     
-    
     attachment_ref_names = select_project_attachments['name'].tolist()
-    
     
     reference_fq_datasets = reference_fq_datasets.sort_values(by='name')
     
@@ -817,7 +811,7 @@ def export_project(project_view: pd.DataFrame):
                        'text/csv')
 
 # region Update Many Datasets
-@st.dialog('Update Datasets', width='large')
+@st.dialog('Update Projects', width='large')
 def update_many_projects(project_select_df: pd.DataFrame):
 
     # Show delete button if project is owned by user's owner_group
@@ -864,7 +858,7 @@ projects['id_str'] = projects['id_project'].astype(str)
 #region UI
 
 # Navbar
-col1, col2, col3, col4, col5 = st.columns([3,4.75,2.5, 1,0.75], vertical_alignment='center')
+col1, col2, col3, col4, col5 = st.columns([3,4.75,2.2, 1.3,0.75], vertical_alignment='center')
 
 with col1:
 
@@ -875,12 +869,13 @@ with col1:
                         label_visibility = 'collapsed')
 
 with col3:
-    st.toggle("Metadata", key='show_metadata', help='Switch to Projects Metadata View')
+    st.toggle("Metadata", key='show_metadata')
 
 # Dynamic list of checkboxes with distinct values
 with col4:
     
     metadata_select = st.session_state['metadata_select']
+    metadata_select = metadata_select.dropna(axis=1, how='all')
     
     if metadata_select.empty:
         metadata_filter_disabled = True
@@ -947,7 +942,8 @@ projects_show = projects_show.loc[
 st.session_state['metadata_select'] = projects_show[metadata.columns]
 
 # Search by metadata filter
-projects_show = filter_df_by_metadata_filter(projects_show)
+projects_show = extensions.filter_df_by_metadata_filter(projects_show,
+                                                        filter_session_prefix='project_meta_filter_')
 
 # Remove those meta cols from projects_show which are all None
 meta_cols_all_none = projects_show.loc[:,metadata.columns].isna().all()
@@ -1113,16 +1109,29 @@ if show_project_details:
     
     st.divider()
     
-    detail_tab_names = [":blue-background[**Features**]",
-                        ":blue-background[**Datasets**]",
-                        ":blue-background[**Attachments**]"]
-    # Show Collaborators Tab only if project is owned by user's owner_group
+    # detail_tab_names = [":blue-background[**Features**]",
+    #                     ":blue-background[**Datasets**]",
+    #                     ":blue-background[**Attachments**]"]
+    # # Show Collaborators Tab only if project is owned by user's owner_group
 
-    detail_tabs = st.tabs(detail_tab_names)
+    # detail_tabs = st.tabs(detail_tab_names)
 
-    #region Detail Features
-    with detail_tabs[0]:
+    segment_control_options = ['Features', 'Datasets', 'Attachments']
+    segment_default = segment_control_options[st.session_state['details_segment_ix']]
     
+    project_detail_selection = st.segmented_control(
+            'Project Detail Selection',
+            segment_control_options,
+            key='project_detail_selection',
+            default=segment_default,
+            label_visibility = 'collapsed',
+            on_change = update_segment_default,
+            args = (segment_control_options,)
+        )
+    
+    #region Detail Features
+    if project_detail_selection == 'Features':
+        
         col1d, col2d = st.columns([7,5])
         
         with col1d:
@@ -1172,7 +1181,7 @@ if show_project_details:
                             key='metadata_details_df')
     
     #region Detail Datasets
-    with detail_tabs[1]:
+    if project_detail_selection == 'Datasets':
         
         with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
                 
@@ -1196,7 +1205,7 @@ if show_project_details:
                         height = max_df_height)
     
     #region Detail Attachments   
-    with detail_tabs[2]:
+    if project_detail_selection == 'Attachments':
         
         with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
             

@@ -15,6 +15,7 @@ import random
 import pathlib
 import socket
 import base64
+import sqlite3
 
 import pandas as pd
 
@@ -61,9 +62,6 @@ parser.add_argument(
 export_parser = subparsers.add_parser("export",
                                       help='Export ReadStore Database',
                                       add_help=True)
-
-export_parser.add_argument(
-    '--db-directory', type=str, help='Directory containing ReadStore database (required)', metavar='')
 
 export_parser.add_argument(
     '--config-directory', type=str, help='Directory containing ReadStore config files (required)', metavar='')
@@ -304,8 +302,10 @@ def run_rs_server(db_directory: str,
     # Define 
     if debug:
         rs_config['django']['django_settings_module'] = 'settings.development'
+        rs_config['django']['gunicorn_run'] = False
     else:
         rs_config['django']['django_settings_module'] = 'settings.production'
+        rs_config['django']['gunicorn_run'] = True
     
     with open(config_path, "w") as f:
         yaml.dump(rs_config, f)
@@ -412,8 +412,7 @@ def run_rs_server(db_directory: str,
         os.environ['RS_KEY_PATH'] = ''
         
         
-def run_db_export(db_directory: str,
-                  config_directory: str,
+def run_db_export(config_directory: str,
                   export_directory: str):
     """
         Run ReadStore Server
@@ -421,22 +420,15 @@ def run_db_export(db_directory: str,
     
     print("Run DB Export")
     
-    # Validate paths
-    db_directory = _get_path(db_directory)
+    # Validate paths || Really required?
     config_directory = _get_path(config_directory)
     export_directory = _get_path(export_directory)
     
     # Check permissions for db_directory and db_backup_directory
-    assert os.path.isdir(db_directory), f'ERROR: db_directory {db_directory} does not exist!'
     assert os.path.isdir(export_directory), f'ERROR: db_backup_directory {export_directory} does not exist!'
-    
-    assert os.access(db_directory, os.W_OK), f'ERROR: db_directory {db_directory} is not writable!'
     assert os.access(export_directory, os.W_OK), f'ERROR: db_backup_directory {export_directory} is not writable!'
-    
-    assert os.access(db_directory, os.R_OK), f'ERROR: db_directory {db_directory} is not readable!'
     assert os.access(export_directory, os.R_OK), f'ERROR: db_backup_directory {export_directory} is not readable!'
     assert os.access(config_directory, os.R_OK), f'ERROR: config_directory {config_directory} is not readable!'
-    
     
     if 'RS_PYTHON' in os.environ:
         print('Found RS_PYTHON in Environment Variables')
@@ -484,7 +476,12 @@ def run_db_export(db_directory: str,
         export_process.wait()
     
     # Reformat all tables except attachments    
-    export_filenames = ['app_project.json', 'app_fqdataset.json', 'app_fqfile.json', 'app_prodata.json']
+    export_filenames = ['app_project.json',
+                        'app_fqdataset.json',
+                        'app_fqfile.json',
+                        'app_prodata.json',
+                        'app_fqattachment.json',
+                        'app_projectattachment.json']
     
     print('Reformat JSON Dump')
     
@@ -505,58 +502,57 @@ def run_db_export(db_directory: str,
         export_df.to_csv(export_path.replace('.json','.csv'), index=False, sep=',')
     
     # Reformat json for attachments files / i.e. convert base64 data back to files stored alongside json
-    print('Reformat Attachments')
+    print('Export Attachment Body Table')
     
-    attachment_file_names = ['app_fqattachment.json', 'app_projectattachment.json']
+    db_path = rs_config['django']['db_path']
     
-    for file_name in attachment_file_names:
-        
-        print(f'Reformat Attachment File {file_name}')
-        attachment_path = os.path.join(export_directory, file_name)
-        
-        with open(attachment_path, 'r') as fh:
-            attachment_data = yaml.safe_load(fh)
-        
-        attachment_data_format = [] 
-        for attachment in attachment_data:
-            
-            pk = attachment['pk']
-            
-            # Check if attachments refer to project or dataset
-            if 'fq_dataset' in attachment['fields']:
-                attach_fk_id = attachment['fields']['fq_dataset']
-                attach_fk_name = 'fq_dataset'
-            elif 'project' in attachment['fields']:
-                attach_fk_id = attachment['fields']['project']
-                attach_fk_name = 'project'
-            else:
-                print(attachment['fields'].keys())
-                sys.stderr.write(f'ERROR: Invalid column names in attachment files!\n')
-                return
-            
-            # Create output directory for project
-            dump_dir = os.path.join(export_directory, f'{attach_fk_name}_{attach_fk_id}')
-            os.makedirs(dump_dir, exist_ok=True)
-            
-            filename = attachment['fields']['name']
-            file_path = os.path.join(dump_dir, filename)
-            
-            data_b64 = attachment['fields']['body']
-            data_binary = base64.b64decode(data_b64)
-            
-            with open(file_path, 'wb') as fh:
-                fh.write(data_binary)
+    conn = sqlite3.connect(db_path)
     
-            col_data = attachment['fields']
-            col_data['id'] = pk
-            _ = col_data.pop('body')
+    export_table_definitions = [
+        ('fq_dataset', 'fq_attachment'),
+        ('project', 'project_attachment')
+    ]
+    
+    for table_def in export_table_definitions:
         
-            attachment_data_format.append(col_data)
+        main_table = table_def[0]
+        attachment_table = table_def[1]
+        
+        print(f"Export Attachments for {attachment_table}")
+        
+        # Export fq_attachments
+        query = f'''SELECT {main_table}.name, {attachment_table}.name, attachment_body.body
+        FROM {main_table}
+        JOIN {attachment_table}
+        ON {main_table}.id={attachment_table}.{main_table}_id
+        JOIN attachment_body
+        ON {attachment_table}.attachment_body_id=attachment_body.id'''
+    
+        cursor = conn.cursor()
+        
+        num_elements = cursor.execute(f'SELECT COUNT(*) FROM {attachment_table}')
+        num_elements = num_elements.fetchone()[0]
+        
+        cur_exec = cursor.execute(query)
+        
+        for ix, ele in enumerate(cur_exec):
+            
+            if (ix % (num_elements / 10)) == 0:
+                print(f'Exported {ix} of {num_elements} elements')
+            
+            fq_dataset_name = ele[0]
+            fq_attachment_name = ele[1]
+            attachment_body = ele[2]
 
-        attachment_df = pd.DataFrame(attachment_data_format)
-        attachment_df.to_csv(attachment_path.replace('.json','.csv'), index=False, sep=',')
-        
-        
+            fq_dataset_dir = os.path.join(export_directory, main_table, fq_dataset_name)
+            os.makedirs(fq_dataset_dir, exist_ok=True)
+            
+            with open(os.path.join(fq_dataset_dir, fq_attachment_name), 'wb') as fh:
+                fh.write(attachment_body)
+
+    conn.close()    
+    
+    
 def main():
     
     args = parser.parse_args()
@@ -582,18 +578,9 @@ def main():
         
         export_directory = args.export_directory
         
-        if 'RS_DB_DIRECTORY' in os.environ:
-            print('Found RS_DB_DIRECTORY in Environment Variables')
-            db_directory = os.environ['RS_DB_DIRECTORY']
-        
         if 'RS_CONFIG_DIRECTORY' in os.environ:
             print('Found RS_CONFIG_DIRECTORY in Environment Variables')
             config_directory = os.environ['RS_CONFIG_DIRECTORY']
-        
-        if db_directory is None:
-            export_parser.print_help()
-            print('ERROR: --db-directory is required')
-            return
         
         if config_directory is None:
             export_parser.print_help()
@@ -605,7 +592,7 @@ def main():
             print('ERROR: --export_directory is required')
             return
                 
-        run_db_export(db_directory, config_directory, export_directory)
+        run_db_export(config_directory, export_directory)
         
     elif version:
         print(f'ReadStore Basic Version: {__version__}')

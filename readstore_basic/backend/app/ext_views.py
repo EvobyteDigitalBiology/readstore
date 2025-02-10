@@ -45,6 +45,7 @@ from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 
 from django.db.models import Q
+from django.db.models import F
 
 from .models import AppUser
 from .models import FqFile
@@ -687,7 +688,12 @@ class FqAttachmentExt(APIView):
                     & (og_check | collab_check) \
                     & attachment_name_check
             
-            qset = FqAttachment.objects.filter(Q_comb).distinct().all()
+            # Add attachments to FqDataset
+            qset = FqAttachment.objects \
+                .annotate(body = F('attachment_body__body')) \
+                .filter(Q_comb) \
+                .distinct() \
+                .all()
             
             serializer = FqAttachmentSerializer(qset, many=True)
             return Response(serializer.data)
@@ -922,7 +928,12 @@ class ProjectAttachmentExt(APIView):
                     & (og_check | collab_check) \
                     & attachment_name_check
             
-            qset = ProjectAttachment.objects.filter(Q_comb).distinct().all()
+            qset = ProjectAttachment.objects \
+                .annotate(body = F('attachment_body__body')) \
+                .filter(Q_comb) \
+                .distinct() \
+                .all()
+            
             serializer = ProjectAttachmentSerializer(qset, many=True)
             return Response(serializer.data)
 

@@ -39,8 +39,6 @@ def reset_password():
         
         if old_pwd == new_pwd:
             st.error('Passwords are identical')        
-        elif not extensions.validate_charset(new_pwd):
-            st.error('Password: Only 0-9 a-z A-Z. @ - _ characters allowed')
         elif len(new_pwd) < 8:
             st.error('Password: Minimum 8 characters')
         elif new_pwd != repeat_new_pwd:
@@ -141,7 +139,6 @@ with col1:
             
             if st.button('Enter New Key'):
                 enter_license_key()
-
 
     if st.button('Reset Password', use_container_width=True):
         reset_password()

@@ -7,7 +7,9 @@ import random
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.dispatch import receiver
 
+#region Functions
 
 def generate_short_uuid() -> str:
     """Generate short uuid.
@@ -151,6 +153,16 @@ class OwnerGroup(BasicModel):
     class Meta:
         db_table = 'owner_group'
 
+class AttachmentBody(models.Model):
+    
+    """
+        AttachmentBody Model to store binary files. 
+    """
+    
+    body = models.BinaryField()
+    
+    class Meta:
+        db_table = 'attachment_body'
 
 class FqFile(PipelineModel):
     
@@ -206,7 +218,7 @@ class Project(BasicModel):
         Project Model
     """
     
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, unique=True)
     description = models.TextField(null=True, blank=True)
     metadata  = models.JSONField()
     dataset_metadata_keys = models.JSONField()
@@ -214,23 +226,29 @@ class Project(BasicModel):
     owner_group = models.ForeignKey(OwnerGroup, on_delete=models.CASCADE)
     
     class Meta:
-        db_table = 'project'
-        unique_together = ('name', 'owner_group')
-        
+        db_table = 'project'        
             
-class ProjectAttachment(BinaryFileModel):
-    
+            
+class ProjectAttachment(BasicFileModel):
     """
         Project Attachments to store binary files. 
     """
     
     name = models.TextField()
+    attachment_body = models.OneToOneField(AttachmentBody, on_delete=models.PROTECT)   
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     
     class Meta:
         db_table = 'project_attachment'
         unique_together = ('name', 'project')
-       
+
+@receiver(models.signals.post_delete, sender=ProjectAttachment)
+def delete_project_attachment_bodies(sender, instance, **kwargs):
+    """
+        Delete FqAttachmentBodies
+    """
+    
+    instance.attachment_body.delete()
 
 class FqDataset(BasicModel):
     
@@ -238,7 +256,7 @@ class FqDataset(BasicModel):
         Model to organize FqFiles and metadata
     """
     
-    name = models.TextField()
+    name = models.TextField(unique=True)
     description = models.TextField(null=True, blank=True)
     qc_passed = models.BooleanField()
     fq_file_r1 = models.OneToOneField(FqFile, related_name='fq_file_r1', on_delete=models.SET_NULL, null=True, blank=True)
@@ -253,21 +271,31 @@ class FqDataset(BasicModel):
 
     class Meta:
         db_table = 'fq_dataset'
-        unique_together = ('name', 'owner_group')
+        
 
-
-class FqAttachment(BinaryFileModel):
+class FqAttachment(BasicFileModel):
     
     """
         Model to store binary files for FqDatasets. 
     """
     
     name = models.TextField()
+    attachment_body = models.OneToOneField(AttachmentBody, on_delete=models.PROTECT)
     fq_dataset = models.ForeignKey(FqDataset, on_delete=models.CASCADE)
     
     class Meta:
         db_table = 'fq_attachment'
         unique_together = ('name', 'fq_dataset')
+
+
+@receiver(models.signals.post_delete, sender=FqAttachment)
+def delete_fq_attachment_bodies(sender, instance, **kwargs):
+    """
+        Delete FqAttachmentBodies
+    """
+    
+    instance.attachment_body.delete()
+
         
 class LicenseKey(BasicModel):
     

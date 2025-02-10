@@ -23,7 +23,7 @@ global:
   valid_read1_suffix: R1_001,R1,Read1,r1_001,r1,read1
   valid_read2_suffix: R2_001,R2,Read2,r2_001,r2,read2
   valid_read_type: R1,R2,I1,I2
-  readstore_version: 1.3.5
+  readstore_version: 1.4.0
   metadata_reserved_keys: id,name,project,project_ids,project_names,owner_group_name,qc_passed,paired_end,index_read,created,description,owner_username,fq_file_r1,fq_file_r2,fq_file_i1,fq_file_i2,id_project,name_project,name_og,archived,collaborators,dataset_metadata_keys,data_type,version,valid_to,upload_path,owner_username,fq_dataset,id_fq_dataset,name_fq_dataset
 streamlit:
   access_token_refresh_seconds: 600

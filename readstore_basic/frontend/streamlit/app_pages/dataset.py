@@ -77,6 +77,9 @@ if not 'pro_data_new' in st.session_state:
 if not 'fq_metadata_select' in st.session_state:
     st.session_state['fq_metadata_select'] = pd.DataFrame()
 
+if not 'fq_details_segment_ix' in st.session_state:
+    st.session_state['fq_details_segment_ix'] = 0
+
 # Set selected ProData index for an activate dataset for download function
 def update_attachment_select():
     if st.session_state['dataset_select_id']:
@@ -88,6 +91,13 @@ def update_pro_data_select():
         dataset_id = st.session_state['dataset_select_id']
         st.session_state[f'download_pro_data_select_{dataset_id}'] = st.session_state['fq_prodata_details_df']
 
+def update_segment_default(segment_control_options):
+    
+    dataset_detail_selection = st.session_state['dataset_detail_selection']
+    
+    if dataset_detail_selection:
+        ix = segment_control_options.index(dataset_detail_selection)
+        st.session_state['fq_details_segment_ix'] = ix
 
 def update_pro_data_show_archived():
     new_state = st.session_state['checkbox_pro_data_include_archive']
@@ -96,35 +106,6 @@ def update_pro_data_show_archived():
     # Reset selection to avoid problems with old selection
     if detail_fq_pro_data_key_name in st.session_state:
         del st.session_state[detail_fq_pro_data_key_name]
-
-def filter_df_by_metadata_filter(df: pd.DataFrame, filter_session_prefix = 'fq_dataset_meta_filter_'):
-    """Filter a DataFrame by metadata filter session state
-
-    For each key in session state check if it starts with filter_session_prefix
-    Parse metadata key and values to filter from session state and filter DataFrame
-    If values are defined perform filtering
-    Move to next key
-    
-    Args:
-        df (pd.DataFrame): dataframe to filter
-        filter_session_prefix (str, optional): Key prefix to fetch metadata filter from session state.
-
-    Returns:
-        pd.DataFrame: Filtered DataFrame
-    """
-
-    for k in st.session_state:
-        if k.startswith(filter_session_prefix):
-            meta_key = k.replace(filter_session_prefix, '')
-            values = st.session_state[k]
-            
-            # Add this if to check in case that project_show was updated
-            if meta_key in df:            
-                if values != []:
-                    df = df.loc[df[meta_key].isin(values),:]
-
-    return df
-
 
 #region Create Dataset
 @st.dialog('Create Dataset', width='large')
@@ -137,7 +118,6 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
         reference_project_names_df (pd.DataFrame): Existing names of projects
     """
     
-    
     # Get reference dataset and project names
     reference_fq_dataset_names = reference_fq_dataset_names.str.lower()
     reference_fq_dataset_names = reference_fq_dataset_names.tolist()
@@ -148,10 +128,9 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
                         help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).')
 
     # Define Tabs
-    tab1, tab2, tab3, tab4 = st.tabs([":blue-background[**Projects**]",
+    tab1, tab2, tab3 = st.tabs([":blue-background[**Projects**]",
                                     ":blue-background[**Features**]",
-                                    ":blue-background[**Attachments**]",
-                                    ":blue-background[**ProData**]"])
+                                    ":blue-background[**Attachments**]"])
 
     # TAB: Features: Project
     with tab1:
@@ -230,142 +209,142 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
         st.write(' ')
     
     # TAB: Create ProData Entries for Dataset
-    with tab4:
+    # with tab4:
               
-        st.write('Attach **Pro**cessed Data.')
+    #     st.write('Attach **Pro**cessed Data.')
 
-        pro_data_name = st.text_input("Enter Name",
-                                        max_chars=150,
-                                        help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
-                                        label_visibility = "collapsed",
-                                        placeholder = "Enter Name",
-                                        key = 'pro_data_name')
+    #     pro_data_name = st.text_input("Enter Name",
+    #                                     max_chars=150,
+    #                                     help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
+    #                                     label_visibility = "collapsed",
+    #                                     placeholder = "Enter Name",
+    #                                     key = 'pro_data_name')
         
-        pro_data_type = st.text_input("Enter Data Type",
-                                        max_chars=150,
-                                        help = 'Data Type, e.g. gene_count. \nName must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
-                                        label_visibility = "collapsed",
-                                        placeholder = "Enter Data Type",
-                                        key = 'pro_data_type')
+    #     pro_data_type = st.text_input("Enter Data Type",
+    #                                     max_chars=150,
+    #                                     help = 'Data Type, e.g. gene_count. \nName must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
+    #                                     label_visibility = "collapsed",
+    #                                     placeholder = "Enter Data Type",
+    #                                     key = 'pro_data_type')
         
-        pro_upload_path = st.text_input("Enter Upload Path",
-                                        max_chars=1000,
-                                        help = 'Path to File to Upload',
-                                        label_visibility = "collapsed",
-                                        placeholder = "Path to ProData File",
-                                        key = 'pro_upload_path')
+    #     pro_upload_path = st.text_input("Enter Upload Path",
+    #                                     max_chars=1000,
+    #                                     help = 'Path to File to Upload',
+    #                                     label_visibility = "collapsed",
+    #                                     placeholder = "Path to ProData File",
+    #                                     key = 'pro_upload_path')
         
-        pro_description = st.text_area("Enter Description",
-                                        help = 'Description of the FASTQ Dataset.',
-                                        height = 68,
-                                        label_visibility = "collapsed",
-                                        placeholder = "Enter Description",
-                                        key = 'pro_description')
+    #     pro_description = st.text_area("Enter Description",
+    #                                     help = 'Description of the FASTQ Dataset.',
+    #                                     height = 68,
+    #                                     label_visibility = "collapsed",
+    #                                     placeholder = "Enter Description",
+    #                                     key = 'pro_description')
         
-        # Metadata for ProData
-        with st.container(border=True):
+    #     # Metadata for ProData
+    #     with st.container(border=True):
             
-            col1p, col2p = st.columns([11,1], vertical_alignment='top')
+    #         col1p, col2p = st.columns([11,1], vertical_alignment='top')
                     
-            with col1p:
+    #         with col1p:
                 
-                tab1p = st.tabs([":blue-background[**Metadata**]"])[0]
+    #             tab1p = st.tabs([":blue-background[**Metadata**]"])[0]
                 
-                with tab1p:
+    #             with tab1p:
                     
-                    selected_fq_metadata = pd.DataFrame({
-                        'key' : [],
-                        'value' : []
-                    })
+    #                 selected_fq_metadata = pd.DataFrame({
+    #                     'key' : [],
+    #                     'value' : []
+    #                 })
 
-                    # Data Editor for Input
-                    selected_fq_metadata = selected_fq_metadata.astype(str)
-                    pro_metadata_df = st.data_editor(
-                        selected_fq_metadata,
-                        use_container_width=True,
-                        hide_index=True,
-                        column_config = {
-                            'key' : st.column_config.TextColumn('Key'),
-                            'value' : st.column_config.TextColumn('Value')
-                        },
-                        num_rows ='dynamic',
-                        key = 'create_pro_data_metadata_df'
-                    )
+    #                 # Data Editor for Input
+    #                 selected_fq_metadata = selected_fq_metadata.astype(str)
+    #                 pro_metadata_df = st.data_editor(
+    #                     selected_fq_metadata,
+    #                     use_container_width=True,
+    #                     hide_index=True,
+    #                     column_config = {
+    #                         'key' : st.column_config.TextColumn('Key'),
+    #                         'value' : st.column_config.TextColumn('Value')
+    #                     },
+    #                     num_rows ='dynamic',
+    #                     key = 'create_pro_data_metadata_df'
+    #                 )
             
-            with col2p:
-                with st.popover(':material/help:'):
-                    st.write("Key-value pairs to store and group dataset metadata.")
+    #         with col2p:
+    #             with st.popover(':material/help:'):
+    #                 st.write("Key-value pairs to store and group dataset metadata.")
         
-        col3, col4 = st.columns([3, 9])
+    #     col3, col4 = st.columns([3, 9])
         
-        # Need a session state to store ProData which should be added
+    #     # Need a session state to store ProData which should be added
         
-        with col3:
-            if st.button('Add ProData'):
+    #     with col3:
+    #         if st.button('Add ProData'):
                 
-                # Validate ProData
-                if pro_data_name == '':
-                    st.error("Please enter a ProData Name.")
-                elif not extensions.validate_charset(pro_data_name):
-                    st.error('ProData Name: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
-                elif pro_data_type == '':
-                    st.error("Please enter a ProData Data Type.")
-                elif not extensions.validate_charset(pro_data_type):
-                    st.error('ProData Data Type: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
-                elif pro_upload_path == '':
-                    st.error("Enter an upload path")
-                elif not os.path.isfile(pro_upload_path):
-                    st.error("Upload path for ProData File not found")
-                else:
+    #             # Validate ProData
+    #             if pro_data_name == '':
+    #                 st.error("Please enter a ProData Name.")
+    #             elif not extensions.validate_charset(pro_data_name):
+    #                 st.error('ProData Name: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
+    #             elif pro_data_type == '':
+    #                 st.error("Please enter a ProData Data Type.")
+    #             elif not extensions.validate_charset(pro_data_type):
+    #                 st.error('ProData Data Type: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.')
+    #             elif pro_upload_path == '':
+    #                 st.error("Enter an upload path")
+    #             elif not os.path.isfile(pro_upload_path):
+    #                 st.error("Upload path for ProData File not found")
+    #             else:
                     
-                    # Remove na values from metadata key column
-                    pro_metadata_df = pro_metadata_df.loc[~pro_metadata_df['key'].isna(),:]
-                    # Replace all None values with empty string
-                    pro_metadata_df = pro_metadata_df.fillna('')
+    #                 # Remove na values from metadata key column
+    #                 pro_metadata_df = pro_metadata_df.loc[~pro_metadata_df['key'].isna(),:]
+    #                 # Replace all None values with empty string
+    #                 pro_metadata_df = pro_metadata_df.fillna('')
                   
-                    # Validate ProData Metadata
-                    pro_metadata_keys = pro_metadata_df['key'].tolist()
-                    pro_metadata_values = pro_metadata_df['value'].tolist()
-                    pro_metadata_keys = [k.lower() for k in pro_metadata_keys]                  
+    #                 # Validate ProData Metadata
+    #                 pro_metadata_keys = pro_metadata_df['key'].tolist()
+    #                 pro_metadata_values = pro_metadata_df['value'].tolist()
+    #                 pro_metadata_keys = [k.lower() for k in pro_metadata_keys]                  
                     
-                    for k, v in zip(pro_metadata_keys, pro_metadata_values):                        
-                        if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-                            st.error(f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces')
-                            break
-                        if k in uiconfig.METADATA_RESERVED_KEYS:
-                            st.error(f'Metadata Key **{k}**: Reserved keyword, please choose another key')
-                            break
-                    else:
+    #                 for k, v in zip(pro_metadata_keys, pro_metadata_values):                        
+    #                     if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
+    #                         st.error(f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces')
+    #                         break
+    #                     if k in uiconfig.METADATA_RESERVED_KEYS:
+    #                         st.error(f'Metadata Key **{k}**: Reserved keyword, please choose another key')
+    #                         break
+    #                 else:
                         
-                        pro_data_entry = {
-                            'name' : pro_data_name,
-                            'data_type' : pro_data_type,
-                            'upload_path' : pro_upload_path,
-                            'description' : pro_description,
-                            'metadata' : {k:v for k,v in zip(pro_metadata_keys, pro_metadata_values)}
-                        }
+    #                     pro_data_entry = {
+    #                         'name' : pro_data_name,
+    #                         'data_type' : pro_data_type,
+    #                         'upload_path' : pro_upload_path,
+    #                         'description' : pro_description,
+    #                         'metadata' : {k:v for k,v in zip(pro_metadata_keys, pro_metadata_values)}
+    #                     }
                         
                         
-                        # Add ProData to session state
-                        if not st.session_state['pro_data_new'] is None:
-                            # Returns a list of dicts
-                            pro_data_new = st.session_state['pro_data_new']
-                            pro_data_new_names = [e['name'] for e in pro_data_new]  
+    #                     # Add ProData to session state
+    #                     if not st.session_state['pro_data_new'] is None:
+    #                         # Returns a list of dicts
+    #                         pro_data_new = st.session_state['pro_data_new']
+    #                         pro_data_new_names = [e['name'] for e in pro_data_new]  
                             
-                            if pro_data_name in pro_data_new_names:
-                                st.error("ProData Name already exists.")
-                            else:
-                                pro_data_new.append(pro_data_entry)
-                                st.session_state['pro_data_new'] = pro_data_new
-                        else:
-                            # Initialize ProData as list of dicts
-                            st.session_state['pro_data_new'] = [pro_data_entry]
+    #                         if pro_data_name in pro_data_new_names:
+    #                             st.error("ProData Name already exists.")
+    #                         else:
+    #                             pro_data_new.append(pro_data_entry)
+    #                             st.session_state['pro_data_new'] = pro_data_new
+    #                     else:
+    #                         # Initialize ProData as list of dicts
+    #                         st.session_state['pro_data_new'] = [pro_data_entry]
                                                     
-        with col4:
-            if not st.session_state['pro_data_new'] is None:
-                names = [e['name'] for e in st.session_state['pro_data_new']]
+    #     with col4:
+    #         if not st.session_state['pro_data_new'] is None:
+    #             names = [e['name'] for e in st.session_state['pro_data_new']]
                 
-                st.write('ProData added: ' + ', '.join(names))
+    #             st.write('ProData added: ' + ', '.join(names))
         
     _ , col_conf = st.columns([9,3])
 
@@ -1161,7 +1140,9 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
         elif export_selection == 'Datasets':
             
             # Get fq_attachments
+            # TODO: Speedup requesting view
             fq_attachments = datamanager.get_fq_dataset_attachments(st.session_state["jwt_auth_header"])
+            # Cast attachments to a list
             fq_attachments_list = fq_attachments.groupby('fq_dataset_id')['name'].apply(list)
             fq_attachments_list = fq_attachments_list.reset_index()
             fq_attachments_list.columns = ['fq_dataset_id', 'attachments']
@@ -1209,7 +1190,8 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
                 fq_datasets_meta = pd.concat([fq_datasets, fq_metadata], axis=1)
                 fq_datasets_meta = fq_datasets_meta.loc[fq_datasets_meta['id'].isin(selected_fq_ids),:]
                 
-                pro_data, pro_metadata = datamanager.get_pro_data_meta_overview(st.session_state["jwt_auth_header"])
+                pro_data, pro_metadata = datamanager.get_pro_data_meta_overview(st.session_state["jwt_auth_header"],
+                                                                                include_archived=export_include_archived)
                 
                 pro_data_meta = pd.concat([pro_data, pro_metadata], axis=1)
                 
@@ -1218,20 +1200,13 @@ def export_datasets(fq_dataset_view: pd.DataFrame):
                                                         right_on='id',
                                                         suffixes=('', '_fq_dataset'))
                 
-                dataset_names = pro_data_meta_merge.pop('name_fq_dataset')
-                
-                pro_data_meta_merge = pro_data_meta_merge.drop(columns=['id_fq_dataset'])
+                pro_data_meta_merge = pro_data_meta_merge.drop(columns=['id_fq_dataset', 'name_fq_dataset'])
                 pro_data_meta_merge = pro_data_meta_merge.rename(columns={'owner_username' : 'creator',
-                                                                        'fq_dataset' : 'dataset_id'})
-                    
-                # Reorder columns to have all metadata at the end
-                pro_data_meta_merge.insert(1, 'dataset_name', dataset_names)
-                                 
-                if not export_include_archived:
-                    pro_data_meta_merge = pro_data_meta_merge.loc[
-                        pro_data_meta_merge['valid_to'].isna(),:]
-                    
-            
+                                                                        'fq_dataset' : 'dataset_id',
+                                                                        'fq_dataset_name' : 'dataset_name',
+                                                                        'project' : 'project_ids',
+                                                                        })
+                
             pro_data = datamanager.get_pro_data_owner_group(st.session_state["jwt_auth_header"])
             
             st.download_button('Download .csv',
@@ -1261,15 +1236,12 @@ fq_datasets, fq_metadata = datamanager.get_fq_dataset_meta_overview(st.session_s
 # Subset project names form fq_datasets overview, filter empty projects columns
 # Transform to pandas series and filter out all projects that are empty
 # Add 'No Project' and construct filter list
-fq_dataset_project_set = fq_datasets['project_names'].apply(lambda x: x != [])
-fq_dataset_project = fq_datasets.loc[fq_dataset_project_set, 'project_names']
-fq_dataset_project = fq_dataset_project.explode().unique()
-fq_dataset_project_filter = sorted(fq_dataset_project)
-fq_dataset_project_filter = [fq for fq in fq_dataset_project_filter if fq in my_project_names.tolist() ]
+
+fq_dataset_project_filter = extensions.project_filter_from_df(fq_datasets)
+fq_dataset_project_filter = [proj for proj in fq_dataset_project_filter if proj in my_project_names.tolist()]
 fq_dataset_project_filter.insert(0, 'No Project')
 
 # Reference project names 
-reference_owner_group_names = sorted(fq_datasets['owner_group_name'].unique())
 reference_project_names_df = project_owner_group[['id', 'name', 'dataset_metadata_keys']]
 # Subset dataset names those that are in the owner group
 reference_dataset_names = fq_datasets.loc[
@@ -1281,8 +1253,7 @@ fq_datasets['id_str'] = fq_datasets['id'].astype(str)
 
 # UI
 
-col1, col2, col3, col4, col5, col6 = st.columns([3,3,1.75,2.5,1 ,0.75], vertical_alignment='center')
-
+col1, col2, col3, col4, col5, col6 = st.columns([3,3,1.75,2.2,1.3,0.75], vertical_alignment='center')
 
 with col1:
     
@@ -1303,13 +1274,15 @@ with col2:
 with col4:
     
     st.toggle("Metadata",
-              key='show_fq_metadata',
-              help='Switch to Datasets Metadata View')
+              key='show_fq_metadata')
 
 # Dynamic list of checkboxes with distinct values
 with col5:
     
     metadata_select = st.session_state['fq_metadata_select']
+    
+    # Drop columns which are all N/A
+    metadata_select = metadata_select.dropna(axis=1, how='all')
     
     if metadata_select.empty:
         metadata_filter_disabled = True
@@ -1343,7 +1316,7 @@ with col6:
 
 col_config_user = {
     'id': st.column_config.NumberColumn('ID'),
-    'name' : st.column_config.TextColumn('Name', help='FASTQ Dataset Name'),
+    'name' : st.column_config.TextColumn('Name', help='Dataset Name'),
     'project' : None,
     'project_names' : st.column_config.ListColumn('Projects', help='Projects the Dataset is associated with'),
     'owner_group_name' : None,
@@ -1363,7 +1336,7 @@ col_config_user = {
 
 col_config_meta = {
     'id': st.column_config.NumberColumn('ID'),
-    'name' : st.column_config.TextColumn('Name', help='FASTQ Dataset Name'),
+    'name' : st.column_config.TextColumn('Name', help='Dataset Name'),
     'project_names' : None,
     'owner_group_name' : None,
     'id_str' : None
@@ -1393,7 +1366,8 @@ if projects_filter:
 st.session_state['fq_metadata_select'] = fq_datasets_show[fq_metadata.columns]
 
 # Filter out meta columns from selected view which are all None
-fq_datasets_show = filter_df_by_metadata_filter(fq_datasets_show)
+fq_datasets_show = extensions.filter_df_by_metadata_filter(fq_datasets_show,
+                                                           filter_session_prefix = 'fq_dataset_meta_filter_')
 
 # Remove those meta cols from projects_show which are all None
 fq_meta_cols_all_none = fq_datasets_show.loc[:,fq_metadata.columns].isna().all()
@@ -1427,7 +1401,6 @@ else:
 
 # For formatting, replace None with empty string
 fq_datasets_show = fq_datasets_show.fillna('')
-
 
 fq_select = st.dataframe(fq_datasets_show[show_cols],
                         column_config = col_config,
@@ -1470,11 +1443,11 @@ if len(fq_select.selection['rows']) == 1:
         st.session_state["jwt_auth_header"],
         fq_dataset_id = fq_dataset_detail_id
     )
-        
+    
     if st.session_state['show_details']:
-        show_project_details = True
+        show_details = True
     else:
-        show_project_details = False
+        show_details = False
     
     update_disabled = False
     update_one = True
@@ -1506,7 +1479,7 @@ elif len(fq_select.selection['rows']) > 1:
     fq_dataset_update = fq_dataset_detail.copy()
     fq_metadata_update_many = fq_metadata_detail_many.copy()
     
-    show_project_details = False
+    show_details = False
     update_disabled = False
     update_one = False
     
@@ -1518,7 +1491,7 @@ elif len(fq_select.selection['rows']) > 1:
     st.session_state['dataset_select_id'] = None
     
 else:
-    show_project_details = False
+    show_details = False
     update_disabled = True
     update_one = False
     
@@ -1585,23 +1558,36 @@ with col_low_3:
 
 with col_low_4:    
    
-   on = st.toggle("Details",
+    on = st.toggle("Details",
                   key='show_details_dataset',
                   value=st.session_state['show_details'],
                   on_change = extensions.switch_show_details,
                   help='Show Details for selected Dataset')
 
-if show_project_details:
+if show_details:
     
     st.divider()
     
-    tab1d, tab2d, tab3d, tab4d = st.tabs([':blue-background[**Features**]',
-                                   ':blue-background[**Projects**]',
-                                   ':blue-background[**Attachments**]',
-                                   ':blue-background[**ProData**]'])
+    segment_control_options = ['Features', 'Projects', 'Attachments', 'ProData']
+    segment_default = segment_control_options[st.session_state['fq_details_segment_ix']]
     
-    with tab1d:
+    dataset_detail_selection = st.segmented_control(
+            'Dataset Detail Selection',
+            segment_control_options,
+            key='dataset_detail_selection',
+            default=segment_default,
+            label_visibility = 'collapsed',
+            on_change = update_segment_default,
+            args = (segment_control_options,)
+        )
     
+    # tab1d, tab2d, tab3d, tab4d = st.tabs([':blue-background[**Features**]',
+    #                                     ':blue-background[**Projects**]',
+    #                                     ':blue-background[**Attachments**]',
+    #                                     ':blue-background[**ProData**]'])
+    
+    if dataset_detail_selection == 'Features':
+        
         col1d1, col2d1 = st.columns([7,5])
     
         with col1d1:
@@ -1685,7 +1671,7 @@ if show_project_details:
                             },
                             key='fq_metadata_details_df')
     
-    with tab2d:
+    if dataset_detail_selection == 'Projects':
         
         with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
             
@@ -1715,8 +1701,8 @@ if show_project_details:
                             key='fq_dataset_projects_df',
                             height = max_df_height)
             
-    with tab3d:
-    
+    if dataset_detail_selection == 'Attachments':
+        
         with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
             
             select_dataset_id = st.session_state['dataset_select_id']
@@ -1775,7 +1761,7 @@ if show_project_details:
                         key='fq_attachment_details_df',
                         height = max_df_height)
 
-    with tab4d:
+    if dataset_detail_selection == 'ProData':
         
         with st.container(border = True, height = uiconfig.DETAIL_VIEW_HEIGHT):
             
