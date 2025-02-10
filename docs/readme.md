@@ -397,7 +397,7 @@ In some cases it might be necessary to retrieve the full database content includ
 The `readstore-server export` command dump the database and stored files.
 
 ```
-usage: readstore-server export [-h] [--db-directory] [--config-directory] [--export_directory]
+usage: readstore-server export [-h] [--config-directory] [--export_directory]
 
 options:
   -h, --help           show this help message and exit
