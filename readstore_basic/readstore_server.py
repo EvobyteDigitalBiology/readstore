@@ -415,8 +415,7 @@ def run_rs_server(db_directory: str,
         os.environ['RS_KEY_PATH'] = ''
         
         
-def run_db_export(db_directory: str,
-                  config_directory: str,
+def run_db_export(config_directory: str,
                   export_directory: str):
     """
         Run ReadStore Server
@@ -430,9 +429,7 @@ def run_db_export(db_directory: str,
     
     # Check permissions for db_directory and db_backup_directory
     assert os.path.isdir(export_directory), f'ERROR: db_backup_directory {export_directory} does not exist!'
-    
     assert os.access(export_directory, os.W_OK), f'ERROR: db_backup_directory {export_directory} is not writable!'
-    
     assert os.access(export_directory, os.R_OK), f'ERROR: db_backup_directory {export_directory} is not readable!'
     assert os.access(config_directory, os.R_OK), f'ERROR: config_directory {config_directory} is not readable!'
     
@@ -584,18 +581,9 @@ def main():
         
         export_directory = args.export_directory
         
-        if 'RS_DB_DIRECTORY' in os.environ:
-            print('Found RS_DB_DIRECTORY in Environment Variables')
-            db_directory = os.environ['RS_DB_DIRECTORY']
-        
         if 'RS_CONFIG_DIRECTORY' in os.environ:
             print('Found RS_CONFIG_DIRECTORY in Environment Variables')
             config_directory = os.environ['RS_CONFIG_DIRECTORY']
-        
-        if db_directory is None:
-            export_parser.print_help()
-            print('ERROR: --db-directory is required')
-            return
         
         if config_directory is None:
             export_parser.print_help()
@@ -607,7 +595,7 @@ def main():
             print('ERROR: --export_directory is required')
             return
                 
-        run_db_export(db_directory, config_directory, export_directory)
+        run_db_export(config_directory, export_directory)
         
     elif version:
         print(f'ReadStore Basic Version: {__version__}')
