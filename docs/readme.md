@@ -243,7 +243,7 @@ For more information check the [ReadStore CLI GitHub Repository](https://github.
 
 Validate successful install by running
 
-`readstore-cli -v`
+`readstore -v`
 
 This should print the CLI's version
 
@@ -397,16 +397,15 @@ In some cases it might be necessary to retrieve the full database content includ
 The `readstore-server export` command dump the database and stored files.
 
 ```
-usage: readstore-server export [-h] [--db-directory] [--config-directory] [--export_directory]
+usage: readstore-server export [-h] [--config-directory] [--export_directory]
 
 options:
   -h, --help           show this help message and exit
-  --db-directory       Directory containing ReadStore Database (required)
   --config-directory   Directory containing ReadStore Database (required)
   --export_directory   Directory for storing exported ReadStore Database files (required)
 ```
 
-Example `readstore export --db-directory /path/to/db --config-directory /path/to/config --export_directory /path/to/export_files`
+Example `readstore export --config-directory /path/to/config --export_directory /path/to/export_files`
 
 The tables are exported as `.csv` and `.json` files. Project and Datasets attachment files are exported in their original file format, each in a separate folder for each Project or Dataset.
 
@@ -494,13 +493,13 @@ The ReadStore CLI enables programmatic access to Projects, Datasets, metadata an
 
 Some example commands are:
 
-`readstore list`  List all FASTQ files
+`readstore dataset list`  List all datasets
 
-`readstore get --id 25`  Get detailed view on Dataset 25
+`readstore dataset get --id 25`  Get detailed view on Dataset 25
 
-`readstore get --id 25 --read1-path`  Get path for Read1 FASTQ file
+`readstore dataset get --id 25 --read1-path`  Get path for Read1 FASTQ file
 
-`readstore get --id 25 --meta`  Get metadata for Dataset 25
+`readstore dataset get --id 25 --meta`  Get metadata for Dataset 25
 
 `readstore project get --name cohort1 --attachment`  Get attachment files for Project "cohort1"
 
@@ -515,7 +514,7 @@ ProData are attached to Datasets, and can be uploaded via the ReadStore CLI or R
 You can check the ProData for each Dataset in the ReadStore App under the `Datasets` section.
 
 Processed Data are not directly uploaded to the ReadStore database, but similar to raw datasets
-their path are stored and validated.
+their path are stored in the database and validated.
 
 Here's an example how to upload, retrieve and delete a processed file.
 
@@ -561,7 +560,3 @@ Check the LICENSE file for a full list of attributions and third-party license i
 - pydantic (https://docs.pydantic.dev/latest/)
 - pandas (https://pandas.pydata.org/)
 - python (https://www.python.org/)
-
-
-
-
