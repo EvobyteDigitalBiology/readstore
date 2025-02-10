@@ -53,5 +53,7 @@ jobs:
             **Changelog**
             [CHANGELOG.md](https://github.com/EvobyteDigitalBiology/readstore/blob/main/docs/CHANGELOG.md)
 
+            PyPI Package: https://pypi.org/project/readstore-basic/
+
           draft: false
           prerelease: false
