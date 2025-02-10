@@ -64,9 +64,6 @@ export_parser = subparsers.add_parser("export",
                                       add_help=True)
 
 export_parser.add_argument(
-    '--db-directory', type=str, help='Directory containing ReadStore database (required)', metavar='')
-
-export_parser.add_argument(
     '--config-directory', type=str, help='Directory containing ReadStore config files (required)', metavar='')
 
 export_parser.add_argument(
