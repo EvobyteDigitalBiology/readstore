@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.4.0 - 2025-02-10
+
+**Added**
+
+- ProData page in dashboard
+
+**Changed**
+
+- Improved database storage of attachment files
+
+**Bugfix**
+- Change tab layout for better transistions in detail view
+
 ## v1.3.6 - 2025-01-10
 
 **Added**
@@ -13,7 +26,7 @@
 
 **Bugfix**
 
--  Validate file path for upload of FASTQ files from template files. Only accept template upload if ALL FASTQ file path are found
+- Validate file path for upload of FASTQ files from template files. Only accept template upload if ALL FASTQ file path are found
 - Error when updating readstore_config.yaml during update cycles
 
 ## v1.3.3/v1.3.4 - 2024-12-23
