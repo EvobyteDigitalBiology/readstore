@@ -713,7 +713,7 @@ class ProjectExt(APIView):
     def get_permissions(self):
         view_permissions = super().get_permissions()
         view_permissions.append(IsAuthenticated())
-        if self.request.method == ['POST', 'PUT', 'DELETE']:
+        if self.request.method in ['POST', 'PUT', 'DELETE']:
             view_permissions.append(RSClientHasStaging())
         return view_permissions
     
