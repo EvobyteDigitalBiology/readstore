@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.4.1 - 2025-02-11
+
+**Bugfix**
+
+- Restrict permissions to create and update projects in case of missing staging permissions
+- Update fq file if validation when updating datasets via external API
+
 ## v1.4.0 - 2025-02-10
 
 **Added**
