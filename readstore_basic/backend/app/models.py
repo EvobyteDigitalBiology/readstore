@@ -210,7 +210,23 @@ class FqFile(PipelineModel):
                 return True
         else:
             return False
+    
+    def get_fq_dataset_id(self) -> int | None:
+        """Get FqDataset ID.
+
+        Get FqDataset ID associated with FqFile.
         
+        Returns:
+            int: FqDataset ID
+        """
+        
+        fq_attributes = ['fq_file_r1', 'fq_file_r2', 'fq_file_i1', 'fq_file_i2']
+        for fq_attribute in fq_attributes:
+            if hasattr(self, fq_attribute):
+                return getattr(self, fq_attribute).id
+        else:
+            return None
+
 
 class Project(BasicModel):
     
