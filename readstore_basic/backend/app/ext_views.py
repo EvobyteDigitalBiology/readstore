@@ -330,12 +330,13 @@ class FqDatasetExt(APIView):
 
         return project_ids
     
-    def _get_fq_file_fks(self, validated_data: dict) -> Tuple:
+    def _get_fq_file_fks(self, validated_data: dict, fq_dataset_id: int | None = None) -> Tuple:
         """Validate FqFile foreign keys and return FqFile objects
             Check if FqFile PKs exists and if FqFiles are already attached to another dataset
 
         Args:
             validated_data (dict): validated data from serializer
+            operation (str): operation type post or put
 
         Raises:
             ValidationError: If FqFile PKs are not found or FqFiles are already attached to another dataset
@@ -345,7 +346,10 @@ class FqDatasetExt(APIView):
             Order FqFile R1, FqFile R2, FqFile I1, FqFile I2
         """
         
-        # Could be forteign key fields
+        if isinstance(fq_dataset_id, str):
+            fq_dataset_id = int(fq_dataset_id)
+    
+        # Could be foreign key fields
         fq_file_r1 = validated_data.get('fq_file_r1')
         fq_file_r2 = validated_data.get('fq_file_r2')
         fq_file_i1 = validated_data.get('fq_file_i1')
@@ -359,17 +363,34 @@ class FqDatasetExt(APIView):
             else:
                 fq_file_r1 = FqFile.objects.get(pk=fq_file_r1)
                 
+                # Run a get fq_dataset check
                 if fq_file_r1.has_fq_dataset():
-                    raise ValidationError({'detail' : 'FqFile R1 already attached to another dataset'}, code=400)
-
+                    
+                    if fq_dataset_id is None:
+                        raise ValidationError({'detail' : 'FqFile R1 already attached to another dataset'}, code=400)
+                    else:
+                        # If put operation then first check if the fq_file is already attached to the dataset itself
+                        fq_file_dataset_id = fq_file_r1.get_fq_dataset_id()
+                        
+                        if fq_file_dataset_id != fq_dataset_id:
+                            raise ValidationError({'detail' : 'FqFile R1 already attached to another dataset'}, code=400) 
+                    
         if fq_file_r2:
             if not FqFile.objects.filter(pk=fq_file_r2).exists():
                 raise ValidationError({'detail' : 'FqFile R2 not found'}, code=400)
             else:
                 fq_file_r2 = FqFile.objects.get(pk=fq_file_r2)
-                
+            
                 if fq_file_r2.has_fq_dataset():
-                    raise ValidationError({'detail' : 'FqFile R2 already attached to another dataset'}, code=400)
+                    
+                    if fq_dataset_id is None:
+                        raise ValidationError({'detail' : 'FqFile R2 already attached to another dataset'}, code=400)
+                    else:    
+                        # If put operation then first check if the fq_file is already attached to the dataset itself
+                        fq_file_dataset_id = fq_file_r2.get_fq_dataset_id()
+                        if fq_file_dataset_id != fq_dataset_id:
+                        
+                            raise ValidationError({'detail' : 'FqFile R2 already attached to another dataset'}, code=400)
 
         if fq_file_i1:
             if not FqFile.objects.filter(pk=fq_file_i1).exists():
@@ -378,7 +399,14 @@ class FqDatasetExt(APIView):
                 fq_file_i1 = FqFile.objects.get(pk=fq_file_i1)
                 
                 if fq_file_i1.has_fq_dataset():
-                    raise ValidationError({'detail' : 'FqFile I1 already attached to another dataset'}, code=400)
+                    
+                    if fq_dataset_id is None:
+                        raise ValidationError({'detail' : 'FqFile I1 already attached to another dataset'}, code=400)
+                    else:
+                        # If put operation then first check if the fq_file is already attached to the dataset itself
+                        fq_file_dataset_id = fq_file_i1.get_fq_dataset_id()
+                        if fq_file_dataset_id != fq_dataset_id:
+                            raise ValidationError({'detail' : 'FqFile I1 already attached to another dataset'}, code=400)
                 
         if fq_file_i2:
             if not FqFile.objects.filter(pk=fq_file_i2).exists():
@@ -387,7 +415,13 @@ class FqDatasetExt(APIView):
                 fq_file_i2 = FqFile.objects.get(pk=fq_file_i2)
                 
                 if fq_file_i2.has_fq_dataset():
-                    raise ValidationError({'detail' : 'FqFile I2 already attached to another dataset'}, code=400)
+                    
+                    if fq_dataset_id is None:
+                        raise ValidationError({'detail' : 'FqFile I2 already attached to another dataset'}, code=400)
+                    else:
+                        fq_file_dataset_id = fq_file_i2.get_fq_dataset_id()
+                        if fq_file_dataset_id != fq_dataset_id:
+                            raise ValidationError({'detail' : 'FqFile I2 already attached to another dataset'}, code=400)
 
         return fq_file_r1, fq_file_r2, fq_file_i1, fq_file_i2
     
@@ -604,7 +638,8 @@ class FqDatasetExt(APIView):
             
             project_ids = self._get_project_ids(serializer.validated_data)
             
-            fq_file_r1, fq_file_r2, fq_file_i1, fq_file_i2 = self._get_fq_file_fks(serializer.validated_data)
+            fq_file_r1, fq_file_r2, fq_file_i1, fq_file_i2 = self._get_fq_file_fks(serializer.validated_data,
+                                                                                   fq_dataset_id=int(pk))
             
             # Update entry
             fq_dataset.name = name
