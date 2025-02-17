@@ -1,0 +1,1371 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../installation/">
+      
+      
+      <link rel="icon" href="../img/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.4">
+    
+    
+      
+        <title>Readme - ReadStore Basic Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.8608ea7d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+      <link rel="stylesheet" href="../stylesheets/mkdocsoad.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#readstore-basic" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="https://evo-byte.com/readstore" title="ReadStore Basic Docs" class="md-header__button md-logo" aria-label="ReadStore Basic Docs" data-md-component="logo">
+      
+  <img src="../assets/BannerLarge.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ReadStore Basic Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Readme
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+    
+  
+  Readme
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../installation/" class="md-tabs__link">
+        
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../CHANGELOG/" class="md-tabs__link">
+        
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../rest_api/" class="md-tabs__link">
+        
+  
+    
+  
+  API Reference
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://evo-byte.com/readstore" title="ReadStore Basic Docs" class="md-nav__button md-logo" aria-label="ReadStore Basic Docs" data-md-component="logo">
+      
+  <img src="../assets/BannerLarge.png" alt="logo">
+
+    </a>
+    ReadStore Basic Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Readme
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Readme
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Table of Contents
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-lean-solution-for-managing-ngs-and-omics-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Lean Solution for Managing NGS and Omics Data
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      Description
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-permissions-and-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security, Permissions and Backup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Security, Permissions and Backup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#database-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Database Permissions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#admin-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      Admin Account
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#user-account-passwords-and-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      User Account Passwords and Tokens
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backups" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backups
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deployment-and-server-configurations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment and Server Configurations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation &amp; Updates
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation & Updates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-install-the-readstore-basic-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Install the ReadStore Basic Server
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-start-the-webserver" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Start the Webserver
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Start the Webserver">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prepare-output-folders" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prepare Output Folders
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#start-the-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Start the Server
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-if-my-server-terminates" class="md-nav__link">
+    <span class="md-ellipsis">
+      What if my Server Terminates?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-connect-to-the-readstore-web-app-with-your-browser" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Connect to the ReadStore Web App with your Browser
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Connect to the ReadStore Web App with your Browser">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#access-readstore-web-app-via-ssh-tunnel" class="md-nav__link">
+    <span class="md-ellipsis">
+      Access ReadStore Web App via SSH Tunnel
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-setup-admin-account-and-first-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Setup Admin Account and First Users
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Setup Admin Account and First Users">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#change-your-admin-password-immediately" class="md-nav__link">
+    <span class="md-ellipsis">
+      Change your Admin password IMMEDIATELY!
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enter-your-license-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enter your License Key
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-new-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create new User(s)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-install-the-readstore-command-line-interface-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Install the ReadStore Command Line Interface (CLI)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Install the ReadStore Command Line Interface (CLI)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install Command
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configure CLI
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-an-existing-readstore-basic-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Update an existing ReadStore Basic Server
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced-readstore-basic-server-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced ReadStore Basic Server Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced ReadStore Basic Server Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changing-server-ports" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changing Server Ports
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-readstore-using-environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configure ReadStore using Environment Variables
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-readstore-systemd-linux-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create ReadStore systemd Linux service
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#export-dump-readstore-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      Export (Dump) ReadStore Database
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#readstore-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      ReadStore API
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ReadStore API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      API Endpoint
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-reponse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Reponse
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documentation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quickstart" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quickstart
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quickstart">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-account-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Account Settings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-upload-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Upload Files
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-stage-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Stage Files
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-access-datasets-via-the-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Access Datasets via the CLI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-managing-processed-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Managing Processed Data
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contributing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#license" class="md-nav__link">
+    <span class="md-ellipsis">
+      License
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#credits-and-acknowledgments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Credits and Acknowledgments
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CHANGELOG/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rest_api/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<p><img alt="GitHub Release" src="https://img.shields.io/github/v/release/EvobyteDigitalBiology/readstore" />
+<img alt="PyPI - Version" src="https://img.shields.io/pypi/v/readstore-basic" />
+<img alt="Build Status" src="https://img.shields.io/badge/build-passing-brightgreen" /></p>
+<h1 id="readstore-basic">ReadStore Basic</h1>
+<p>This README introduces ReadStore Data Platform, the lean solution for managing NGS and omics data.</p>
+<p>The full <strong>ReadStore Basic documentation</strong> is available <a href="https://evobytedigitalbiology.github.io/readstore/">here</a> </p>
+<p><strong>Please read and follow the instructions carefully</strong>. In particular the <a href="#backup">Security, Permissions and Backup</a> section contains important information related to data security and backup. In case of problems with the install or information on different Linux distributions, please check the separate <a href="../installation/">Installation Guide</a>.</p>
+<p>You need a license key for using ReadStore Basic, please check the <a href="https://evo-byte.com/readstore-get-started/">ReadStore website</a> for more information or reach out to license@evo-byte.com</p>
+<p>Start with the ReadStore Intro and <strong>Tutorials</strong>: https://www.youtube.com/@evobytedigitalbio</p>
+<p>Blog posts and How-Tos: https://evo-byte.com/blog/</p>
+<p>For general questions reach out to info@evo-byte.com or in case of technical problems to support@evo-byte.com</p>
+<p>Happy analysis :)</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#description">Description</a></li>
+<li><a href="#backup">Security, Permissions and Backup</a></li>
+<li><a href="#installation">Installation</a><ul>
+<li><a href="#update">Update an existing ReadStore Server</a></li>
+<li><a href="#advancedconfig">Advanced Server Configuration</a></li>
+<li><a href="#systemd">Configure systemd Service</a></li>
+<li><a href="#export_dump">Export Database to File</a></li>
+</ul>
+</li>
+<li><a href="#api">ReadStore API</a></li>
+<li><a href="#usage">Usage</a><ol>
+<li><a href="#account_settings">Account Settings</a></li>
+<li><a href="#upload_files">Upload Files</a></li>
+<li><a href="#stage_files">Stage Files</a></li>
+<li><a href="#access_via_cli">Access Datasets via the CLI</a></li>
+<li><a href="#manage_pro_data">Managing Processed Data</a></li>
+</ol>
+</li>
+<li><a href="#contributing">Contributing</a></li>
+<li><a href="#license">License</a></li>
+<li><a href="#acknowledgments">Credits and Acknowledgments</a></li>
+</ul>
+<h2 id="the-lean-solution-for-managing-ngs-and-omics-data">The Lean Solution for Managing NGS and Omics Data</h2>
+<p>ReadStore is a platform for storing, managing, and integrating omics data. It speeds up analysis and offers a simple way of managing and sharing NGS omics datasets, metadata and processed data (<strong>Pro</strong>cessed <strong>Data</strong>).
+Built-in project and metadata management structures your workflows and a collaborative user interface enhances teamwork — so you can focus on generating insights.</p>
+<p>The integrated Webservice enables you to directly retrieve data from ReadStore via the terminal <a href="#https://github.com/EvobyteDigitalBiology/readstore-cli">Command-Line Interface (CLI)</a> or <a href="#https://github.com/EvobyteDigitalBiology/pyreadstore">Python</a> / <a href="#https://github.com/EvobyteDigitalBiology/r-readstore">R</a> SDKs.</p>
+<p>The ReadStore Basic version offered here provides a local web server with simple user management. If you need organization-wide deployment, advanced user and group management, or cloud integration, please check the ReadStore Advanced versions and reach out to info@evo-byte.com.</p>
+<h2 id="description">Description</h2>
+<p>ReadStore facilitates managing FASTQ files, NGS and Omics data, along with experimental (meta)data and <strong>Pro</strong>cessed <strong>Dataset</strong>. It provides a database and a web app with a simple user interface to create and edit datasets and projects. You can create your own structure using metadata key-value pairs (e.g., replicate: 1 or condition: control) or attach files as additional information.</p>
+<p>Metadata, file attachments and processed datasets (ProData) can be accessed along with your NGS datasets from analysis scripts or data pipelines, providing consistent workflow automation.</p>
+<p>ReadStore Basic enables you to manage NGS data from your local Linux environment and can be set up in a few minutes. It comprises a local web server and web app that you can connect to via your browser to explore and edit your NGS experiments.</p>
+<p>To upload FASTQ files and Processed Data from the command line into the ReadStore database, you’ll also need to install the ReadStore CLI.</p>
+<p>Logging into the ReadStore web app via the browser requires a user account. User accounts are created from the Admin account, which is setup by default.</p>
+<p>ReadStore Basic provides a shared work environment for all registered users. Users can collaborate on editing datasets, projects, metadata, and attachments, with shared access to all resources. This facilitates cross-functional projects, connecting data analysts and experimental researchers.</p>
+<p>The ReadStore database can be accessed programmatically using the <a href="#https://github.com/EvobyteDigitalBiology/readstore-cli">Command-Line Interface (CLI)</a> or <a href="#https://github.com/EvobyteDigitalBiology/pyreadstore">Python</a> &amp; <a href="#https://github.com/EvobyteDigitalBiology/r-readstore">R</a> SDKs. This facilitates easy integration into bioinformatics pipelines and downstream analysis workflows.</p>
+<p>If you would like to have more advanced user, group, and permission management, please reach out for a demo of the ReadStore Advanced version.</p>
+<h2 id="security-permissions-and-backup">Security, Permissions and Backup<a id="backup"></a></h2>
+<p><strong>PLEASE READ AND FOLLOW THESE INSTRUCTIONS CAREFULLY!</strong></p>
+<p>ReadStore Basic comes with simple security and permission management based on Linux file permissions, which govern access to the ReadStore database.</p>
+<h3 id="database-permissions">Database Permissions <a id="permission"></a></h3>
+<p>The Linux user running the <code>readstore-server</code> is, by default, the <strong>Data Owner</strong>. In this role, the <strong>Data Owner</strong> has exclusive read/write permissions (<code>chmod 600</code>) to the database files, database backups, secret key, and ReadStore configuration.</p>
+<p>The <strong>Data Owner</strong> must ensure that access rights to these files remain restricted to prevent unauthorized access to the ReadStore database (see <a href="#installation">Installation</a>). By default, the secret key and configuration files are stored in your home directory (<code>~/.rs-server/</code>), but you can change the <code>--config-directory</code> to specify a different folder path.</p>
+<p>The ReadStore secret key is located in your <code>--config-dir</code> (default <code>~/.rs-server/secret_key</code>). It is recommended to <strong>keep a secured copy of the secret key</strong> to allow access to backups or restore the database in case of an incident.</p>
+<h3 id="admin-account">Admin Account</h3>
+<p>Upon the first launch of the ReadStore Basic web server, the Admin account is created with a password provided along with your license key.</p>
+<p>The <strong>Admin must change the Admin password immediately</strong> upon the first login.</p>
+<h3 id="user-account-passwords-and-tokens">User Account Passwords and Tokens</h3>
+<p>To log in to the ReadStore web app via a web browser, each <strong>User</strong> needs a user account. User accounts are created by the <strong>Admin</strong> from within the web app. The Admin sets an account password when creating new users. Each <strong>User</strong> can later change their account password.</p>
+<p>Each <strong>User</strong> has a unique <strong>Token</strong> assigned, which is required to connect to ReadStore via the Command-Line Interface (CLI) or through the Python and R SDKs. This token should not be shared. Tokens can be easily regenerated from the Settings page in the ReadStore CLI.</p>
+<p>A <strong>User</strong> is required to have <strong>staging permissions</strong> to upload FASTQ files into the ReadStore database.</p>
+<p>See <a href="#installation">Installation</a> for instructions how to setup Users</p>
+<h3 id="backups">Backups</h3>
+<p>ReadStore automatically performs regular backups. The backup directory (see <a href="#installation">Installation</a>) should be different from the database directory. ReadStore log files are also saved to a predefined folder. Each folder should have sufficient space to store database, backup, and log files.</p>
+<p>It is posible to <strong>export</strong> (dump) the database into <code>.json</code> and <code>.csv</code> files using the <code>readstore-server export</code> method. More information below the <a href="#export_dump">Export</a> section. </p>
+<h3 id="deployment-and-server-configurations">Deployment and Server Configurations</h3>
+<p><strong>You are responsible for hosting and deploying the ReadStore server in a secure environment</strong>. This includes, but is not limited to, access management, active firewall protection of your servers, and regular patching of your operating system.</p>
+<p>If you need a ReadStore version with more advanced permission and group management, database server support, or customization for your infrastructure, please reach out.</p>
+<h2 id="installation-updates">Installation &amp; Updates</h2>
+<p><strong>NOTE</strong> Check the <a href="../installation/">Installation Guide</a> for more information and common sources of errors or contact support@evo-byte.com in case of technical problems. We will certainly find a solution.</p>
+<p>More information on <a href="#update">updating</a> a running ReadStore server can be found below.</p>
+<h3 id="1-install-the-readstore-basic-server">1. Install the ReadStore Basic Server</h3>
+<p>You need <strong>Python version 3.10 or higher</strong> to install ReadStore.</p>
+<p>You can perform the install in a conda or venv virtual environment to simplify package management.
+This is recommended to avoid potential conflicts in the required Python dependencies.</p>
+<p>Here is an example how to setup a virtual environment using the venv module:</p>
+<p><code>python -m venv .venv</code></p>
+<p><code>source .venv/bin/activate</code></p>
+<p>This provides you with a clean virtual environment avoiding potential issues with resolving Python dependencies. </p>
+<p>Next install the ReadStore Basic server.</p>
+<p><code>pip3 install readstore-basic</code></p>
+<p>A local install is also possible</p>
+<p><code>pip3 install --user readstore-basic</code></p>
+<p>Make sure that <code>~/.local/bin</code> is on your <code>$PATH</code> in case you encounter problems when starting the server.</p>
+<p>Validate the install by running</p>
+<p><code>readstore-server -v</code></p>
+<p>This should print the ReadStore Basic version</p>
+<h3 id="2-start-the-webserver">2. Start the Webserver</h3>
+<h4 id="prepare-output-folders">Prepare Output Folders</h4>
+<p>Create output folders for the ReadStore database files (<code>db-directory</code>), the backups (<code>db-backup-directory</code>) and log files (<code>log-directory</code>).</p>
+<p>All ReadStore database, backup and log files are created with user-exclusive read/write permissions (<code>chmod 600</code>) when starting the ReadStore server for the first time. Make sure that restricted permissions are maintained to avoid unwanted access to database files.</p>
+<p>The readstore configuration files and secret key are by default written to you home dir <code>~/.rs-server</code> (user-exclusive read/write permissions <code>chmod 600</code>). You can specify another <code>config-directory</code>. Ensure restricted permissions for this folder and files. It is recommended to create a <a href="#permission">secure backup of the secret key</a> </p>
+<h4 id="start-the-server">Start the Server</h4>
+<p><code>readstore-server --db-directory /path/to/database_dir --db-backup-directory /path/to/backup_dir --log-directory /path/to/logs_dir</code></p>
+<p>ReadStore Server requires ports 8000 and 8501. See <a href="#advancedconfig">below</a> if there is a problem with blocked ports.</p>
+<p>The command will run the server in your current terminal session, but you probably want to keep your server running after closing the terminal.
+There are different options</p>
+<ul>
+<li>Use a terminal multiplexer like <code>screen</code> or <code>tmux</code> to start a persistent session and run the server from there</li>
+<li>Start the server with <code>nohup</code> to keep running after closing you session (<code>nohup readstore-server ...</code>)</li>
+<li>Configure a <code>systemd</code> service, which can for instance handle automatic (re)start procedures (s. <a href="#systemd">below</a>)</li>
+</ul>
+<p>You can configure the readstore-server using environment variables. This can be useful in containerized or cloud applications. (s. <a href="#advancedconfig">Advanced Configuration</a>)</p>
+<h4 id="what-if-my-server-terminates">What if my Server Terminates?</h4>
+<p>The database and backups persist also if the ReadStore server is terminated or updated. 
+The database files remain stored in the <code>db-directory</code> or <code>db-backup-directory</code> folders.</p>
+<p>You can simply restart the <code>readstore-server</code> with the same directories, and you will be able to access all data in your database. </p>
+<p><strong>NOTE</strong> The database files and backups must match to the secret key in your <code>config-dir</code>. Hence it is recommended to consistently use the <code>config-dir</code> with the same <code>db-directory</code> and <code>db-backup-directory</code> folders.</p>
+<h3 id="3-connect-to-the-readstore-web-app-with-your-browser">3. Connect to the ReadStore Web App with your Browser</h3>
+<p>After the launch of the webserver you should to be able to connect to the ReadStore web app from your browser.</p>
+<p>The ReadStore web app should be available via your browser under localhost port 8501 (<code>http://127.0.0.1:8501</code> or <code>http://localhost:8501/</code>). You should see a login screen.</p>
+<p>If you you want to connect to the ReadStore Web App from a remote connection, e.g. from you local PC via the browser, you may need to open the corresponing server ports or setup a SSH tunnel (s. below)</p>
+<p><strong>NOTE</strong> The port can change depending on your server settings (s. <a href="#advancedconfig">Advanced Configuration</a>).</p>
+<h4 id="access-readstore-web-app-via-ssh-tunnel">Access ReadStore Web App via SSH Tunnel</h4>
+<p>If you run ReadStore Basic on a Linux server that you connect to via SSH, consider using SSH tunneling / port forwarding to access the server port 8501 from your local machine's browser (Check this <a href="#https://linuxize.com/post/how-to-setup-ssh-tunneling/">Tutorial</a>). Tools like <a href="#https://www.putty.org/">PuTTY</a> help Windows users to easily set up SSH tunnels.</p>
+<p>In any case make sure that server connections are established <em>in agreement with your organizations IT security guidelines</em> or ask your IT admins for support. </p>
+<p>If you need support in making ReadStore available for users in your organization, reach out to info@evo-byte.com. We will find a solution for you!</p>
+<h3 id="4-setup-admin-account-and-first-users">4. Setup Admin Account and First Users</h3>
+<h4 id="change-your-admin-password-immediately">Change your Admin password IMMEDIATELY!</h4>
+<p>Together with you ReadStore License Key you should have received a the login password for the Admin account.</p>
+<ol>
+<li>Log into the web app with the username <code>admin</code> and the received admin password</li>
+<li>Move to the <code>Settings</code> page and click the <code>Reset Password</code> button</li>
+<li>Enter a new password and <code>Confirm</code></li>
+<li>Login out and into the admin account again to validate the new password</li>
+</ol>
+<h4 id="enter-your-license-key">Enter your License Key</h4>
+<p>You need to enter your license key before you can create users.</p>
+<ol>
+<li>Log into the Admin account</li>
+<li>Move to the <code>Settings</code> page</li>
+<li>Click the <code>License Key</code> button. You should see information on the current status of you license</li>
+<li>Click <code>Enter New Key</code> and enter you license key and <code>Confirm</code></li>
+</ol>
+<p>This activates your license and you should see an expiration date and the maximum number of user/seats in the <code>License Key</code> overview.</p>
+<h4 id="create-new-users">Create new User(s)</h4>
+<ol>
+<li>Log into the Admin account, move to the <code>Admin</code> page</li>
+<li>Click the <code>Create</code> button to create a new user</li>
+<li>Add name, email and password. If the user should be allowed to upload FASTQ files you must enable <code>Staging Permissions</code></li>
+<li>Click <code>Confirm</code>. You should see the new user in the overview</li>
+</ol>
+<p>Users can change their password in their <code>Settings</code> page. The number of users is limited by the seats of your license.</p>
+<h3 id="5-install-the-readstore-command-line-interface-cli">5. Install the ReadStore Command Line Interface (CLI)</h3>
+<p>You need to install the ReadStore CLI if you want to upload FASTQ files and access ReadStore data from the CLI.</p>
+<p>For more information check the <a href="https://github.com/EvobyteDigitalBiology/readstore-cli">ReadStore CLI GitHub Repository</a></p>
+<p><strong>NOTE</strong> Uploading FASTQ files requires users to have <code>staging permission</code> set in their account.  </p>
+<h4 id="install-command">Install Command</h4>
+<p><code>pip3 install readstore-cli</code></p>
+<p>Validate successful install by running</p>
+<p><code>readstore -v</code></p>
+<p>This should print the CLI's version</p>
+<h4 id="configure-cli">Configure CLI</h4>
+<p>You need to configure the ReadStore CLI client with your username and token.
+You can find and change you user <code>token</code> in the <code>Settings</code> page of your account. Click on <code>Token</code> to retrieve the token value.</p>
+<p>Run</p>
+<p><code>readstore configure</code></p>
+<p>Enter you <code>username</code>, <code>token</code>, and your preferred output format <code>json, text or csv</code>.</p>
+<p>Check the status of your CLI config with</p>
+<p><code>readstore configure list</code></p>
+<p>You should see the credentials you entered.</p>
+<h3 id="update-an-existing-readstore-basic-server">Update an existing ReadStore Basic Server<a id="update"></a></h3>
+<p>If you already have a running ReadStore Server and want to upgrade to a new version, follow these simple steps:</p>
+<p><strong>0. Backup Validation</strong></p>
+<p>Ensure that ReadStore database backups are in place and up-to-date (located in the --db-directory folder). Optionally, copy the latest backup file (.sqlite3) to a secure location for potential rollback.</p>
+<p><strong>1. Stop the Running Server</strong></p>
+<p>Stop the running server by terminating the server process or stopping the corresponding Linux service. This will not affect the data.</p>
+<p><strong>2. Update the ReadStore-Basic Python Package</strong></p>
+<p>Within the Python environment used to run the ReadStore Server, update the <code>readstore-basic</code> package by running the following command:</p>
+<p><code>pip install readstore-basic --upgrade</code></p>
+<p>After updating, verify that the new version is installed and the old version is removed:</p>
+<p><code>readstore-server -v</code></p>
+<p>This command should print the new version number.</p>
+<p><strong>3. Restart the Server</strong></p>
+<p>Restart the ReadStore Server with the same folder directories and settings as before the update.</p>
+<p><strong>4. Continue Operations</strong></p>
+<p>Resume your work as usual. If you encounter any questions or issues, contact support@evo-byte.com.</p>
+<h3 id="advanced-readstore-basic-server-configuration">Advanced ReadStore Basic Server Configuration<a id="advancedconfig"></a></h3>
+<p><code>readstore-server -h</code></p>
+<div class="highlight"><pre><span></span><code>ReadStore Server
+
+options:
+  -h, --help            show this help message and exit
+  --db-directory        Directory for Storing ReadStore Database.
+  --db-backup-directory
+                        Directory for Storing ReadStore Database Backups
+  --log-directory       Directory for Storing ReadStore Logs
+  --config-directory    Directory for storing readstore_server_config.yaml (~/.rs-server)
+  --django-port         Port of Django Backend
+  --streamlit-port      Port of Streamlit Frontend
+  --debug               Run In Debug Mode
+</code></pre></div>
+<p>ReadStore requires different directories for storing the database file, backups, logs and configurations. It is important to make sure that the user launching the ReadStore server (<strong>data owner</strong>) has read and write permissions for each folder. The files created have user-exclusive read/write permissions (<code>chmod 600</code>) by default and it is important to ensure that permissions are kept restrictive.</p>
+<p>You can run ReadStore in a more verbose <code>--debug</code> mode, which is not recommended.</p>
+<h4 id="changing-server-ports">Changing Server Ports</h4>
+<p>ReadStores uses a Django Webserver and Streamlit Frontend with default ports 8000 and 8501. If other applications are running on these ports, change the ports using the <code>--django-port</code> or <code>--streamlit-port</code> arguments to a free port.</p>
+<p><strong>NOTE</strong> Changing ports requires users to connect to the webapp using a different port. Users also need to update their default CLI/SDK configurations. More information in the ReadStore CLI's README.</p>
+<h4 id="configure-readstore-using-environment-variables">Configure ReadStore using Environment Variables</h4>
+<p>In some cases you may want to setup the ReadStore server using environment variables, for instance if you run containers or cloud applications.</p>
+<p>The following environment variables can be used to configure the ReadStore server</p>
+<div class="highlight"><pre><span></span><code>RS_DB_DIRECTORY         Corresponds to db-directory argument
+RS_DB_BACKUP_DIRECTORY  Corresponds to db-backup-directory argument
+RS_LOG_DIRECTORY        Corresponds to log-directory argument
+RS_CONFIG_DIRECTORY     Corresponds to config-directory argument
+RS_DJANGO_PORT          Corresponds to django-port argument
+RS_STREAMLIT_PORT       Corresponds to streamlit-port argument
+
+RS_PYTHON      Path to Python executable    (default: python3)
+RS_STREAMLIT   Path to Streamlit executable (default: streamlit)
+RS_GUNICORN    Path to Gunicorn executable  (default: gunicorn)
+</code></pre></div>
+<h3 id="create-readstore-systemd-linux-service">Create ReadStore systemd Linux service<a id="systemd"></a></h3>
+<p>Creating a Linux service has the several advantages for running the ReadStore server. 
+A service can take case of automatic restart of the ReadStore server in case of an update or crash of you Linux server.</p>
+<p>You find here a starting point for setting up a service using <code>systemd</code> but you may need superuser (<code>sudo</code>) privileges to actually start the service. Get in touch with you IT admins if you need support.</p>
+<ol>
+<li>
+<p>Check the <code>readstore.service</code> file provided here in the repository and adapt it with your environment configurations</p>
+<ul>
+<li><code>User</code>: Linux Username to run service. Will be the <strong>Data Owner</strong> for database files, logs, secrets and config.</li>
+<li><code>WorkingDirectory</code>: Choose working directory for service</li>
+<li><code>ExecStart</code>: Command to run readstore-server. You need to define the python to the Python install you want to use (check with <code>which python</code>) and the path to the <code>readstore_server.py</code>, which is typically in your python3 site packages folder (e.g. <code>.local/lib/python3.11/site-packages/readstore_basic/readstore_server.py</code>). Specify the path to the database files, backup, config and logs in the ExecStart</li>
+<li><code>Environment=RS_STREAMLIT</code>: Path to Streamlit executable (run <code>which streamlit</code> to find the path)</li>
+<li><code>Environment=RS_PYTHON</code>: Path to Python executable (run <code>which python</code> to find the path). Should be   the same as in ExecStart</li>
+<li><code>Environment=RS_GUNICORN</code>: Path to Gunicorn executable (run <code>which gunicorn</code> to find the path)</li>
+</ul>
+</li>
+<li>
+<p>Copy the <code>readstore.service</code> file to the system folder</p>
+<p><code>cp readstore.service /etc/systemd/system/readstore.service</code></p>
+</li>
+<li>
+<p>Reload the Systemd Deamon</p>
+<p><code>sudo systemctl daemon-reload</code></p>
+</li>
+<li>
+<p>Enable and Start the Service</p>
+<p><code>sudo systemctl enable readstore.service</code></p>
+<p><code>sudo systemctl start readstore.service</code></p>
+</li>
+<li>
+<p>Check service status</p>
+<p><code>sudo systemctl status readstore.service</code></p>
+</li>
+<li>
+<p>Check service logs</p>
+<p><code>sudo journalctl -u readstore.service -f</code></p>
+</li>
+<li>
+<p>Stop or Restart Service</p>
+<p>Restarting might be required after installing a ReadStore Basic update</p>
+<p><code>sudo systemctl stop readstore.service</code></p>
+<p><code>sudo systemctl restart readstore.service</code></p>
+</li>
+</ol>
+<h3 id="export-dump-readstore-database">Export (Dump) ReadStore Database<a id="export_dump"></a></h3>
+<p>In some cases it might be necessary to retrieve the full database content including all tables in a flat file format (i.e. json or csv). This includes attachment files which have been uploaded for projects or datasets.</p>
+<p>The <code>readstore-server export</code> command dump the database and stored files.</p>
+<div class="highlight"><pre><span></span><code>usage: readstore-server export [-h] [--config-directory] [--export_directory]
+
+options:
+  -h, --help           show this help message and exit
+  --config-directory   Directory containing ReadStore Database (required)
+  --export_directory   Directory for storing exported ReadStore Database files (required)
+</code></pre></div>
+<p>Example <code>readstore export --config-directory /path/to/config --export_directory /path/to/export_files</code></p>
+<p>The tables are exported as <code>.csv</code> and <code>.json</code> files. Project and Datasets attachment files are exported in their original file format, each in a separate folder for each Project or Dataset.</p>
+<h2 id="readstore-api">ReadStore API<a id="api"></a></h2>
+<p>The <strong>ReadStore Basic</strong> server provides a RESTful API for accessing resources via HTTP requests.<br />
+This API extends the functionalities of the ReadStore CLI as well as the Python and R SDKs.</p>
+<h3 id="api-endpoint">API Endpoint</h3>
+<p>By default, the API is accessible at:<br />
+<code>http://127.0.0.1:8000/api_x_v1/</code></p>
+<h3 id="authentication">Authentication</h3>
+<p>Users must authenticate using their username and token via the Basic Authentication scheme.</p>
+<h3 id="example-usage">Example Usage</h3>
+<p>Below is an example demonstrating how to use the ReadStore CLI to retrieve an overview of Projects by sending an HTTP <code>GET</code> request to the <code>project/</code> endpoint.<br />
+In this example, the username is <code>testuser</code>, and the token is <code>0dM9qSU0Q5PLVgDrZRftzw</code>. You can find your token in the ReadStore settings.</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span>-u<span class="w"> </span>testuser:0dM9qSU0Q5PLVgDrZRftzw<span class="w"> </span>http://localhost:8000/api_x_v1/project/
+</code></pre></div>
+<h4 id="example-reponse">Example Reponse</h4>
+<p>A successful HTTP response returns a JSON-formatted string describing the project(s) in the ReadStore database. Example response:</p>
+<div class="highlight"><pre><span></span><code>[{
+  &quot;id&quot;: 4,
+  &quot;name&quot;: &quot;TestProject99&quot;,
+  &quot;metadata&quot;: {
+    &quot;key1&quot;: &quot;value1&quot;,
+    &quot;key2&quot;: &quot;value2&quot;
+  },
+  &quot;attachments&quot;: []
+}]
+</code></pre></div>
+<h3 id="documentation">Documentation</h3>
+<p>Comprehensive <a href="https://evobytedigitalbiology.github.io/readstore/rest_api/">API documentation</a> is available in the ReadStore Basic Docs.</p>
+<h2 id="usage">Usage</h2>
+<p>Detailed tutorials, videos and explanations are found on <a href="https://www.youtube.com/playlist?list=PLk-WMGySW9ySUfZU25NyA5YgzmHQ7yquv">YouTube</a> or on the <a href="https://evo-byte.com/blog"><strong>EVO</strong>BYTE blog</a>.</p>
+<h3 id="quickstart">Quickstart</h3>
+<p>Let's upload some FASTQ files.</p>
+<h4 id="1-account-settings">1. Account Settings<a id="account_settings"></a></h4>
+<p>Make sure you have the <a href="https://github.com/EvobyteDigitalBiology/readstore-cli">ReadStore CLI</a> installed and configured (s. <a href="#installation">Installation</a>).</p>
+<p>Run the command to check if your configuration is in place.</p>
+<p><code>readstore configure list</code></p>
+<p>For uploading FASTQ files your User Account needs to have <code>Staging Permission</code>. Check this in the <code>Settings</code> page of your account. If you do not have <code>Staging Permission</code>, ask the Admin to grant you permission.</p>
+<h4 id="2-upload-files">2. Upload Files<a id="upload_files"></a></h4>
+<p>Move to a folder that contains some FASTQ files.</p>
+<p><code>readstore upload myfile_r1.fastq</code></p>
+<p>This will upload the file and run the QC check. You can select several files at once using the <code>*</code> wildcard.</p>
+<p>You can also upload multiple FASTQ files at once using the import function or perform a <code>Import From File</code> form the ReadStore app staging page. </p>
+<h4 id="3-stage-files">3. Stage Files<a id="stage_files"></a></h4>
+<p>Login to the User Interface on your browser and move to the <code>Staging</code> page. Here you find a list of all FASTQ files you just upload.</p>
+<p>For large files the QC step can take a while to complete. FASTQ files are grouped in Datasets which you can <code>Check In</code>. Then they appear in the <code>Datasets</code> page.</p>
+<p>If you uploaded a large number of FASTQ files at once, you can Check In multiple FASTQ files at once using the <code>Batch Check In</code> function. For this, click on <code>More</code> in the top right and select <code>Batch Check In</code>. Select all datasets that you want to check in and confirm.</p>
+<p>Under <code>More</code>, you also find the <code>Import From File</code> method that allows you to get and upload Excel or .csv files with FASTQ paths to upload. </p>
+<h4 id="4-access-datasets-via-the-cli">4. Access Datasets via the CLI<a id="access_via_cli"></a></h4>
+<p>The ReadStore CLI enables programmatic access to Projects, Datasets, metadata and attachments.</p>
+<p>Some example commands are:</p>
+<p><code>readstore dataset list</code>  List all datasets</p>
+<p><code>readstore dataset get --id 25</code>  Get detailed view on Dataset 25</p>
+<p><code>readstore dataset get --id 25 --read1-path</code>  Get path for Read1 FASTQ file</p>
+<p><code>readstore dataset get --id 25 --meta</code>  Get metadata for Dataset 25</p>
+<p><code>readstore project get --name cohort1 --attachment</code>  Get attachment files for Project "cohort1"</p>
+<p>You can find a full documentation in the <a href="https://github.com/EvobyteDigitalBiology/readstore-cli">ReadStore CLI Repository</a></p>
+<h4 id="5-managing-processed-data">5. Managing <strong>Pro</strong>cessed <strong>Data</strong><a id="manage_pro_data"></a></h4>
+<p><strong>Pro</strong>cessed <strong>Data</strong> refer to files generated through processing of raw sequencing data.
+Depending on the omics technology and assay used, this could be a transcript count file, variant files or gene count matrices. </p>
+<p>ProData are attached to Datasets, and can be uploaded via the ReadStore CLI or R &amp; Python SDKs.
+You can check the ProData for each Dataset in the ReadStore App under the <code>Datasets</code> section.</p>
+<p>Processed Data are not directly uploaded to the ReadStore database, but similar to raw datasets
+their path are stored in the database and validated.</p>
+<p>Here's an example how to upload, retrieve and delete a processed file.</p>
+<p><strong>NOTE</strong> Your user account is required to have <code>Staging Permissions</code> to upload and delete ProData files:</p>
+<p><code>readstore pro-data upload -d test_dataset_1 -n test_dataset_count_matrix -t count_matrix test_count_matrix.h5</code><br />
+Upload count matrix test_count_matrix.h5 with name "test_dataset_count_matrix" for dataset with name "test_dataset_1"</p>
+<p><code>readstore pro-data list</code> List Processed Data for all Datasets and Projects</p>
+<p><code>readstore pro-data get -d test_dataset_1 -n test_dataset_count_matrix</code> Get ProData details for Dataset "test_dataset_1" with the name "test_dataset_count_matrix"</p>
+<p><code>readstore pro-data delete -d test_dataset_1 -n test_dataset_count_matrix</code> Delete ProData for dataset "test_dataset_1" with the name "test_dataset_count_matrix"</p>
+<p>The delete operation does not remove the file from the file system, only from the database.</p>
+<h2 id="contributing">Contributing</h2>
+<p>Please feel free to create an issue for problems with the software or feature suggestions.</p>
+<h2 id="license">License</h2>
+<p>ReadStore Basic Server is distributed under a commercial/proprietary license.
+Details are found in the LICENSE file.</p>
+<p>You need a license key for using ReadStore Basic, please check the ReadStore website for more information or reach out to license@evo-byte.com. Using ReadStore Basic without a valid license key is not permitted.</p>
+<p>ReadStore CLI is distributed under an Open Source Apache 2.0 License.</p>
+<h2 id="credits-and-acknowledgments">Credits and Acknowledgments<a id="acknowledgments"></a></h2>
+<p>ReadStore Basic is built upon the following open-source python packages and would like to thank all contributing authors, developers and partners.</p>
+<p>Check the LICENSE file for a full list of attributions and third-party license information.</p>
+<ul>
+<li>Django (https://www.djangoproject.com/)</li>
+<li>djangorestframework (https://www.django-rest-framework.org/)</li>
+<li>requests (https://requests.readthedocs.io/en/latest/)</li>
+<li>gunicorn (https://gunicorn.org/)</li>
+<li>pysam (https://pysam.readthedocs.io/en/latest/api.html)</li>
+<li>pyyaml (https://pyyaml.org/)</li>
+<li>streamlit (https://streamlit.io/)</li>
+<li>pydantic (https://docs.pydantic.dev/latest/)</li>
+<li>pandas (https://pandas.pydata.org/)</li>
+<li>python (https://www.python.org/)</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2025 EVOBYTE Digital Biology Dr. Jonathan Alles
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/EvobyteDigitalBiology/readstore" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1M480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2m-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3m-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annnotation", "content.copy"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f1b6f286.min.js"></script>
+      
+    
+  </body>
+</html>
