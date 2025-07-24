@@ -576,8 +576,6 @@ def get_project_datasets_overview(headers: dict) -> pd.DataFrame:
     
     fq_datasets = fq_datasets[['id', 'name', 'project']]
     
-    print(fq_datasets)
-    
     fq_datasets.columns = ['dataset_id', 'dataset_name', 'project_id']
     fq_datasets = fq_datasets.explode('project_id')
     datasets_projects = fq_datasets.merge(projects, on='project_id', how='left')
