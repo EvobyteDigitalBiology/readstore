@@ -1,4 +1,5 @@
 django:
+  python_exec: python3
   access_token_lifetime: 660
   allowed_hosts: localhost,127.0.0.1,*
   api_version: api_v1
