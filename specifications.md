@@ -11,7 +11,10 @@ Make sure folders are successfully created. If folders with that name exists, th
 
 - Validate that a help message is printed if user enters invalid argument, e.g. --db_directory instead of --db-directory
 
-- Make the login optional
+- Make the login optional. For this add a boolean --enable-login to argument parser. If that flag is false, then set 'global/enable_login' to false in readstore_server_config.yaml. If  true then create a random password and write it to a secret_default_user_key file in config_directory, and change to read only permissions. Add this key path as env variable. RS_DEFAULT_USER_KEY_PATH env. Run launch_backend with --create-default-user-with-password argument and password.
+
+- If enable-login is true, then run launch_backend with --create-admin-user-with-password argument and initial password 'readstore'.
+
 
 ## readstore_basic/backend/setup_user.py
 
