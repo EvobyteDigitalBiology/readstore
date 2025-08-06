@@ -29,7 +29,16 @@ except ModuleNotFoundError:
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RS_CONFIG_PATH = os.path.join(BASE_DIR, 'readstore_server_config.yaml')
 
-parser = argparse.ArgumentParser(
+class ReadStoreArgumentParser(argparse.ArgumentParser):
+    """Custom ArgumentParser that shows help on error."""
+    
+    def error(self, message: str) -> None:
+        """Override error method to show help when invalid arguments are provided."""
+        sys.stderr.write(f'error: {message}\n')
+        self.print_help()
+        sys.exit(2)
+
+parser = ReadStoreArgumentParser(
     prog='readstore-server',
     usage='%(prog)s <command> [options]',
     description="ReadStore Server",
@@ -38,13 +47,13 @@ parser = argparse.ArgumentParser(
 subparsers = parser.add_subparsers(title="Commands")
 
 parser.add_argument(
-    '--db-directory', type=str, help='Directory for Storing ReadStore Database (required)', metavar='')
+    '--db-directory', type=str, help='Directory for Storing ReadStore Database (optional - defaults to readstore-db)', metavar='')
 
 parser.add_argument(
-    '--db-backup-directory', type=str, help='Directory for Storing ReadStore Database Backups (required)', metavar='')
+    '--db-backup-directory', type=str, help='Directory for Storing ReadStore Database Backups (optional - defaults to readstore-db-backup)', metavar='')
 
 parser.add_argument(
-    '--log-directory', type=str, help='Directory for Storing ReadStore Logs (required)', metavar='')
+    '--log-directory', type=str, help='Directory for Storing ReadStore Logs (optional - defaults to readstore-log)', metavar='')
 
 parser.add_argument(
     '--config-directory', type=str, help='Directory for storing readstore_server_config.yaml (~/.rs-server)', metavar='', default='~/.rs-server')
@@ -80,6 +89,55 @@ def _get_path(path: str):
 def _is_port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('localhost', port)) == 0
+
+def create_default_directories() -> tuple[str, str, str] | None:
+    """Create default directories with readstore- prefix.
+    
+    Returns:
+        tuple: (db_directory, db_backup_directory, log_directory) if successful,
+               None if directories already exist
+    """
+    current_dir = os.getcwd()
+    
+    default_db_dir = os.path.join(current_dir, 'readstore-db')
+    default_backup_dir = os.path.join(current_dir, 'readstore-db-backup')
+    default_log_dir = os.path.join(current_dir, 'readstore-log')
+    
+    # Check if any of the directories already exist
+    if (os.path.exists(default_db_dir) or 
+        os.path.exists(default_backup_dir) or 
+        os.path.exists(default_log_dir)):
+        
+        print("\nERROR: One or more default directories already exist:")
+        if os.path.exists(default_db_dir):
+            print(f"  - {default_db_dir}")
+        if os.path.exists(default_backup_dir):
+            print(f"  - {default_backup_dir}")
+        if os.path.exists(default_log_dir):
+            print(f"  - {default_log_dir}")
+        print("\nPlease specify directory paths using command line arguments:")
+        print("  --db-directory <path>")
+        print("  --db-backup-directory <path>") 
+        print("  --log-directory <path>")
+        print("\nRun readstore_server.py -h for help")
+        return None
+    
+    # Create directories
+    try:
+        os.makedirs(default_db_dir, exist_ok=False)
+        os.makedirs(default_backup_dir, exist_ok=False)
+        os.makedirs(default_log_dir, exist_ok=False)
+        
+        print(f"Successfully created default directories:")
+        print(f"  - Database directory: {default_db_dir}")
+        print(f"  - Backup directory: {default_backup_dir}")
+        print(f"  - Log directory: {default_log_dir}")
+        
+        return default_db_dir, default_backup_dir, default_log_dir
+        
+    except OSError as e:
+        print(f"ERROR: Failed to create default directories: {e}")
+        return None
 
 def validate_requirements():
     """Validate package requirements
@@ -395,6 +453,17 @@ def run_rs_server(db_directory: str,
 
     os.chdir(BASE_DIR)
     
+    
+    print('#'*50)
+    print('#'*50)
+    print('#')
+    print('#      Open ReadStore App in your Browser')
+    print(f'#      http://localhost:{streamlit_port}')
+    print('#')
+    print('#'*50)
+    print('#'*50)
+    
+    
     try:
         backup_process.wait()
         st_process.wait()
@@ -618,17 +687,28 @@ def main():
             streamlit_port = int(os.environ['RS_STREAMLIT_PORT'])
             print('Found RS_STREAMLIT_PORT in Environment Variables')
         
+        # Handle case where no directory arguments are provided
+        if db_directory is None and db_backup_directory is None and log_directory is None:
+            # Try to create default directories
+            default_dirs = create_default_directories()
+            if default_dirs is None:
+                # Default directories already exist, show help and exit
+                return
+            else:
+                db_directory, db_backup_directory, log_directory = default_dirs
+        
+        # Validate that all required directories are specified
         if db_directory is None:
             parser.print_help()
             print('ERROR: --db-directory is required')
             return
         if db_backup_directory is None:
             parser.print_help()
-            print('ERROR: --db_backup_directory is required')
+            print('ERROR: --db-backup-directory is required')
             return
         if log_directory is None:
             parser.print_help()
-            print('ERROR: --log_directory is required')
+            print('ERROR: --log-directory is required')
             return
         
         #Define logger    
