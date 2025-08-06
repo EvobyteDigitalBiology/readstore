@@ -66,6 +66,9 @@ parser.add_argument(
     '--debug', action='store_true', help='Run In Debug Mode')
 
 parser.add_argument(
+    '--enable-login', action='store_true', help='Enable user authentication')
+
+parser.add_argument(
     '-v', '--version', action='store_true', help='Show Version Information')
 
 export_parser = subparsers.add_parser("export",
@@ -213,7 +216,8 @@ def run_rs_server(db_directory: str,
                   config_directory: str,
                   django_port: int,
                   streamlit_port: int,
-                  debug: bool):
+                  debug: bool,
+                  enable_login: bool):
     """
         Run ReadStore Server
     """
@@ -365,6 +369,9 @@ def run_rs_server(db_directory: str,
         rs_config['django']['django_settings_module'] = 'settings.production'
         rs_config['django']['gunicorn_run'] = True
     
+    # Handle enable_login configuration
+    rs_config['global']['enable_login'] = enable_login
+    
     with open(config_path, "w") as f:
         yaml.dump(rs_config, f)
 
@@ -380,10 +387,32 @@ def run_rs_server(db_directory: str,
     else:
         logger.info(f'Secret Key already exists at {secret_key_path}')
     
+    # Handle default user creation if login is disabled
+    if not enable_login:
+        logger.info(f'Prepare Default User Key for Login')
+        
+        secret_default_user_key_path = os.path.join(config_directory, 'secret_default_user_key')
+        if not os.path.exists(secret_default_user_key_path):
+            logger.info(f'Create Default User Key')
+            # Generate random password for default user
+            default_user_password = ''.join(random.sample(string.ascii_letters + string.digits, 16))
+            with open(secret_default_user_key_path, 'w') as f:
+                f.write(default_user_password)
+            os.chmod(secret_default_user_key_path, 0o600)
+        else:
+            logger.info(f'Default User Key already exists at {secret_default_user_key_path}')
+            # Read existing password
+            with open(secret_default_user_key_path, 'r') as f:
+                default_user_password = f.read().strip()
+    
     # Export DJANGO_SETTINGS_MODULE
     os.environ['DJANGO_SETTINGS_MODULE'] = rs_config['django']['django_settings_module']
     os.environ['RS_CONFIG_PATH'] = config_path
     os.environ['RS_KEY_PATH'] = secret_key_path
+    
+    # Set default user key path environment variable if login is enabled
+    if not enable_login:
+        os.environ['RS_DEFAULT_USER_KEY_PATH'] = secret_default_user_key_path
     
     logger.info('Start Streamlit Frontend')
     
@@ -411,8 +440,17 @@ def run_rs_server(db_directory: str,
     # Start Django Backend
     
     logger.info('Setup Django Backend')
-    launch_backend_cmd = [python_exec,os.path.join('launch_backend.py')]
-    launch_backend_process = subprocess.Popen(launch_backend_cmd, )
+    launch_backend_cmd = [python_exec, os.path.join('launch_backend.py')]
+    
+    # Add user creation arguments if login is enabled
+    if enable_login:
+        logger.info('Login enabled - creating admin')
+        launch_backend_cmd.extend(['--create-admin-user-with-password', 'readstore'])
+    else:
+        logger.info('Login disabled - creating default user')
+        launch_backend_cmd.extend(['--create-default-user-with-password', default_user_password])
+    
+    launch_backend_process = subprocess.Popen(launch_backend_cmd)
     
     launch_backend_process.wait()
     
@@ -453,7 +491,6 @@ def run_rs_server(db_directory: str,
 
     os.chdir(BASE_DIR)
     
-    
     print('#'*50)
     print('#'*50)
     print('#')
@@ -463,7 +500,6 @@ def run_rs_server(db_directory: str,
     print('#'*50)
     print('#'*50)
     
-    
     try:
         backup_process.wait()
         st_process.wait()
@@ -472,6 +508,9 @@ def run_rs_server(db_directory: str,
         os.environ['RS_CONFIG_PATH'] = ''
         os.environ['RS_KEY_PATH'] = ''
         
+        if not enable_login:
+            os.environ['RS_DEFAULT_USER_KEY_PATH'] = ''
+        
     except KeyboardInterrupt:
         st_process.terminate()
         backup_process.terminate()
@@ -479,6 +518,9 @@ def run_rs_server(db_directory: str,
         
         os.environ['RS_CONFIG_PATH'] = ''
         os.environ['RS_KEY_PATH'] = ''
+        
+        if not enable_login:
+            os.environ['RS_DEFAULT_USER_KEY_PATH'] = ''
         
         
 def run_db_export(config_directory: str,
@@ -633,6 +675,7 @@ def main():
     django_port = args.django_port
     streamlit_port = args.streamlit_port
     debug = args.debug
+    enable_login = args.enable_login
 
     version = args.version
     
@@ -718,7 +761,8 @@ def main():
                     config_directory,
                     django_port,
                     streamlit_port,
-                    debug)
+                    debug,
+                    enable_login)
 
 
 if __name__ == '__main__':
