@@ -19,3 +19,20 @@ Make sure folders are successfully created. If folders with that name exists, th
     - One argument --create-default-user-with-password creates a User instance with username = 'default'. This user is part of appuser_group and staging_group. A password string must be passed to the argument as a string and set when instantiating the user. If an environement variable DEFAULT_USER_PWD is found, the overwrite the argument input through the parser.
     - One argument --create-admin-user-with-password creates a User instance with username = 'admin' and is_staff = True. This user is part of admin. A password string must be passed to the argument as a string and set when instantiating the user. If an environement variable ADMIN_USER_PWD is found, the overwrite the argument input through the parser.
 - On both cases create a OwnerGroup with name 'default'. If an admin is created, the admin should be owner of OwnerGroup "default". If a default user but no admin is created, then the default user should be owner of OwnerGroup "default"
+
+
+## readstore_basic/backend/launch_backend.py
+
+- Add an argument parser with 
+    
+    - One argument --create-default-user-with-password creates a User instance with username = 'default'. This user is part of appuser_group and staging_group. A password string must be passed to the argument as a string and set when instantiating the user. If an environement variable DEFAULT_USER_PWD is found, the overwrite the argument input through the parser.
+    
+    - One argument --create-admin-user-with-password creates a User instance with username = 'admin' and is_staff = True. This user is part of admin. A password string must be passed to the argument as a string and set when instantiating the user. If an environement variable ADMIN_USER_PWD is found, the overwrite the argument input through the parser.
+    
+    - One argument --rs-config-path. If an environement variable RS_CONFIG_PATH is found, the overwrite the argument input through the parser. If not export the RS_CONFIG_PATH environment variable.
+    
+    - One argument --rs-key-path. If an environement variable RS_KEY_PATH is found, the overwrite the argument input through the parser. If not export the RS_KEY_PATH environment variable.
+    
+    - Invoke the setup_user.py command with the --create-default-user-with-password argument if no DEFAULT_USER_PWD is set and --create-default-user-with-password is passed in launch_backend.py
+    
+    - Invoke the setup_user.py command with the --create-admin-user-with-password argument if no ADMIN_USER_PWD is set and --create-admin-user-with-password is passed in launch_backend.py
