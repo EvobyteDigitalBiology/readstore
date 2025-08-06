@@ -26,6 +26,8 @@ st.logo(
         link = 'https://www.evo-byte.com/readstore'
 )
 
+st.html('static/styles.css')
+
 auth_status = extensions.user_auth_status()
 
 # PAGES
@@ -115,6 +117,7 @@ if auth_status:
         pages = pages + [settings_page, logout_page]
 
     pg = st.navigation(pages)
+
 else:
     pg = st.navigation([login_page])
 
@@ -127,13 +130,13 @@ position: fixed;
 left: 0;
 bottom: 0;
 width: 100%;
-background-color: white;
-color: #1D959B;
 text-align: center;
+font-size: 12.8px;
+margin-bottom: 0.25rem;
 }
 </style>
 <div class="footer">
-<p>ReadStore Basic insert_version (c) 2024-2025</p>
+<p style="margin-bottom: 0rem;">ReadStore Basic insert_version (c) 2024-2025</p>
 </div>
 """
 
