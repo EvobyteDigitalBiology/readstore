@@ -11,11 +11,10 @@ Test datasets can be added as well to django DB
 
 import os
 import django
+import argparse
 from typing import List
 from itertools import chain
 import string
-
-
 
 assert os.getenv("DJANGO_SETTINGS_MODULE"), "DJANGO_SETTINGS_MODULE not set"
 
@@ -141,9 +140,19 @@ class ViewPermissionManager():
         permissions = list(chain(*permissions))
         return permissions
     
-def create_admin_user(name: str, password: str):
+def create_admin_user(name: str, password: str, admin_group):
+    """Create admin user with specified name and password.
+    
+    Args:
+        name (str): Username for the admin user
+        password (str): Password for the admin user
+        admin_group (Group): Admin group to assign to user
+        
+    Returns:
+        tuple: (User object or None, bool indicating if user was created)
+    """
     if User.objects.filter(username=name).exists():
-        return False
+        return User.objects.get(username=name), False
     else:
         admin = User.objects.create(username=name,
                                     password=make_password(password),
@@ -151,10 +160,83 @@ def create_admin_user(name: str, password: str):
                 
         admin.groups.set([admin_group])
         admin.save()
-        return True
+        return admin, True
+
+
+def create_default_user(password: str, appuser_group, staging_group):
+    """Create default user with specified password.
+    
+    Args:
+        password (str): Password for the default user
+        appuser_group (Group): AppUser group to assign to user
+        staging_group (Group): Staging group to assign to user
+        
+    Returns:
+        tuple: (User object, bool indicating if user was created)
+    """
+    if User.objects.filter(username='default').exists():
+        return User.objects.get(username='default'), False
+    else:
+        default_user = User.objects.create(username='default',
+                                          password=make_password(password),
+                                          is_staff=False)
+                
+        default_user.groups.set([appuser_group, staging_group])
+        default_user.save()
+        return default_user, True
+
+
+def create_default_owner_group(owner_user):
+    """Create default OwnerGroup with specified owner.
+    
+    Args:
+        owner_user (User): User who will be the owner of the default group
+        
+    Returns:
+        OwnerGroup: Created or existing default OwnerGroup
+    """
+    if not OwnerGroup.objects.filter(name='default').exists():
+        owner_group = OwnerGroup.objects.create(name='default', owner=owner_user)
+        print("Default owner group created.")
+        return owner_group
+    else:
+        print("Default owner group already exists.")
+        return OwnerGroup.objects.get(name='default')
+
+
+def setup_argument_parser():
+    """Set up argument parser for the script.
+    
+    Returns:
+        argparse.ArgumentParser: Configured argument parser
+    """
+    parser = argparse.ArgumentParser(
+        description='Setup ReadStore users and permissions',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    
+    parser.add_argument(
+        '--create-default-user-with-password',
+        type=str,
+        metavar='PASSWORD',
+        help='Create a default user with the specified password. Environment variable DEFAULT_USER_PWD overrides this.'
+    )
+    
+    parser.add_argument(
+        '--create-admin-user-with-password', 
+        type=str,
+        metavar='PASSWORD',
+        help='Create an admin user with the specified password. Environment variable ADMIN_USER_PWD overrides this.'
+    )
+    
+    return parser
 
 
 if __name__ == '__main__':
+    
+    # Parse command line arguments
+    parser = setup_argument_parser()
+    args = parser.parse_args()
 
     print("Setup permissions....")
     
@@ -206,23 +288,40 @@ if __name__ == '__main__':
     # Create admin user
     print("Setup admin user....")
 
-    if User.objects.filter(username='admin').exists():
-        print("Admin user already exists.")
-        admin = User.objects.get(username='admin')
-    else:
-        print('\n')
-        print('Set ReadStore ADMIN Account')
+    # Handle user creation based on arguments
+    admin_user = None
+    default_user = None
+    
+    # Create admin user if requested
+    if args.create_admin_user_with_password:
+        # Check for environment variable override
+        admin_password = os.getenv('ADMIN_USER_PWD', args.create_admin_user_with_password)
         
-        admin = User.objects.create(username='admin',
-                                    password=make_password('readstore'),
-                                    is_staff=True)
-                
-        admin.groups.set([admin_group])
-        admin.save()
-        print("Admin user created.")
-
-    # Create default owner group
-    print("Setup default owner group....")
-    if not OwnerGroup.objects.filter(name='default').exists():
-        OwnerGroup.objects.create(name='default', owner=admin)
-        print("Default owner group created.")
+        admin_user, created = create_admin_user('admin', admin_password, admin_group)
+        if created:
+            print("Admin user created.")
+        else:
+            print("Admin user already exists.")
+    
+    # Create default user if requested
+    if args.create_default_user_with_password:
+        print("Setup default user....")
+        
+        # Check for environment variable override
+        default_password = os.getenv('DEFAULT_USER_PWD', args.create_default_user_with_password)
+        
+        default_user, created = create_default_user(default_password, appuser_group, staging_group)
+        if created:
+            print("Default user created.")
+        else:
+            print("Default user already exists.")
+    
+    # Create default owner group if users were created
+    if admin_user or default_user:
+        print("Setup default owner group....")
+        
+        # Determine owner: admin takes precedence, then default user
+        owner = admin_user if admin_user else default_user
+        create_default_owner_group(owner)
+    else:
+        print("No users created. Skipping OwnerGroup creation.")
