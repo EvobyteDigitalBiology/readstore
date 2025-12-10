@@ -52,6 +52,12 @@ def setup_argument_parser():
         help='Path to ReadStore secret key file. Environment variable RS_KEY_PATH overrides this.'
     )
     
+    parser.add_argument(
+        '--create-examples-with-default-user',
+        action='store_true',
+        help='Create example project and dataset.'
+    )
+    
     return parser
 
 # Parse command line arguments
@@ -103,8 +109,8 @@ PYTHON_EXEC = rs_config['django']['python_exec']
 # Handle user creation if requested
 setup_user_cmd = [PYTHON_EXEC, 'setup_user.py']
 
-if args.create_default_user_with_password or args.create_admin_user_with_password:
-    print('User creation requested - will invoke setup_user.py')
+if args.create_default_user_with_password or args.create_admin_user_with_password or args.create_examples_with_default_user:
+    print('User creation or examples requested - will invoke setup_user.py')
     user_creation_needed = True
     
     # Add default user creation if requested
@@ -126,6 +132,11 @@ if args.create_default_user_with_password or args.create_admin_user_with_passwor
             print('Adding --create-admin-user-with-password to setup_user.py command')
         else:
             print('ADMIN_USER_PWD environment variable found - setup_user.py will use it')
+    
+    # Add examples creation if requested
+    if args.create_examples_with_default_user:
+        setup_user_cmd.append('--create-examples-with-default-user')
+        print('Adding --create-examples to setup_user.py command')
 
 # Set up the Django environment
 print('Run Migrations')
