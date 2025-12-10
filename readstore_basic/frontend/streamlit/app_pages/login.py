@@ -37,7 +37,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
 col2a, col2, _ = st.columns([4, 4, 4], vertical_alignment="center")
 
 with col2:
@@ -55,19 +54,7 @@ with col2:
 
         if uiconfig.AUTH_METHOD == uiconfig.AUTH_METHOD.JWT:
             try:
-                access_token, refresh_token = extensions.get_jwt_token(username, password)
-
-                st.session_state["access_token"] = access_token
-                st.session_state["refresh_token"] = refresh_token
-                st.session_state["jwt_auth_header"] = {"Authorization": "JWT " + access_token}
-                
-                st.write()
-                
-                extensions.validate_endpoints(uiconfig.ENDPOINT_CONFIG,
-                                headers = st.session_state["jwt_auth_header"])
-                
-                extensions.start_token_refresh_thread()
-                
+                extensions.perform_login(username, password)
                 st.rerun()
                 
             except exceptions.UIAppError as e:
