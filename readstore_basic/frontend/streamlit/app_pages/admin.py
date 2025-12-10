@@ -19,17 +19,17 @@ if not extensions.user_auth_status():
 
 colh1, colh2 = st.columns([11,1], vertical_alignment='top')
 
-with colh1:
-    st.markdown(
-    """
-    <div style="text-align: right;">
-        <b>Username</b> {username}
-    </div>
-    """.format(username=st.session_state['username']),
-    unsafe_allow_html=True
-    )
-with colh2:
-    st.page_link('app_pages/settings.py', label='', icon=':material/settings:')
+# with colh1:
+#     st.markdown(
+#     """
+#     <div style="text-align: right;">
+#         <b>Username</b> {username}
+#     </div>
+#     """.format(username=st.session_state['username']),
+#     unsafe_allow_html=True
+#     )
+# with colh2:
+#     st.page_link('app_pages/settings.py', label='', icon=':material/settings:')
 
 
 # Applying the custom CSS in the app
@@ -91,8 +91,8 @@ def create_user(reference_user_names: pd.Series,
     with col2c:
         if st.button('Confirm', type ='primary', key='ok_create_user', disabled = confirm_disabled, use_container_width=True):
             
-            valid_license = datamanager.valid_license(st.session_state['jwt_auth_header'])
-            number_seats = datamanager.get_license_seats(st.session_state['jwt_auth_header'])
+            # valid_license = datamanager.valid_license(st.session_state['jwt_auth_header'])
+            # number_seats = datamanager.get_license_seats(st.session_state['jwt_auth_header'])
             
             # Make username and password case sensitive
             username = username.lower()
@@ -114,10 +114,10 @@ def create_user(reference_user_names: pd.Series,
                 st.error('Email: Only 0-9 a-z A-Z. @ - _ characters allowed')
             elif email != '' and not extensions.validate_email(email):
                 st.error('Email: Invalid Email Format')
-            elif not valid_license:
-                st.error('License Key Invalid')
-            elif number_users > number_seats: # Take account for admin user
-                st.error('License Key Seats Full and Maximum Users Reached')
+            # elif not valid_license:
+            #     st.error('License Key Invalid')
+            # elif number_users > number_seats: # Take account for admin user
+            #     st.error('License Key Seats Full and Maximum Users Reached')
             else:
                 datamanager.create_user(st.session_state['jwt_auth_header'],
                                         username,
