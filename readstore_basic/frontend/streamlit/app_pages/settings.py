@@ -7,7 +7,6 @@ import streamlit as st
 import extensions
 import datamanager
 import styles
-import live
 import datetime
 import numpy as np
                 
@@ -53,29 +52,29 @@ def reset_password():
             except Exception as e:
                 st.error(str(e))
 
-@st.dialog('Enter License Key', width='medium')
-def enter_license_key():
+# @st.dialog('Enter License Key', width='medium')
+# def enter_license_key():
     
-    license_key = st.text_input('Enter License Key',
-                            help = 'Key Format: XXXXX-XXXXX-XXXXX-XXXXX')
+#     license_key = st.text_input('Enter License Key',
+#                             help = 'Key Format: XXXXX-XXXXX-XXXXX-XXXXX')
     
-    if st.button('Confirm', type='primary'):
-        valid, res, seats = live.vl(license_key)
-        if valid:
-            if res < datetime.datetime.now().date():
-                st.error('License Key Expired')
-            else:
-                st.success('License Key Valid')
-                res = datamanager.create_license_key(st.session_state["jwt_auth_header"], 
-                                                license_key,
-                                                seats,
-                                                res)
+#     if st.button('Confirm', type='primary'):
+#         valid, res, seats = live.vl(license_key)
+#         if valid:
+#             if res < datetime.datetime.now().date():
+#                 st.error('License Key Expired')
+#             else:
+#                 st.success('License Key Valid')
+#                 res = datamanager.create_license_key(st.session_state["jwt_auth_header"], 
+#                                                 license_key,
+#                                                 seats,
+#                                                 res)
                 
-                time.sleep(1)
-                st.cache_data.clear()
-                st.rerun()
-        else:
-            st.error('License Key Invalid')
+#                 time.sleep(1)
+#                 st.cache_data.clear()
+#                 st.rerun()
+#         else:
+#             st.error('License Key Invalid')
 
 @st.dialog('License Key', width='medium')
 def show_key(key):
@@ -85,10 +84,10 @@ def show_key(key):
 user_data = datamanager.get_my_user(st.session_state["jwt_auth_header"])
 user_groups = datamanager.get_user_groups(st.session_state["jwt_auth_header"])['name'].tolist()
 
-latest_license_key = datamanager.get_license_key(st.session_state["jwt_auth_header"])
+# latest_license_key = datamanager.get_license_key(st.session_state["jwt_auth_header"])
 
-if not datamanager.valid_license(st.session_state["jwt_auth_header"]):
-        st.warning('License Key invalid or expired. Please get in touch with support.')
+# if not datamanager.valid_license(st.session_state["jwt_auth_header"]):
+#    st.warning('License Key invalid or expired. Please get in touch with support.')
     
 col1, _ = st.columns([4,8])
 
@@ -116,29 +115,29 @@ with col1:
                 st.cache_data.clear()
                 st.rerun()
     
-    if 'admin' in user_groups:
+    # if 'admin' in user_groups:
         
-        with st.popover('License Key', icon=":material/key:", use_container_width=True):
+    #     with st.popover('License Key', icon=":material/key:", use_container_width=True):
                     
-            if len(latest_license_key) == 0:
-                st.warning('No License Key Found. Enter New Key.')
-            elif len(latest_license_key) > 1:
-                st.warning('Multiple Active License Keys Found. Please contact Support.')
-            else:
-                license_key = latest_license_key['key'].values[0]
+    #         if len(latest_license_key) == 0:
+    #             st.warning('No License Key Found. Enter New Key.')
+    #         elif len(latest_license_key) > 1:
+    #             st.warning('Multiple Active License Keys Found. Please contact Support.')
+    #         else:
+    #             license_key = latest_license_key['key'].values[0]
                 
-                expiration = latest_license_key['expiration_date'].values[0]
-                expiration = np.datetime_as_string(expiration, unit='D')
-                seats = str(latest_license_key['seats'].values[0])
+    #             expiration = latest_license_key['expiration_date'].values[0]
+    #             expiration = np.datetime_as_string(expiration, unit='D')
+    #             seats = str(latest_license_key['seats'].values[0])
                 
-                st.write('**Expiration Date**', expiration)
-                st.write('**Seats / Users**', seats)
+    #             st.write('**Expiration Date**', expiration)
+    #             st.write('**Seats / Users**', seats)
             
-                if st.button('Show License Key'):
-                    show_key(license_key)
+    #             if st.button('Show License Key'):
+    #                 show_key(license_key)
             
-            if st.button('Enter New Key'):
-                enter_license_key()
+    #         if st.button('Enter New Key'):
+    #             enter_license_key()
 
     if st.button('Reset Password', use_container_width=True):
         reset_password()
