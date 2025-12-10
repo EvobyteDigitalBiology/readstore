@@ -25,7 +25,6 @@ try:
 except ModuleNotFoundError:
     from __version__ import __version__
 
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RS_CONFIG_PATH = os.path.join(BASE_DIR, 'readstore_server_config.yaml')
 
@@ -59,9 +58,9 @@ parser.add_argument(
     '--config-directory', type=str, help='Directory for storing readstore_server_config.yaml (~/.rs-server)', metavar='', default='~/.rs-server')
 
 parser.add_argument(
-    '--django-port', type=int, default=8000, help='Port of Django Backend', metavar='')
+    '--django-port', type=int, default=8000, help='Port of Django Backend (default 8000)', metavar='')
 parser.add_argument(
-    '--streamlit-port', type=int, default=8501, help='Port of Streamlit Frontend', metavar='')
+    '--streamlit-port', type=int, default=8501, help='Port of Streamlit Frontend (default 8501)', metavar='')
 parser.add_argument(
     '--debug', action='store_true', help='Run In Debug Mode')
 
@@ -93,12 +92,13 @@ def _is_port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('localhost', port)) == 0
 
-def create_default_directories() -> tuple[str, str, str] | None:
+def create_default_directories() -> tuple[str, str, str]:
     """Create default directories with readstore- prefix.
     
+    If directories already exist, use them instead of creating new ones.
+    
     Returns:
-        tuple: (db_directory, db_backup_directory, log_directory) if successful,
-               None if directories already exist
+        tuple: (db_directory, db_backup_directory, log_directory)
     """
     current_dir = os.getcwd()
     
@@ -107,40 +107,42 @@ def create_default_directories() -> tuple[str, str, str] | None:
     default_log_dir = os.path.join(current_dir, 'readstore-log')
     
     # Check if any of the directories already exist
-    if (os.path.exists(default_db_dir) or 
-        os.path.exists(default_backup_dir) or 
-        os.path.exists(default_log_dir)):
-        
-        print("\nERROR: One or more default directories already exist:")
-        if os.path.exists(default_db_dir):
-            print(f"  - {default_db_dir}")
-        if os.path.exists(default_backup_dir):
-            print(f"  - {default_backup_dir}")
-        if os.path.exists(default_log_dir):
-            print(f"  - {default_log_dir}")
-        print("\nPlease specify directory paths using command line arguments:")
-        print("  --db-directory <path>")
-        print("  --db-backup-directory <path>") 
-        print("  --log-directory <path>")
-        print("\nRun readstore_server.py -h for help")
-        return None
+    existing_dirs = []
+    if os.path.exists(default_db_dir):
+        existing_dirs.append(default_db_dir)
+    if os.path.exists(default_backup_dir):
+        existing_dirs.append(default_backup_dir)
+    if os.path.exists(default_log_dir):
+        existing_dirs.append(default_log_dir)
     
-    # Create directories
+    if existing_dirs:
+        print("\nUsing existing default directories:")
+        for dir_path in existing_dirs:
+            print(f"  - {dir_path}")
+    
+    # Create directories if they don't exist
+    dirs_created = []
     try:
-        os.makedirs(default_db_dir, exist_ok=False)
-        os.makedirs(default_backup_dir, exist_ok=False)
-        os.makedirs(default_log_dir, exist_ok=False)
+        if not os.path.exists(default_db_dir):
+            os.makedirs(default_db_dir, exist_ok=True)
+            dirs_created.append(default_db_dir)
+        if not os.path.exists(default_backup_dir):
+            os.makedirs(default_backup_dir, exist_ok=True)
+            dirs_created.append(default_backup_dir)
+        if not os.path.exists(default_log_dir):
+            os.makedirs(default_log_dir, exist_ok=True)
+            dirs_created.append(default_log_dir)
         
-        print(f"Successfully created default directories:")
-        print(f"  - Database directory: {default_db_dir}")
-        print(f"  - Backup directory: {default_backup_dir}")
-        print(f"  - Log directory: {default_log_dir}")
+        if dirs_created:
+            print("\nSuccessfully created default directories:")
+            for dir_path in dirs_created:
+                print(f"  - {dir_path}")
         
         return default_db_dir, default_backup_dir, default_log_dir
         
     except OSError as e:
         print(f"ERROR: Failed to create default directories: {e}")
-        return None
+        sys.exit(1)
 
 def validate_requirements():
     """Validate package requirements
@@ -270,10 +272,10 @@ def run_rs_server(db_directory: str,
     logger.info('Check Available Ports\n')
     
     if _is_port_in_use(django_port):
-        logger.error(f'ERROR: Port {django_port} is already in use!')
+        logger.error(f'ERROR: Django Port {django_port} is already in use!')
         return
     if _is_port_in_use(streamlit_port):
-        logger.error(f'ERROR: Port {streamlit_port} is already in use!')
+        logger.error(f'ERROR: Streamlit Port {streamlit_port} is already in use!')
         return
     
         # Check if st is set as ENV variable
@@ -371,6 +373,7 @@ def run_rs_server(db_directory: str,
     
     # Handle enable_login configuration
     rs_config['global']['enable_login'] = enable_login
+    rs_config['global']['config_dir'] = config_directory
     
     with open(config_path, "w") as f:
         yaml.dump(rs_config, f)
@@ -448,10 +451,9 @@ def run_rs_server(db_directory: str,
         launch_backend_cmd.extend(['--create-admin-user-with-password', 'readstore'])
     else:
         logger.info('Login disabled - creating default user')
-        launch_backend_cmd.extend(['--create-default-user-with-password', default_user_password])
+        launch_backend_cmd.extend(['--create-default-user-with-password', default_user_password, '--create-examples-with-default-user'])
     
     launch_backend_process = subprocess.Popen(launch_backend_cmd)
-    
     launch_backend_process.wait()
     
     logger.info('Setup Backup')
@@ -512,8 +514,8 @@ def run_rs_server(db_directory: str,
             os.environ['RS_DEFAULT_USER_KEY_PATH'] = ''
         
     except KeyboardInterrupt:
-        st_process.terminate()
         backup_process.terminate()
+        st_process.terminate()
         django_process.terminate()
         
         os.environ['RS_CONFIG_PATH'] = ''
@@ -567,7 +569,6 @@ def run_db_export(config_directory: str,
     os.environ['RS_KEY_PATH'] = secret_key_path
     
     # Dump files to json
-
     dump_table_names = ['app.project',
                         'app.fqdataset',
                         'app.fqfile',
@@ -732,13 +733,8 @@ def main():
         
         # Handle case where no directory arguments are provided
         if db_directory is None and db_backup_directory is None and log_directory is None:
-            # Try to create default directories
-            default_dirs = create_default_directories()
-            if default_dirs is None:
-                # Default directories already exist, show help and exit
-                return
-            else:
-                db_directory, db_backup_directory, log_directory = default_dirs
+            # Create or use existing default directories
+            db_directory, db_backup_directory, log_directory = create_default_directories()
         
         # Validate that all required directories are specified
         if db_directory is None:
