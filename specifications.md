@@ -47,6 +47,13 @@ Make sure folders are successfully created. If folders with that name exists, th
     
     - Invoke the setup_user.py command with the --create-admin-user-with-password argument if no ADMIN_USER_PWD is set and --create-admin-user-with-password is passed in launch_backend.py
  
+
+## readstore_basic/backend/app/ext_views.py
+
+- The `authentication_classes` attribute for each view class in `ext_views.py` should be configurable from `readstore_server_config.yaml` `enable_API_token` parameter.
+If started without login_enabled. The `enable_API_token` should be set in `settings/development.py` and `settings/production.py`.
+
+
 ## readstore_basic/frontend/streamlit/app.py
 
 - Modification of the login process. 
