@@ -240,6 +240,34 @@ def start_token_refresh_thread():
     add_script_run_ctx(t)
     t.start()
 
+
+def perform_login(username: str, password: str):
+    """Perform login and setup session state.
+    
+    This function handles the complete login process including:
+    - Getting JWT tokens
+    - Setting session state
+    - Validating endpoints
+    - Starting token refresh thread
+    
+    Args:
+        username: Username for login
+        password: Password for login
+        
+    Raises:
+        exceptions.UIAppError: If login fails
+    """
+    access_token, refresh_token = get_jwt_token(username, password)
+    
+    st.session_state["access_token"] = access_token
+    st.session_state["refresh_token"] = refresh_token
+    st.session_state["jwt_auth_header"] = {"Authorization": "JWT " + access_token}
+    
+    validate_endpoints(uiconfig.ENDPOINT_CONFIG,
+                      headers=st.session_state["jwt_auth_header"])
+    
+    start_token_refresh_thread()
+
 def validate_url_scheme(url: str):
     parsed_url = urlparse(url)
     return parsed_url.scheme in ["http", "https"]
