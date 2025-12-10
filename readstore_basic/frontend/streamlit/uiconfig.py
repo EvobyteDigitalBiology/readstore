@@ -43,6 +43,9 @@ STATIC_PATH_PREFIX = rs_config['streamlit']['static_path_prefix']
 AUTH_METHOD = AuthMethod.JWT
 AUTH_USER_GROUP = ["appuser", "admin"]
 
+ENABLE_LOGIN = rs_config['global']['enable_login']
+CONFIG_DIR = rs_config['global']['config_dir']
+
 # Refesh token every 10 minutes
 ACCESS_TOKEN_REFESH_SECONDS = 10*60
 CACHE_TTL_SECONDS=15*60
