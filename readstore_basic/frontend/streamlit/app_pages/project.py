@@ -24,18 +24,18 @@ if not extensions.user_auth_status():
 
 colh1, colh2 = st.columns([11,1], vertical_alignment='top')
 
-with colh1:
-    st.markdown(
-        """
-        <div style="text-align: right;">
-            <b>Username</b> {username}
-        </div>
-        """.format(username=st.session_state['username']),
-        unsafe_allow_html=True
-    )
+# with colh1:
+#     st.markdown(
+#         """
+#         <div style="text-align: right;">
+#             <b>Username</b> {username}
+#         </div>
+#         """.format(username=st.session_state['username']),
+#         unsafe_allow_html=True
+#     )
     
-with colh2:
-    st.page_link('app_pages/settings.py', label='', icon=':material/settings:')
+# with colh2:
+#     st.page_link('app_pages/settings.py', label='', icon=':material/settings:')
 
 # Applying the custom CSS in the app
 st.markdown(
