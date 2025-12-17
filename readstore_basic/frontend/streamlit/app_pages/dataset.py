@@ -591,7 +591,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
             if selected_fq_attachments.shape[0] > 7:
                 max_df_height = 290
             else:
-                max_df_height = None
+                max_df_height = 'content'
             
             attach_select = st.dataframe(selected_fq_attachments,
                                     hide_index = True,
@@ -647,7 +647,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
             if selected_fq_pro_data.shape[0] > 7:
                 max_df_height = 350
             else:
-                max_df_height = None
+                max_df_height = 'content'
             
             pro_data_select = st.dataframe(selected_fq_pro_data,
                                         hide_index = True,
@@ -1688,7 +1688,7 @@ if show_details:
             if dataset_projects_detail.shape[0] > 7:
                 max_df_height = 315
             else:
-                max_df_height = None
+                max_df_height = 'content'
             
             st.dataframe(dataset_projects_detail,
                             use_container_width = True,
@@ -1746,7 +1746,7 @@ if show_details:
             if select_fq_dataset_attachments.shape[0] > 7:
                 max_df_height = 315
             else:
-                max_df_height = None
+                max_df_height = 'content'
             
             st.dataframe(select_fq_dataset_attachments,
                         hide_index = True,
@@ -1809,7 +1809,7 @@ if show_details:
             if select_fq_dataset_pro_data.shape[0] > 7:
                 max_df_height = 260
             else:
-                max_df_height = None
+                max_df_height = 'content'
             
             st.dataframe(select_fq_dataset_pro_data,
                         hide_index = True,
