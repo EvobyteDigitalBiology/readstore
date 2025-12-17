@@ -13,6 +13,12 @@
   background-color: #10575a;
 }
 
+.stButton:has(button[kind="primary"]) button:disabled {
+  color: #808495;
+  background-color: #f0f2f6;
+  border: solid 2.0px #808495;
+}
+
 .stButton:has(button[kind="secondary"]) button {
   color: #1d959b;
   border-width: 2.0px;
@@ -58,6 +64,10 @@
   color: #1d959b;
   border-style: solid;
   background-color: #f0f2f6;
+}
+
+.stDownloadButton:has(button[kind="secondary"]) > button:hover {
+  background-color: #c2cbdb;
 }
 
 .stDownloadButton:has(button[kind="secondary"]) > button p {
@@ -254,7 +264,8 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
 
 
 .st-key-project-metadata-info,
-.st-key-project-metadata-keys-info {
+.st-key-project-metadata-keys-info,
+.st-key-dataset-metadata-info {
   gap: 0px;
 }
 
@@ -273,7 +284,11 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
 .st-key-project-features-detail-id,
 .st-key-project-features-detail-name,
 .st-key-project-features-detail-created,
-.st-key-project-features-detail-description {
+.st-key-project-features-detail-description, 
+.st-key-dataset-features-detail-id,
+.st-key-dataset-features-detail-name,
+.st-key-dataset-features-detail-created,
+.st-key-dataset-features-detail-description {
   padding: 8px;
   border-radius: 8px;
 }
@@ -281,7 +296,11 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
 .st-key-project-features-detail-id > div:first-child div[data-testid="stMarkdownContainer"] p,
 .st-key-project-features-detail-name > div:first-child div[data-testid="stMarkdownContainer"] p,
 .st-key-project-features-detail-created > div:first-child div[data-testid="stMarkdownContainer"] p,
-.st-key-project-features-detail-description > div:first-child div[data-testid="stMarkdownContainer"] p {
+.st-key-project-features-detail-description > div:first-child div[data-testid="stMarkdownContainer"] p,
+.st-key-dataset-features-detail-id > div:first-child div[data-testid="stMarkdownContainer"] p,
+.st-key-dataset-features-detail-name > div:first-child div[data-testid="stMarkdownContainer"] p,
+.st-key-dataset-features-detail-created > div:first-child div[data-testid="stMarkdownContainer"] p,
+.st-key-dataset-features-detail-description > div:first-child div[data-testid="stMarkdownContainer"] p {
   color: #808495;
   font-weight: 500;
 }
@@ -310,10 +329,84 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
 .st-key-info-no-samples-datasets div[data-testid="stAlertContainer"],
 .st-key-info-no-samples-uploads div[data-testid="stAlertContainer"],
 .st-key-info-no-projects div[data-testid="stAlertContainer"],
-.st-key-info-no-attachments div[data-testid="stAlertContainer"] {
+.st-key-info-no-attachments div[data-testid="stAlertContainer"],
+.st-key-info-no-prodata div[data-testid="stAlertContainer"] {
   background-color: #f0f2f6;
 }
 
 .st-key-projects-header-left-container {
   flex-flow: nowrap !important;
+}
+
+
+/* DATASETS PAGE STYLES */
+
+.st-key-datasets-header-container {
+  /* Same layout as projects */
+}
+
+.st-key-datasets-header-left-container {
+  flex-flow: nowrap !important;
+}
+
+.st-key-datasets-header-right-container {
+  /* Same as projects */
+}
+
+.st-key-dataset_split_button {
+    width: 132px;
+}
+
+.st-key-dataset_split_button button[data-testid="stBaseButton-primary"] {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.st-key-dataset_split_button button[data-testid="stBaseButton-primary"]:hover {
+    background-color: #10575a;
+}
+
+.st-key-datasets-refresh button,
+.st-key-datasets-collapse-details button {
+  width: 35px;
+}
+
+.st-key-datasets-refresh span,
+.st-key-datasets-collapse-details span,
+.st-key-dataset-metadata-filter-popover span {
+  font-size: 17.5px;
+}
+
+.st-key-dataset-metadata-filter-popover span[data-testid="stIconMaterial"],
+.st-key-dataset-metadata-filter-popover span:has(span[data-testid="stIconMaterial"])
+{
+  display: none;
+}
+
+.st-key-dataset-metadata-filter-popover div {
+  margin: 0px;
+  padding: 0px;
+  width: 35px;
+}
+
+.st-key-dataset-metadata-filter-popover button[data-testid="stPopoverButton"]:hover {
+  background-color: #c2cbdb !important;
+}
+
+.st-key-datasets-show-metadata-toggle label > div {
+  margin: 0px;
+}
+
+.st-key-datasets-show-metadata-toggle label {
+  align-items: center;
+}
+
+.st-key-datasets-header-split-button-container button {
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
+}
+
+.st-key-datasets-header-split-button-container .stSelectbox > div > div {
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
 }
