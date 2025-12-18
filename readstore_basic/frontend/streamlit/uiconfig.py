@@ -108,4 +108,6 @@ ENDPOINT_CONFIG = {
     'fq_attachment' : '/'.join([BACKEND_API_ENDPOINT, 'fq_attachment/']),
     'license_key' : '/'.join([BACKEND_API_ENDPOINT, 'license_key/']),
     'pro_data' : '/'.join([BACKEND_API_ENDPOINT, 'pro_data/']),
+    'user_data_stats' : '/'.join([BACKEND_API_ENDPOINT, 'database_stats/']),
+    'recent_activity' : '/'.join([BACKEND_API_ENDPOINT, 'recent_activity/']),
 }
