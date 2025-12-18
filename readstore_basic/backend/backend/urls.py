@@ -86,6 +86,9 @@ urlpatterns = [
     path('api_v1/pro_data/owner_group/valid/', views.ProDataViewSet.as_view({'get': 'owner_group_valid'})),
     path('api_v1/pro_data/fq_dataset/<pk>/', views.ProDataViewSet.as_view({'get': 'fq_dataset'})),
     path('api_v1/pro_data/validate_upload_path', views.ProDataViewSet.as_view({'get': 'validate_upload_path'})),
+
+    path('api_v1/database_stats/', views.UserDataStatsView.as_view()),
+    path('api_v1/recent_activity/', views.UserRecentActivityView.as_view()),
     
     path('admin/', admin.site.urls),
 ]
