@@ -39,10 +39,13 @@ from uidataclasses import FqFileUploadApp
 from uidataclasses import InvalidPath
 from uidataclasses import ProData
 from uidataclasses import TransferOwner
+from uidataclasses import UserDataStats
+from uidataclasses import UserRecentActivity
+
 
 #region basic functions
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
-def get_my_user(headers: dict) -> pd.DataFrame:
+def get_my_user(headers: dict) -> User:
     
     endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['user'], 'my_user/')
     df = extensions.detail_request_to_model(endpoint, User, headers=headers)
@@ -375,6 +378,31 @@ def get_pro_data_invalid_upload_paths(headers: dict) -> List[dict]:
     df = extensions.get_request_to_df(endpoint, InvalidPath, headers=headers)
     
     return df
+
+def get_recent_activity(headers: dict) -> pd.DataFrame:
+    
+    endpoint = os.path.join(uiconfig.BACKEND_API_ENDPOINT, 'recent_activity/')
+    df = extensions.get_request_to_df(endpoint, UserRecentActivity, headers=headers)
+    
+    return df
+
+
+@st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
+def get_user_data_stats(headers: dict) -> UserDataStats:
+    """
+    Retrieve user data statistics from the backend API.
+    
+    Args:
+        headers: Authentication headers for the request
+        
+    Returns:
+        UserDataStats: User data statistics model containing storage and usage info
+    """
+
+    endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['user_data_stats'])
+    user_data_stats = extensions.detail_request_to_model(endpoint, UserDataStats, headers=headers)
+    
+    return user_data_stats
 
 #region COMBINED
 
