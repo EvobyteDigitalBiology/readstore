@@ -10,7 +10,6 @@
         -
         -
         
-
 """
 
 #import re
@@ -265,6 +264,136 @@ class TransferOwnerView(APIView):
                 return Response({'detail' : 'Request is not admin'}, status=400)
         else:        
             return(Response(serializer.errors, status=400))
+
+
+class UserDataStatsView(APIView):
+    """
+    APIView UserDataStatsView
+
+    Return statistics for authenticated user:
+    - Number of Projects owned
+    - Number of FqDatasets owned
+    - Number of FqFiles owned
+    - Number of ProData owned
+    - Sum of num_reads across all FqDatasets
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        user = request.user
+        
+        # Count Projects owned by user
+        num_projects = Project.objects.filter(owner=user).count()
+        
+        # Count FqDatasets owned by user
+        num_fq_datasets = FqDataset.objects.filter(owner=user).count()
+        
+        # Count FqFiles owned by user
+        num_fq_files = FqFile.objects.filter(owner=user).count()
+        
+        # Count ProData owned by user
+        num_pro_data = ProData.objects.filter(owner=user).count()
+        
+        # Sum of num_reads across all FqDatasets owned by user
+        fq_datasets = FqDataset.objects.filter(owner=user).all()
+        
+        # Get number of sequencing reads from each dataset
+        for dataset in fq_datasets:
+            if dataset.fq_file_r1:
+                total_num_reads = dataset.fq_file_r1.num_reads
+            elif dataset.fq_file_r2:
+                total_num_reads = dataset.fq_file_r2.num_reads
+            elif dataset.fq_file_i1:
+                total_num_reads = dataset.fq_file_i1.num_reads
+            elif dataset.fq_file_i2:
+                total_num_reads = dataset.fq_file_i2.num_reads
+            else:
+                total_num_reads = 0
+        
+        stats = {
+            'num_projects': num_projects,
+            'num_fq_datasets': num_fq_datasets,
+            'num_fq_files': num_fq_files,
+            'num_pro_data': num_pro_data,
+            'total_num_reads': total_num_reads
+        }
+        
+        return Response(stats)
+
+
+class UserRecentActivityView(APIView):
+    """
+    APIView UserRecentActivityView
+
+    Return recent activity for authenticated user:
+    - Last 5 updated Projects
+    - Last 5 updated FqDatasets
+    - Last 5 updated ProData entries
+    
+    For each item, returns:
+    - id: Primary key
+    - name: Item name
+    - type: 'project', 'dataset', or 'pro_data'
+    - updated: Last update timestamp
+    - action: 'created' or 'updated'
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        user = request.user
+        recent_activity = []
+        
+        # Get last 5 updated Projects
+        projects = Project.objects.filter(owner=user).order_by('-updated')[:5]
+        for project in projects:
+            # Determine if created or updated (compare created and updated timestamps)
+            # Allow small time difference (1 second) for creation timestamp
+            time_diff = (project.updated - project.created).total_seconds()
+            action = 'created' if time_diff < 1 else 'updated'
+            
+            recent_activity.append({
+                'id': project.id,
+                'name': project.name,
+                'type': 'project',
+                'updated': project.updated.isoformat(),
+                'action': action
+            })
+        
+        # Get last 5 updated FqDatasets
+        fq_datasets = FqDataset.objects.filter(owner=user).order_by('-updated')[:5]
+        for dataset in fq_datasets:
+            time_diff = (dataset.updated - dataset.created).total_seconds()
+            action = 'created' if time_diff < 1 else 'updated'
+            
+            recent_activity.append({
+                'id': dataset.id,
+                'name': dataset.name,
+                'type': 'dataset',
+                'updated': dataset.updated.isoformat(),
+                'action': action
+            })
+        
+        # Get last 5 updated ProData entries
+        pro_data_entries = ProData.objects.filter(owner=user).order_by('-updated')[:5]
+        for pro_data in pro_data_entries:
+            time_diff = (pro_data.updated - pro_data.created).total_seconds()
+            action = 'created' if time_diff < 1 else 'updated'
+            
+            recent_activity.append({
+                'id': pro_data.id,
+                'name': pro_data.name,
+                'type': 'pro_data',
+                'updated': pro_data.updated.isoformat(),
+                'action': action
+            })
+        
+        # Sort all activities by updated timestamp (most recent first)
+        recent_activity.sort(key=lambda x: x['updated'], reverse=True)
+        
+        return Response(recent_activity)
+
 
 class OwnerGroupViewSet(viewsets.ModelViewSet):
     """
