@@ -208,7 +208,7 @@ def create_project(reference_project_names: pd.Series,
 
             name = st_yled.text_input("Project Name",
                                     max_chars=150,
-                                    help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
+                                    help = 'Name must only contain [0-9][a-z][A-Z][.-_@ ]',
                                     width = 400,
                                     border_style='none',
                                     border_width='0px',
@@ -399,6 +399,8 @@ def create_project(reference_project_names: pd.Series,
 
         if st.button('Confirm', type ='primary', key='ok_create_project'):
             
+            name = name.strip()
+
             selected_datasets = st.session_state['selected']
             selected_datasets_ids = selected_datasets['id'].tolist()
             
@@ -412,6 +414,7 @@ def create_project(reference_project_names: pd.Series,
             keys = metadata_df['key'].tolist()
             keys = [k.lower() for k in keys]
             values = metadata_df['value'].tolist()
+            values = [v.strip() for v in values]
             
             # Remove all empty keys and na key
             dataset_meta_keys_df = dataset_meta_keys_df.loc[~dataset_meta_keys_df['key'].isna(),:]
@@ -428,7 +431,7 @@ def create_project(reference_project_names: pd.Series,
             # Check if metadata keys are in reserved keywords
             for k, v in zip(keys, values):
                 if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-                    st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces'
+                    st.session_state['error_cache'] = f'Key **{k}**: Only [0-9][a-z][.-_] allowed. no whitespaces.'
                     break
                 if k in uiconfig.METADATA_RESERVED_KEYS:
                     st.session_state['error_cache'] = f'Metadata Key **{k}**: Reserved keyword, please choose another key'
@@ -437,7 +440,7 @@ def create_project(reference_project_names: pd.Series,
                 # Validate dataset key formats
                 for k in key_templates:
                     if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-                        st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces'
+                        st.session_state['error_cache'] = f'Key **{k}**: Only [0-9][a-z][.-_] allowed. no whitespaces.'
                         break
                     if k in uiconfig.METADATA_RESERVED_KEYS:
                         st.session_state['error_cache'] = f'Metadata key **{k}**: Reserved keyword, please choose another key'
@@ -450,12 +453,12 @@ def create_project(reference_project_names: pd.Series,
                         st.session_state['error_cache'] = 'Project Name is empty'
                     elif name == 'No Project':
                         st.session_state['error_cache'] = 'No Project is a reserved keyword.'
-                    elif not extensions.validate_charset(name):
-                        st.session_state['error_cache'] = f'Project Name: Only [0-9][a-z][.-_] characters allowed, no spaces'
+                    # elif not extensions.validate_charset(name):
+                    #     st.session_state['error_cache'] = f'Project Name: Only [0-9][a-z][.-_] allowed. no whitespaces.'
                     elif name.lower() in reference_project_names:
                         st.session_state['error_cache'] = 'Project Name already exists in Group'
                     else:
-                        metadata = {k:v for k,v in zip(keys,metadata_df['value'])}
+                        metadata = {k:v for k,v in zip(keys,values)}
                         dataset_meta_keys = {k:None for k in key_templates}
 
                         project_id = datamanager.create_project(st.session_state["jwt_auth_header"],
@@ -529,7 +532,7 @@ def update_project(project_select_df: pd.DataFrame,
                                 width = 400,
                                 border_style='none',
                                 border_width='0px',
-                                help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
+                                help = 'Name must only contain [0-9][a-z][A-Z][.-_@ ]',
                                 value = name_old,
                                 key = 'update_project_name_input')
             
@@ -784,7 +787,7 @@ def update_project(project_select_df: pd.DataFrame,
                                         color="#1d959b",
                                         key='delete_attachment_expander'):
 
-                        if st.button('Confirm', key='delete_attachments', disabled=delete_disabled, type='primary'):
+                        if st.button('Confirm', key='delete_attachments', disabled=delete_disabled, type='primary', width='stretch'):
                             
                             attach_ixes = select_attach_update.selection['rows']
                             attach_ids = select_project_attachments.loc[attach_ixes,'id'].tolist()
@@ -845,6 +848,9 @@ def update_project(project_select_df: pd.DataFrame,
             keys = metadata_df['key'].tolist()
             keys = [k.lower() for k in keys]
             values = metadata_df['value'].tolist()
+            values = [v.strip() for v in values]
+            
+            name = name.strip()
 
             # Remove all empty keys and na key
             dataset_meta_keys_df = dataset_meta_keys_df.loc[~dataset_meta_keys_df['key'].isna(),:]
@@ -860,7 +866,7 @@ def update_project(project_select_df: pd.DataFrame,
             # Validate metadata key formats
             for k, v in zip(keys, values):
                 if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-                    st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces'
+                    st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] allowed. no whitespaces.'
                     break
                 if k in uiconfig.METADATA_RESERVED_KEYS:
                     st.session_state['error_cache'] = f'Metadata key {k}: Reserved keyword, please choose another key'
@@ -869,7 +875,7 @@ def update_project(project_select_df: pd.DataFrame,
                 # Validate dataset key formats
                 for k in key_templates:
                     if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-                        st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces'
+                        st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] allowed. no whitespaces.'
                         break
                     if k in uiconfig.METADATA_RESERVED_KEYS:
                         st.session_state['error_cache'] = f'Metadata key {k}: Reserved keyword, please choose another key'
@@ -1502,7 +1508,6 @@ def uimain(projects_show, my_owner_group_name, fq_dataset_og, fq_dataset_collab)
                                 st.markdown(f'{project_description}', width='content')
                             
 
-
                             # project_detail = selected_project.copy()
                             # project_detail_og = project_detail['name_og']
                             
@@ -1529,7 +1534,6 @@ def uimain(projects_show, my_owner_group_name, fq_dataset_og, fq_dataset_collab)
                             #             hide_index = True,
                             #             key='projects_details_df')
                             
-                            st.write(' ')
                         
                         with st_yled.container(key='project-features-detail-metadata-container',
                                             width=300,
@@ -1574,7 +1578,6 @@ def uimain(projects_show, my_owner_group_name, fq_dataset_og, fq_dataset_collab)
                                         key='info-no-samples-datasets',
                                         width=480)
                         else:
-
                             # Limit Max Height of Dataframe
                             if select_project_attached_fq_datasets.shape[0] > 7:
                                 max_df_height = 315
@@ -1582,7 +1585,6 @@ def uimain(projects_show, my_owner_group_name, fq_dataset_og, fq_dataset_collab)
                                 max_df_height = 'content'
                     
                             st.dataframe(select_project_attached_fq_datasets[['id','name', 'description']],
-                                        use_container_width = True,
                                         hide_index = True,
                                         column_config = {
                                             'id' : st.column_config.TextColumn('ID', width='small'),
@@ -1648,7 +1650,6 @@ def uimain(projects_show, my_owner_group_name, fq_dataset_og, fq_dataset_collab)
                                         
                             st.dataframe(select_project_attachments,
                                             hide_index = True,
-                                            use_container_width = True,
                                             column_config = {
                                                 'id' : None,
                                                 'name' : st.column_config.Column('Filename'),
