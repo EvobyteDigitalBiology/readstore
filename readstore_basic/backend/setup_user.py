@@ -30,14 +30,6 @@ from app.models import OwnerGroup
 from app.models import Project
 from app.models import FqDataset
 
-
-def validate_charset(query_str: str):
-    
-    allowed = string.digits + string.ascii_lowercase + string.ascii_uppercase + '_-.@'
-    allowed = set(allowed)
-    
-    return set(query_str) <= allowed
-
 # Permission Management
 
 class ViewPermissions:
