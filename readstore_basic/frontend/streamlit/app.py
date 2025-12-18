@@ -4,18 +4,26 @@
 Streamlit App Main Page
 """
 
+
+import os
+
 import streamlit as st
+import st_yled
+
 from PIL import Image
 import requests.auth as requests_auth
-import os
 
 import extensions
 import uiconfig
+import styles
 import datamanager
 
 __author__ = "Jonathan Alles"
 __email__ = "Jonathan.Alles@evo-byte.com"
 __copyright__ = "Copyright 2024"
+
+st_yled.init()
+
 
 im = Image.open(os.path.join(uiconfig.STATIC_PATH_PREFIX, "static/favicon.ico"))
 st.set_page_config(layout="wide", page_title="ReadStore", page_icon=im)
@@ -51,6 +59,12 @@ if not uiconfig.ENABLE_LOGIN:
 auth_status = extensions.user_auth_status()
 
 # PAGES
+home_page = st.Page("app_pages/home.py",
+                     title="Home",
+                     icon=":material/home:",
+                     url_path = "home",
+                     default=True)
+
 login_page = st.Page("app_pages/login.py",
                      title="Login",
                      icon=":material/login:",
@@ -88,8 +102,15 @@ pro_data_page = st.Page("app_pages/pro_data.py",
 
 settings_page = st.Page("app_pages/settings.py",
                         title="Settings",
-                        icon=":material/settings:",
                         url_path = "settings")
+
+api_page = st.Page("app_pages/api.py",
+                    title="API & CLI",
+                    url_path = "api")
+
+getting_started_page = st.Page("app_pages/getting_started.py",
+                                title="Getting Started",
+                                url_path = "getting_started")
 
 # Define context dependent pages, only shown if the user is authenticated
 
@@ -122,25 +143,25 @@ if auth_status:
         user_groups = datamanager.get_user_groups(st.session_state["jwt_auth_header"])['name'].tolist()
 
         if 'admin' in user_groups:
-            pages = [admin_page, settings_page, logout_page]
+            pages = [admin_page, settings_page, logout_page, api_page, getting_started_page]
         elif 'appuser' in user_groups:
             
             if not 'owner_group' in st.session_state:
                 st.session_state['owner_group'] = datamanager.get_my_owner_group(st.session_state["jwt_auth_header"])['name'].tolist()[0]
         
-            pages = [project_page, dataset_page, pro_data_page]
+            pages = [home_page, project_page, dataset_page, pro_data_page]
         
             if 'staging' in user_groups:
                 pages = pages + [staging_page]
             
-            pages = pages + [settings_page, logout_page]
+            pages = pages + [settings_page, logout_page, api_page, getting_started_page]
 
     else:
         if not 'owner_group' in st.session_state:
             st.session_state['owner_group'] = datamanager.get_my_owner_group(st.session_state["jwt_auth_header"])['name'].tolist()[0]
         
         # No login enabled - show all pages
-        pages = [project_page, dataset_page, pro_data_page, staging_page]
+        pages = [home_page, project_page, dataset_page, pro_data_page, staging_page, settings_page, api_page, getting_started_page]
     
     pg = st.navigation(pages)
 
@@ -154,22 +175,87 @@ else:
 
 pg.run()
 
-footer = """<style>
-.footer {
-position: fixed;
-left: 0;
-bottom: 0;
-width: 100%;
-text-align: center;
-font-size: 12.8px;
-margin-bottom: 0.25rem;
-}
-</style>
-<div class="footer">
-<p style="margin-bottom: 0rem;">ReadStore Basic insert_version (c) 2024-2025</p>
-</div>
+
+
+# region SIDEBAR FOOTER
+
+version_info_md = f"""
+**ReadStore Basic Free Edition**
+
+v{uiconfig.__version__} (c) 2024-2025
 """
 
-footer = footer.replace("insert_version", uiconfig.__version__)
+with st.sidebar.container(key="sidebar-footer-container", width='stretch'):
+    
+    with st.container(key="sidebar-footer-letter-container",
+                      horizontal=True,
+                      vertical_alignment="center",
+                        gap = "medium",
+                        width='stretch'):
 
-st.markdown(footer,unsafe_allow_html=True)
+        st_yled.markdown(version_info_md,
+                        font_size="12px",
+                        color='#31333F99',
+                        width='stretch')
+
+# region HEADER
+sticky_header_bg = st_yled.container(
+    key="sticky-header-bg",
+    background_color="#eef0f5",
+)
+
+with sticky_header_bg:
+    st.write("")
+
+sticky_header = st.container(
+    key="sticky-header",
+    horizontal=True,
+    vertical_alignment="center",
+    width="stretch",
+)
+
+with sticky_header:
+    
+    with st.container(horizontal=True, horizontal_alignment="left"):
+        st.write("")
+        
+    with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center", width=512, key="sticky-header-links"):
+        
+        st_yled.page_link(getting_started_page, label="Getting Started")
+        st_yled.page_link(api_page, label="API & CLI")
+        st_yled.link_button("Docs", url="https://evobytedigitalbiology.github.io/readstore/",
+                            type="secondary",
+                            border_style="none",
+                            color="#808495",
+                            font_size="16.0px",
+                            background_color='#eef0f5',
+                            width="content")
+
+        with st_yled.popover("U", key="avatar-popover"):
+            
+            st_yled.markdown("**User** " + st.session_state['username'],width="content", font_size="12px", key="avatar-username")
+            st.write("")
+            
+            st_yled.page_link(settings_page, label="Settings", width="stretch")
+            
+
+
+# footer = """<style>
+# .footer {
+# position: fixed;
+# left: 0;
+# bottom: 0;
+# width: 100%;
+# text-align: center;
+# font-size: 12.8px;
+# margin-bottom: 0.25rem;
+# }
+# </style>
+# <div class="footer">
+# <p style="margin-bottom: 0rem;">ReadStore Basic insert_version (c) 2024-2025</p>
+# </div>
+# """
+
+# footer = footer.replace("insert_version", uiconfig.__version__)
+
+# st.markdown(footer,unsafe_allow_html=True)
