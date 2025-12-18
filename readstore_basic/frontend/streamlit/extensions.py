@@ -51,7 +51,7 @@ def df_not_empty(val) -> bool:
 
 def validate_charset(query_str: str):
     
-    allowed = string.digits + string.ascii_lowercase + string.ascii_uppercase + '_-.@'
+    allowed = string.digits + string.ascii_lowercase + string.ascii_uppercase + '_-.@ '
     allowed = set(allowed)
     
     return set(query_str) <= allowed

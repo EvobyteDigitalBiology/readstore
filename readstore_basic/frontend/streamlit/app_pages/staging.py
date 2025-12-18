@@ -164,7 +164,7 @@ def checkin_df(fq_file_df: pd.DataFrame,
             name = st.text_input("Dataset Name",
                                 value=display_name,
                                 key='dataset_name',
-                                help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).')
+                                help = 'Name must only contain [0-9][a-z][A-Z][.-_@ ]')
         
         with col_n_2:
             
@@ -385,7 +385,7 @@ def checkin_df(fq_file_df: pd.DataFrame,
                             # 3) Third check for metadata
                             for k, v in zip(keys, values):
                                 if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-                                    st.error(f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces.')
+                                    st.error(f'Key {k}: Only [0-9][a-z][.-_] allowed. no whitespaces..')
                                     break
                                 if k in uiconfig.METADATA_RESERVED_KEYS:
                                     st.error(f'Metadata key {k}: Reserved keyword, please choose another key')
