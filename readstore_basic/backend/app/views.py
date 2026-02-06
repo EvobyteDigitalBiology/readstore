@@ -298,18 +298,18 @@ class UserDataStatsView(APIView):
         # Sum of num_reads across all FqDatasets owned by user
         fq_datasets = FqDataset.objects.filter(owner=user).all()
         
+        total_num_reads = 0
+
         # Get number of sequencing reads from each dataset
         for dataset in fq_datasets:
             if dataset.fq_file_r1:
-                total_num_reads = dataset.fq_file_r1.num_reads
+                total_num_reads += dataset.fq_file_r1.num_reads
             elif dataset.fq_file_r2:
-                total_num_reads = dataset.fq_file_r2.num_reads
+                total_num_reads += dataset.fq_file_r2.num_reads
             elif dataset.fq_file_i1:
-                total_num_reads = dataset.fq_file_i1.num_reads
+                total_num_reads += dataset.fq_file_i1.num_reads
             elif dataset.fq_file_i2:
-                total_num_reads = dataset.fq_file_i2.num_reads
-            else:
-                total_num_reads = 0
+                total_num_reads += dataset.fq_file_i2.num_reads
         
         stats = {
             'num_projects': num_projects,
@@ -330,7 +330,7 @@ class UserRecentActivityView(APIView):
     - Last 5 updated Projects
     - Last 5 updated FqDatasets
     - Last 5 updated ProData entries
-    
+
     For each item, returns:
     - id: Primary key
     - name: Item name
