@@ -68,6 +68,9 @@ parser.add_argument(
     '--enable-login', action='store_true', help='Enable user authentication')
 
 parser.add_argument(
+    '--admin-password', type=str, help='Password for admin user. Required if --enable-login is set', metavar='')
+
+parser.add_argument(
     '-v', '--version', action='store_true', help='Show Version Information')
 
 export_parser = subparsers.add_parser("export",
@@ -219,7 +222,8 @@ def run_rs_server(db_directory: str,
                   django_port: int,
                   streamlit_port: int,
                   debug: bool,
-                  enable_login: bool):
+                  enable_login: bool,
+                  admin_password: str):
     """
         Run ReadStore Server
     """
@@ -247,6 +251,8 @@ def run_rs_server(db_directory: str,
     assert os.access(db_backup_directory, os.R_OK), f'ERROR: db_backup_directory {db_backup_directory} is not readable!'
     assert os.access(config_directory, os.R_OK), f'ERROR: config_directory {config_directory} is not writable!'
     
+    assert not enable_login or (enable_login and admin_password is not None), 'ERROR: --admin-password is required if --enable-login is set!'
+
     rs_log_path = os.path.join(log_directory, 'readstore_server.log')
     
     file_handler = logging.FileHandler(filename=rs_log_path)
@@ -382,8 +388,10 @@ def run_rs_server(db_directory: str,
 
     secret_key_path = os.path.join(config_directory, 'secret_key')
     if not os.path.exists(secret_key_path):
+        
         logger.info(f'Create Secret Key')
         key = ''.join(random.sample(string.ascii_letters + string.digits, 50))
+           
         with open(secret_key_path, 'w') as f:
             f.write(key)
         os.chmod(secret_key_path, 0o600)
@@ -392,13 +400,20 @@ def run_rs_server(db_directory: str,
     
     # Handle default user creation if login is disabled
     if not enable_login:
+
         logger.info(f'Prepare Default User Key for Login')
         
         secret_default_user_key_path = os.path.join(config_directory, 'secret_default_user_key')
         if not os.path.exists(secret_default_user_key_path):
-            logger.info(f'Create Default User Key')
-            # Generate random password for default user
-            default_user_password = ''.join(random.sample(string.ascii_letters + string.digits, 16))
+            
+            if admin_password is not None:
+                logger.info(f'Admin password provided - using it for default user key')
+                default_user_password = admin_password
+            else:
+                logger.info(f'Create Default User Key')
+                # Generate random password for default user
+                default_user_password = ''.join(random.sample(string.ascii_letters + string.digits, 16))
+            
             with open(secret_default_user_key_path, 'w') as f:
                 f.write(default_user_password)
             os.chmod(secret_default_user_key_path, 0o600)
@@ -448,7 +463,7 @@ def run_rs_server(db_directory: str,
     # Add user creation arguments if login is enabled
     if enable_login:
         logger.info('Login enabled - creating admin')
-        launch_backend_cmd.extend(['--create-admin-user-with-password', 'readstore'])
+        launch_backend_cmd.extend(['--create-admin-user-with-password', admin_password])
     else:
         logger.info('Login disabled - creating default user')
         launch_backend_cmd.extend(['--create-default-user-with-password', default_user_password, '--create-examples-with-default-user'])
@@ -677,6 +692,7 @@ def main():
     streamlit_port = args.streamlit_port
     debug = args.debug
     enable_login = args.enable_login
+    admin_password = args.admin_password
 
     version = args.version
     
@@ -749,7 +765,11 @@ def main():
             parser.print_help()
             print('ERROR: --log-directory is required')
             return
-        
+        if enable_login and admin_password is None:
+            parser.print_help()
+            print('ERROR: --admin-password is required when --enable-login is set')
+            return
+
         #Define logger    
         run_rs_server(db_directory,
                     db_backup_directory,
@@ -758,7 +778,8 @@ def main():
                     django_port,
                     streamlit_port,
                     debug,
-                    enable_login)
+                    enable_login,
+                    admin_password)
 
 
 if __name__ == '__main__':
