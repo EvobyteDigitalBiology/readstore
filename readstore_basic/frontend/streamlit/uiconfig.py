@@ -25,8 +25,8 @@ __version__ = rs_config['global']['readstore_version']
 
 # TODO: Update once ST fixed config setting
 if rs_config['django']['django_settings_module'] == 'settings.production':
-    import sys
-    sys.tracebacklimit = 0
+    # import sys
+    # sys.tracebacklimit = 0
     
     import warnings
     warnings.simplefilter(action='ignore', category=FutureWarning)
