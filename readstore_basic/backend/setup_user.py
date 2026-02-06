@@ -386,8 +386,8 @@ if __name__ == '__main__':
     
     # Create examples if requested
     if args.create_examples_with_default_user:
-        if owner_group and default_user and (not created_default_user):
+        if owner_group and default_user and created_default_user:
             print("Creating examples....")
             create_examples(owner_group)
         else:
-            print("ERROR: Cannot create examples without an owner group. Create a user first.")
+            print("ERROR: Cannot create examples without an owner group, new default user. Create a user first.")
