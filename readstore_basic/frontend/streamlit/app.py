@@ -20,7 +20,7 @@ import datamanager
 
 __author__ = "Jonathan Alles"
 __email__ = "Jonathan.Alles@evo-byte.com"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2024-2026"
 
 st_yled.init()
 
@@ -35,6 +35,7 @@ st.logo(
 )
 
 st.html('static/styles.css')
+
 
 # Handle authentication based on login configuration
 if not uiconfig.ENABLE_LOGIN:
@@ -86,9 +87,9 @@ project_page = st.Page("app_pages/project.py",
                        url_path = "project")
 
 staging_page = st.Page("app_pages/staging.py",
-                       title="Staging",
+                       title="Upload",
                        icon=":material/data_check:",
-                       url_path = "staging")
+                       url_path = "upload")
 
 dataset_page = st.Page("app_pages/dataset.py",
                         title="Datasets",
@@ -112,8 +113,8 @@ getting_started_page = st.Page("app_pages/getting_started.py",
                                 title="Getting Started",
                                 url_path = "getting_started")
 
-# Define context dependent pages, only shown if the user is authenticated
 
+# Define context dependent pages, only shown if the user is authenticated
 if auth_status:
     
     # Switch to control if details are shown
@@ -165,6 +166,46 @@ if auth_status:
     
     pg = st.navigation(pages)
 
+    # region HEADER
+    sticky_header_bg = st_yled.container(
+        key="sticky-header-bg",
+        background_color="#eef0f5",
+    )
+
+    with sticky_header_bg:
+        st.write("")
+
+    sticky_header = st.container(
+        key="sticky-header",
+        horizontal=True,
+        vertical_alignment="center",
+        width="stretch",
+    )
+
+    with sticky_header:
+        
+        with st.container(horizontal=True, horizontal_alignment="left"):
+            st.write("")
+            
+        with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center", width=512, key="sticky-header-links"):
+            
+            st_yled.page_link(getting_started_page, label="Getting Started")
+            st_yled.page_link(api_page, label="API & CLI")
+            st_yled.link_button("Docs", url="https://evobytedigitalbiology.github.io/readstore/",
+                                type="secondary",
+                                border_style="none",
+                                color="#808495",
+                                font_size="16.0px",
+                                background_color='#eef0f5',
+                                width="content")
+
+            with st_yled.popover("U", key="avatar-popover"):
+                
+                st_yled.markdown("**User** " + st.session_state['username'],width="content", font_size="12px", key="avatar-username")
+                st.write("")
+                
+                st_yled.page_link(settings_page, label="Settings", width="stretch")
+
 else:
     # Show login page only if login is enabled
     if uiconfig.ENABLE_LOGIN:
@@ -176,13 +217,12 @@ else:
 pg.run()
 
 
-
 # region SIDEBAR FOOTER
 
 version_info_md = f"""
 **ReadStore Basic Free Edition**
 
-v{uiconfig.__version__} (c) 2024-2025
+v{uiconfig.__version__} (c) 2024-2026
 """
 
 with st.sidebar.container(key="sidebar-footer-container", width='stretch'):
@@ -198,64 +238,4 @@ with st.sidebar.container(key="sidebar-footer-container", width='stretch'):
                         color='#31333F99',
                         width='stretch')
 
-# region HEADER
-sticky_header_bg = st_yled.container(
-    key="sticky-header-bg",
-    background_color="#eef0f5",
-)
 
-with sticky_header_bg:
-    st.write("")
-
-sticky_header = st.container(
-    key="sticky-header",
-    horizontal=True,
-    vertical_alignment="center",
-    width="stretch",
-)
-
-with sticky_header:
-    
-    with st.container(horizontal=True, horizontal_alignment="left"):
-        st.write("")
-        
-    with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center", width=512, key="sticky-header-links"):
-        
-        st_yled.page_link(getting_started_page, label="Getting Started")
-        st_yled.page_link(api_page, label="API & CLI")
-        st_yled.link_button("Docs", url="https://evobytedigitalbiology.github.io/readstore/",
-                            type="secondary",
-                            border_style="none",
-                            color="#808495",
-                            font_size="16.0px",
-                            background_color='#eef0f5',
-                            width="content")
-
-        with st_yled.popover("U", key="avatar-popover"):
-            
-            st_yled.markdown("**User** " + st.session_state['username'],width="content", font_size="12px", key="avatar-username")
-            st.write("")
-            
-            st_yled.page_link(settings_page, label="Settings", width="stretch")
-            
-
-
-# footer = """<style>
-# .footer {
-# position: fixed;
-# left: 0;
-# bottom: 0;
-# width: 100%;
-# text-align: center;
-# font-size: 12.8px;
-# margin-bottom: 0.25rem;
-# }
-# </style>
-# <div class="footer">
-# <p style="margin-bottom: 0rem;">ReadStore Basic insert_version (c) 2024-2025</p>
-# </div>
-# """
-
-# footer = footer.replace("insert_version", uiconfig.__version__)
-
-# st.markdown(footer,unsafe_allow_html=True)
