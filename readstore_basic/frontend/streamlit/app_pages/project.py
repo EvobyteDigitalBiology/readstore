@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 
 import st_yled
-from streamlit_split_button import split_button
+from st_yled import split_button
 
 import extensions
 import datamanager
@@ -938,7 +938,6 @@ def export_project(project_view: pd.DataFrame):
             project_view (pd.DataFrame): DataFrame of selected projects to export
     """
 
-
     num_projects = project_view.shape[0]
 
     st.write(f'Export {num_projects} Projects and Metadata as .csv file')
@@ -1141,7 +1140,7 @@ def uimain(projects_show, my_owner_group_name, fq_dataset_og, fq_dataset_collab)
                                             gap='small',
                                             key='project-metadata-filter-container'):
                         
-                        st_yled.markdown('Apply Metadata Filter', color=styles.PRIMARY_COLOR, font_size=14)
+                        st_yled.markdown('Apply Metadata Filter', color=styles.PRIMARY_COLOR, font_size=14, key='project-metadata-filter-title')
                         st_yled.button('Reset', icon=':material/filter_alt_off:', on_click=reset_meta_filter_hash)
                     
                     metadata_options = metadata_select.columns
@@ -1551,7 +1550,7 @@ def uimain(projects_show, my_owner_group_name, fq_dataset_og, fq_dataset_collab)
                                             width=400)
                             else:
                                 st.dataframe(selected_metadata,
-                                            use_container_width = True,
+                                            width = 'stretch',
                                             hide_index = True,
                                             column_config = {
                                                 'key' : st.column_config.Column('Key'),
