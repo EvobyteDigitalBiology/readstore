@@ -37,13 +37,21 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-col2a, col2, _ = st.columns([4, 4, 4], vertical_alignment="center")
+st.space(128)
 
-with col2:
+login_cont = st.container(horizontal_alignment="center")
+
+with login_cont:
     
-    st.image(os.path.join(uiconfig.STATIC_PATH_PREFIX, "static/BannerLargeLightBlueBackground.png"), use_container_width = True)
-    
-    login_form = st.form("Login")
+    #
+    st.html("""
+        <div style="gap: 0px;">
+        <span style="color: #2A4159; font-size: 28px; font-weight: 700;">READ</span><span style="color: #2A4159; font-size: 28px;">STORE</span>
+        </div>
+        """,
+        width='content')
+
+    login_form = st.form("Login", width=312)
 
     username = login_form.text_input("**Username**").lower()
     password = login_form.text_input("**Password**", type="password")
@@ -58,4 +66,4 @@ with col2:
                 st.rerun()
                 
             except exceptions.UIAppError as e:
-                st.error(e.message)
+                st.error(e.message, width=312)
