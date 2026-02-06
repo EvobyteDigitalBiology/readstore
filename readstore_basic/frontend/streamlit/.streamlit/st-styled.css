@@ -75,12 +75,17 @@
   font-size: 14.0px;
 }
 
+button[data-testid="stPopoverButton"] {
+  color: #1d959b;
+  border-width: 2.0px;
+  border-color: #1d959b;
+}
 
-
+button[data-testid="stPopoverButton"] p {
+  font-weight: 500;
+}
 
 /* Sidebar Styles */
-
-
 div[data-testid="stSidebarHeader"] {
     margin-bottom: 2rem;
 }
@@ -118,13 +123,13 @@ a[data-testid="stSidebarNavLink"] {
 
 
 /* Hide Settings Page from in Sidebar */
-ul[data-testid="stSidebarNavItems"] li:has(a[href$="settings"]) {
+ul[data-testid="stSidebarNavItems"] li:has(a[href$="settings"]),
+ul[data-testid="stSidebarNavItems"] li:has(a[href$="api"]),
+ul[data-testid="stSidebarNavItems"] li:has(a[href$="getting_started"]) {
     display: none;
 }
 
-
 /* HEADER STYLES */
-
 .st-key-sticky-header {
     position: absolute;
     top: 0;
@@ -150,6 +155,24 @@ ul[data-testid="stSidebarNavItems"] li:has(a[href$="settings"]) {
     background-color: #eef0f5;
 }
 
+.st-key-sticky-header-links .stLinkButton > a[kind="secondary"]:hover {
+    background-color: #c2cbdb !important;
+}
+
+.st-key-sticky-header-links .stPageLink p {
+    font-size: 16px;
+    color: #808495;
+    font-weight: 400 !important;
+}
+
+.st-key-sticky-header-links .stPageLink div[data-testid="stMarkdownContainer"] {
+    padding-top: 1.5px;
+    padding-bottom: 1.5px;
+}
+
+.st-key-sticky-header-links .stPageLink a[data-testid="stPageLink-NavLink"]:hover {
+    background-color: #c2cbdb !important;
+}
 
 .st-key-avatar-popover button {
   height: 40px;
@@ -222,11 +245,15 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
 }
 
 
-.st-key-project_split_button {
+.st-key-project_split_button,
+.st-key-dataset_split_button,
+.st-key-prodata_split_button {
     width: 132px;
 }
 
-.st-key-project_split_button button[data-testid="stBaseButton-primary"] {
+.st-key-project_split_button button[data-testid="stBaseButton-primary"],
+.st-key-dataset_split_button button[data-testid="stBaseButton-primary"],
+.st-key-prodata_split_button button[data-testid="stBaseButton-primary"] {
     border-top-left-radius: 8px;
     border-bottom-left-radius: 8px;
 }
@@ -247,7 +274,10 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
 .st-key-datasets-refresh button,
 .st-key-datasets-collapse-details button,
 .st-key-prodata-refresh button,
-.st-key-prodata-collapse-details button {
+.st-key-prodata-collapse-details button,
+.st-key-staging-refresh button,
+.st-key-staging-help button
+{
   width: 35px;
 }
 
@@ -260,10 +290,11 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
 .st-key-dataset-metadata-filter-popover span,
 .st-key-prodata-refresh span,
 .st-key-prodata-collapse-details span,
-.st-key-prodata-metadata-filter-popover span {
+.st-key-prodata-metadata-filter-popover span,
+.st-key-staging-refresh span,
+.st-key-staging-help span {
   font-size: 17.5px;
 }
-
 
 .st-key-project-metadata-filter-popover div,
 .st-key-dataset-metadata-filter-popover div,
@@ -283,7 +314,9 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
 .st-key-project-metadata-info,
 .st-key-project-metadata-keys-info,
 .st-key-dataset-metadata-info,
-.st-key-pro-data-metadata-info {
+.st-key-pro-data-metadata-info,
+.st-key-staging-dataset-metadata-info
+{
   gap: 0px;
 }
 
@@ -291,18 +324,10 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
     padding: 8px;
 }
 
-.st-key-projects-show-metadata-toggle label > div {
-  margin: 0px;
-}
-
-.st-key-projects-show-metadata-toggle label {
-  align-items: center;
-}
-
-
 [class*='st-key-project-features-detail-'],
 [class*='st-key-dataset-features-detail-'],
-[class*='st-key-prodata-features-detail-'] {
+[class*='st-key-prodata-features-detail-'],
+[class*='home-activity-container-'] {
   padding: 8px;
   border-radius: 8px;
 }
@@ -326,12 +351,18 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
   border-radius: 8px;
 }
 
-.st-key-projects-header-split-button-container button {
+.st-key-projects-header-split-button-container button,
+.st-key-datasets-header-split-button-container button,
+.st-key-prodata-header-split-button-container button,
+.st-key-upload-header-split-button-container button {
   border-top-left-radius: 8px !important;
   border-bottom-left-radius: 8px !important;
 }
 
-.st-key-projects-header-split-button-container .stSelectbox > div > div {
+.st-key-projects-header-split-button-container .stSelectbox > div > div,
+.st-key-datasets-header-split-button-container .stSelectbox > div > div,
+.st-key-prodata-header-split-button-container .stSelectbox > div > div,
+.st-key-upload-header-split-button-container .stSelectbox > div > div {
   border-top-right-radius: 8px !important;
   border-bottom-right-radius: 8px !important;
 }
@@ -342,11 +373,17 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
 .st-key-info-no-samples-uploads div[data-testid="stAlertContainer"],
 .st-key-info-no-projects div[data-testid="stAlertContainer"],
 .st-key-info-no-attachments div[data-testid="stAlertContainer"],
-.st-key-info-no-prodata div[data-testid="stAlertContainer"] {
+.st-key-info-no-prodata div[data-testid="stAlertContainer"],
+.st-key-info-staging-attachment-disabled div[data-testid="stAlertContainer"],
+.st-key-info-staging-project-disabled div[data-testid="stAlertContainer"],
+.st-key-info-staging-metadata-disabled div[data-testid="stAlertContainer"]
+{
   background-color: #f0f2f6;
 }
 
-.st-key-projects-header-left-container {
+.st-key-projects-header-left-container,
+.st-key-datasets-header-left-container,
+.st-key-prodata-header-left-container {
   flex-flow: nowrap !important;
 }
 
@@ -356,41 +393,22 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
   /* Same layout as projects */
 }
 
-.st-key-datasets-header-left-container {
-  flex-flow: nowrap !important;
-}
-
 .st-key-datasets-header-right-container {
   /* Same as projects */
 }
 
-.st-key-dataset_split_button {
-    width: 132px;
-}
-
-.st-key-dataset_split_button button[data-testid="stBaseButton-primary"] {
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-}
-
+.st-key-projects-show-metadata-toggle label > div,
 .st-key-datasets-show-metadata-toggle label > div,
+.st-key-prodata-show-metadata-toggle label > div,
 .st-key-pro-data-show-archived-toggle label > div {
   margin: 0px;
 }
 
+.st-key-projects-show-metadata-toggle label,
 .st-key-datasets-show-metadata-toggle label,
+.st-key-prodata-show-metadata-toggle label,
 .st-key-pro-data-show-archived-toggle label {
   align-items: center;
-}
-
-.st-key-datasets-header-split-button-container button {
-  border-top-left-radius: 8px !important;
-  border-bottom-left-radius: 8px !important;
-}
-
-.st-key-datasets-header-split-button-container .stSelectbox > div > div {
-  border-top-right-radius: 8px !important;
-  border-bottom-right-radius: 8px !important;
 }
 
 
@@ -400,39 +418,8 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
   /* Same layout as projects/datasets */
 }
 
-.st-key-prodata-header-left-container {
-  flex-flow: nowrap !important;
-}
-
 .st-key-prodata-header-right-container {
   /* Same as projects/datasets */
-}
-
-.st-key-prodata_split_button {
-    width: 132px;
-}
-
-.st-key-prodata_split_button button[data-testid="stBaseButton-primary"] {
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-}
-
-.st-key-prodata-show-metadata-toggle label > div {
-  margin: 0px;
-}
-
-.st-key-prodata-show-metadata-toggle label {
-  align-items: center;
-}
-
-.st-key-prodata-header-split-button-container button {
-  border-top-left-radius: 8px !important;
-  border-bottom-left-radius: 8px !important;
-}
-
-.st-key-prodata-header-split-button-container .stSelectbox > div > div {
-  border-top-right-radius: 8px !important;
-  border-bottom-right-radius: 8px !important;
 }
 
 .st-key-prodata-details-features-left,
@@ -449,4 +436,65 @@ div[data-testid="stPopoverBody"]:has(.st-key-avatar-username) .stPageLink {
 .st-key-features-detail-path-container div[data-testid="stMarkdownContainer"] p {
   margin-bottom: 0px;
   margin-left: 14px;
+}
+
+.st-key-api-instructions-container h3,
+.st-key-home-main-container h3 {
+  text-decoration: 6px underline #1d959b;
+  text-underline-offset: 6px;
+}
+
+.st-key-metrics-container label[data-testid="stMetricLabel"] p {
+  font-weight: 600;
+}
+
+.st-key-metrics-container div[data-testid="stMetricValue"] div {
+  font-size: 34px;
+  font-weight: 500;
+}
+
+[class*='home-activity-item-type-'] p {
+  background-color: #1d959b;
+  border-radius: 8px;
+  padding: 0px 8px;
+}
+
+/* STAGING PAGE STYLES */
+
+.st-key-staging-success-no-fq div[role="alert"],
+.st-key-staging-info-fq div[role="alert"] {
+  padding: 8px;
+}
+
+.st-key-staging-no-fq-container {
+  padding: 32px;
+}
+
+[class*='st-key-staging-fq-dataset-container-'] {
+  padding: 24px 32px;
+}
+
+
+.st-key-import-fastq-main {
+  gap: 40px;
+}
+
+.st-key-template-help-link {
+  margin-left: 8px;
+}
+
+.st-key-staging-upload-explained-link-container a {
+  height: 35px;
+  width: 35px;
+  background-color: #f0f2f6;
+  justify-content: center;
+}
+
+.st-key-staging-upload-explained-link-container a:hover {
+  background-color: #c2cbdb;
+}
+
+.st-key-staging-upload-explained-link-container a span {
+  font-size: 17.5px;
+  color: #1d959b
 }
