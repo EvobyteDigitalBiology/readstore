@@ -1,8 +1,13 @@
 # readstore-basic/frontend/streamlit/styles.py
 
 import streamlit as st
+import st_yled
 
 
+PRIMARY_COLOR = "#1d959b"
+SECONDARY_BACKGROUND_COLOR_DEFAULT = "#F0F2F6"
+DATAFRAME_HEADER_BG_COLOR = "#eef0f5"
+FONT_COLOR_DEFAULT = "#31333F"
 
 # footer = """<style>
 # .footer {
@@ -53,3 +58,13 @@ def adjust_button_height(height_px: int = 25):
         </style>
         """,
         unsafe_allow_html=True)
+
+def feature_badge(feature: str, value: str, container_key: str):
+    
+     with st_yled.container(horizontal=True,
+                            background_color='#FFFFFF',
+                            width='content',
+                            key=container_key):
+            
+        st.markdown(feature, width='content')
+        st.markdown(str(value), width='content')
