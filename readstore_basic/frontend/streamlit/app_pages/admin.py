@@ -165,7 +165,7 @@ def update_user(row_ix: int,
     
     owner_group_name = uiconfig.DEFAULT_OWNER_GROUP
     
-    staging = st.checkbox("Staging Permissions",
+    staging = st.checkbox("Upload Permissions",
                           help = "Enables Create, Upload and Delete of FASTQ, Projects, Datasets via CLI and SKD",
                           value = staging_old)
     
@@ -373,6 +373,8 @@ appusers_overview['id_user_str'] = appusers_overview['id_user'].astype(str)
 # Navbar
 #tab1, tab2 = st.tabs([":blue-background[**Users**]", ":blue-background[**Groups**]"])
 
+st.space(64)
+
 tab1 = st.tabs([":blue-background[**Users**]"])[0]
 
 with tab1:
@@ -392,8 +394,7 @@ with tab1:
         if st.button(':material/refresh:',
                      key='refresh_projects',
                      type='tertiary',
-                     help='Refresh Page',
-                     use_container_width=True):
+                     help='Refresh Page'):
             on_click = extensions.refresh_page()
         
     col_config_user = {
@@ -417,7 +418,7 @@ with tab1:
     
     # Dynamically adjust height of dataframe
     if len(appusers_overview) < 14:
-        appuser_df_height = None
+        appuser_df_height = 'content'
     else:
         appuser_df_height = 500
     
