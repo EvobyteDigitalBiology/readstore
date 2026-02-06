@@ -51,21 +51,19 @@ serverPort = 8501
 fastReruns = false
 
 [theme]
-# Primary accent for interactive elements
-primaryColor = '#1D959B'
 
-# Background color for the main content area
-backgroundColor = '#FFFFFF'
+primaryColor = "#1d959b"
+font = "'Inter':https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+baseFontSize = 14
+baseRadius = "8.0px"
+buttonRadius = "8.0px"
+borderColor = "#c4dae5"
+dataframeHeaderBackgroundColor = "#eef0f5"
+showWidgetBorder = true
 
-# Background color for sidebar and most interactive widgets
-# secondaryBackgroundColor = '#3C87AC'
-# secondaryBackgroundColor = '#FFFFFF'
-secondaryBackgroundColor = '#fafcfd'
+[theme.sidebar]
 
-# Color used for almost all text
-textColor = '#2A4159'
-
-# Font family for all text in the app, except code blocks
-# Accepted values (serif | sans serif | monospace) 
-# Default: "sans serif"
-font = "sans serif"
+primaryColor = "#1d959b"
+secondaryBackgroundColor = "#f0f2f6"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+backgroundColor = "#eef0f5"
