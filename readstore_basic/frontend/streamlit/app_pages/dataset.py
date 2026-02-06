@@ -14,7 +14,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import st_yled
-from streamlit_split_button import split_button
+from st_yled import split_button
 
 import extensions
 import datamanager
@@ -32,7 +32,6 @@ if not extensions.user_auth_status():
     st.rerun()
 
 st_yled.init()
-
 
 # Set sesstion state for downloaing attachments
 
@@ -151,7 +150,7 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
         # Set dataset name
         name = st_yled.text_input("Dataset Name",
                                     max_chars=150,
-                                    help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
+                                    help = 'Name must only contain [0-9][a-z][A-Z][.-_@ ]',
                                     width = 400,
                                     border_style='none',
                                     border_width='0px',
@@ -257,14 +256,14 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
 
     #     pro_data_name = st.text_input("Enter Name",
     #                                     max_chars=150,
-    #                                     help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
+    #                                     help = 'Name must only contain [0-9][a-z][A-Z][.-_@ ]',
     #                                     label_visibility = "collapsed",
     #                                     placeholder = "Enter Name",
     #                                     key = 'pro_data_name')
         
     #     pro_data_type = st.text_input("Enter Data Type",
     #                                     max_chars=150,
-    #                                     help = 'Data Type, e.g. gene_count. \nName must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
+    #                                     help = 'Data Type, e.g. gene_count. \nName must only contain [0-9][a-z][A-Z][.-_@ ]',
     #                                     label_visibility = "collapsed",
     #                                     placeholder = "Enter Data Type",
     #                                     key = 'pro_data_type')
@@ -351,7 +350,7 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
                     
     #                 for k, v in zip(pro_metadata_keys, pro_metadata_values):                        
     #                     if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-    #                         st.error(f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces')
+    #                         st.error(f'Key {k}: Only [0-9][a-z][.-_] allowed. no whitespaces.')
     #                         break
     #                     if k in uiconfig.METADATA_RESERVED_KEYS:
     #                         st.error(f'Metadata Key **{k}**: Reserved keyword, please choose another key')
@@ -391,6 +390,7 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
     with st.container(horizontal=True, horizontal_alignment='right'):
 
         if st.button('Cancel', key='cancel_create_project'):
+            reset_selected_project_names()
             st.rerun()
 
         if st.button('Confirm', type ='primary', key='ok_create_dataset'):
@@ -409,6 +409,9 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
             keys = metadata_df['key'].tolist()
             keys = [k.lower() for k in keys]
             values = metadata_df['value'].tolist()
+            values = [v.strip() for v in values]
+            
+            name = name.strip()
             
             # Validate uploaded files
             file_names = [file.name for file in uploaded_files]
@@ -418,7 +421,7 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
             # Check if metadata keys are in reserved keywords
             for k, v in zip(keys, values):
                 if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-                    st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces'
+                    st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] allowed. no whitespaces.'
                     break
                 if k in uiconfig.METADATA_RESERVED_KEYS:
                     st.session_state['error_cache'] = f'Metadata Key **{k}**: Reserved keyword, please choose another key'
@@ -428,11 +431,11 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
                 if name == '':
                     st.session_state['error_cache'] = 'Dataset Name is empty'
                 elif not extensions.validate_charset(name):
-                    st.session_state['error_cache'] = 'Dataset Name: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces'
+                    st.session_state['error_cache'] = 'Dataset Name: Only [0-9][a-z][A-Z][.-_@ ] allowed'
                 elif name.lower() in reference_fq_dataset_names:
                     st.session_state['error_cache'] = 'Dataset Name already exists in Group'
                 else:
-                    metadata = {k:v for k,v in zip(keys, metadata_df['value'])}
+                    metadata = {k:v for k,v in zip(keys, values)}
 
                     dataset_id = datamanager.create_fq_dataset(st.session_state["jwt_auth_header"],
                                                                 name,
@@ -465,6 +468,7 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
                                                         fq_dataset = dataset_id)
 
                     st.cache_data.clear()
+                    reset_selected_project_names()
                     st.rerun()
 
     if st.session_state['error_cache']:
@@ -551,7 +555,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                                 width = 400,
                                 border_style='none',
                                 border_width='0px',
-                                help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
+                                help = 'Name must only contain [0-9][a-z][A-Z][.-_@ ]',
                                 value = fq_dataset_name_old,
                                 key = 'update_dataset_name_input')
 
@@ -837,6 +841,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
     with st.container(horizontal=True, horizontal_alignment='right'):
 
         if st.button('Cancel', key='cancel_create_project'):
+            reset_selected_project_names()
             st.rerun()
     
         # region Confirm Button     
@@ -854,7 +859,11 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
             keys = metadata_df['key'].tolist()
             keys = [k.lower() for k in keys]
             values = metadata_df['value'].tolist()
-            metadata = {k:v for k,v in zip(keys,metadata_df['value'])}
+            values = [v.strip() for v in values]
+            
+            name = name.strip()
+            
+            metadata = {k:v for k,v in zip(keys,values)}
 
             # Validate uploaded files
             file_names = [file.name for file in uploaded_files]
@@ -888,7 +897,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                 # 3) Third check for metadata
                 for k, v in zip(keys, values):
                     if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-                        st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces.'
+                        st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] allowed. no whitespaces..'
                         break
                     if k in uiconfig.METADATA_RESERVED_KEYS:
                         st.session_state['error_cache'] = f'Metadata key **{k}**: Reserved keyword, please choose another key'
@@ -917,6 +926,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                                                                 fq_dataset_id)
                         
                 st.cache_data.clear()
+                reset_selected_project_names()
                 st.rerun()
 
     if st.session_state['error_cache']:
@@ -1025,7 +1035,7 @@ def detail_fq_file(fq_file_id: int):
             
     with col1:
         
-        with st.container(border=True, height=400):
+        with st.container(border=True, height=400, vertical_alignment='center'):
             
             # Get id of the fq file for read            
             fq_file_id = fq_file_read.id
@@ -1050,12 +1060,13 @@ def detail_fq_file(fq_file_id: int):
             fq_file_df = fq_file_df.T
             fq_file_df.index.name = 'FASTQ File'
             fq_file_df.columns = [fq_file_id]
+            fq_file_df[fq_file_id] = fq_file_df[fq_file_id].astype(str)
             
             st.write(fq_file_df)
     
     with col2:
         
-        with st.container(border=True, height=400):
+        with st.container(border=True, height=400, vertical_alignment='center'):
             
             st.subheader('Per Base Phred Score')
             
@@ -1070,8 +1081,15 @@ def detail_fq_file(fq_file_id: int):
             
             st.line_chart(phred_df, x='Base Position', y='Phred Score')
     
-    with st.popover('FASTQ File Path'):
-        st.text_input('FASTQ File Path', value=fq_file_read.upload_path)
+    with st.container(horizontal=True, vertical_alignment='center', border=True):
+
+        st_yled.markdown("FASTQ File Path",
+                         color=styles.PRIMARY_COLOR,
+                         font_weight=500,
+                         font_size=14,
+                         width='content')
+
+        st_yled.code(fq_file_read.upload_path, font_size=14, width='content')
 
 # region Detail ProData
 @st.dialog('Processed Data', width='large')
@@ -1111,7 +1129,7 @@ def detail_pro_data(pro_data_id: int):
             st.subheader('Details')
             
             st.dataframe(detail_df,
-                        use_container_width=True,
+                        width='stretch',
                         hide_index=True)
         
             st.text_input('File Path',
@@ -1131,7 +1149,7 @@ def detail_pro_data(pro_data_id: int):
             metadata_df = pd.DataFrame(metadata.items(), columns=['Key', 'Value'])
             
             st.dataframe(metadata_df,
-                        use_container_width=True,
+                        width='stretch',
                         hide_index=True)
             
     
@@ -1379,7 +1397,9 @@ def delete_datasets(dataset_select_df: pd.DataFrame):
 
 #region UI Main Fragment
 @st.fragment
-def uimain(fq_datasets_show, my_projects, reference_project_names_df, reference_dataset_names):
+def uimain(fq_datasets_show,
+           fq_metadata,
+           my_projects, reference_project_names_df, reference_dataset_names):
     """Main UI rendering function for datasets page"""
 
     # Show Toast Cache
@@ -1653,6 +1673,8 @@ def uimain(fq_datasets_show, my_projects, reference_project_names_df, reference_
         fq_datasets_show = fq_datasets_show.fillna('')
         fq_datasets_show = fq_datasets_show.sort_values(by='id')
 
+
+
         if fq_datasets_show.shape[0] == 0:
             st_yled.info(':material/notifications: No Datasets found. Create new Dataset or adjust filter criteria',
                         border_width="2.0px",
@@ -1661,9 +1683,13 @@ def uimain(fq_datasets_show, my_projects, reference_project_names_df, reference_
                         color="#808495",
                         key='info-no-samples',
                         width=600)
-            # Return early to avoid errors with empty dataframe
-            return
         else:
+            
+            fq_datasets_show['fq_file_r1'] = fq_datasets_show['fq_file_r1'].replace('', np.nan)
+            fq_datasets_show['fq_file_r2'] = fq_datasets_show['fq_file_r2'].replace('', np.nan)
+            fq_datasets_show['fq_file_i1'] = fq_datasets_show['fq_file_i1'].replace('', np.nan)
+            fq_datasets_show['fq_file_i2'] = fq_datasets_show['fq_file_i2'].replace('', np.nan)
+
             fq_select = st.dataframe(fq_datasets_show[show_cols],
                                 column_config=col_config,
                                 selection_mode=['single-cell', 'multi-row'],
@@ -1697,14 +1723,11 @@ def uimain(fq_datasets_show, my_projects, reference_project_names_df, reference_
                 
                 fq_metadata_detail = fq_metadata_detail.dropna().reset_index()
                 fq_metadata_detail.columns = ['key', 'value']
-                
-                update_one = True
 
                 if st.session_state['show_details']:
                     show_project_details = True
                 else:
                     show_project_details = False
-
 
                 fq_dataset_detail_id = fq_dataset_detail['id']
                 
@@ -1914,7 +1937,7 @@ def uimain(fq_datasets_show, my_projects, reference_project_names_df, reference_
                                             width=400)
                             else:
                                 st.dataframe(fq_metadata_detail,
-                                            use_container_width = True,
+                                            width='stretch',
                                             hide_index = True,
                                             column_config = {
                                                 'key' : st.column_config.Column('Key'),
@@ -2090,7 +2113,7 @@ def uimain(fq_datasets_show, my_projects, reference_project_names_df, reference_
                             
                             st.dataframe(select_fq_dataset_pro_data,
                                         hide_index = True,
-                                        use_container_width = True,
+                                        width = 'stretch',
                                         column_config = {
                                             'id' : st.column_config.TextColumn('ID'),
                                             'name' : st.column_config.TextColumn('Name'),
@@ -2110,7 +2133,6 @@ def uimain(fq_datasets_show, my_projects, reference_project_names_df, reference_
                                         value = st.session_state['pro_data_show_archived_versions'],
                                         on_change = update_pro_data_show_archived)
 
-        
 #region DATA
 
 # Get overfiew of all fastq datasets
@@ -2148,5 +2170,5 @@ fq_datasets['id_str'] = fq_datasets['id'].astype(str)
 fq_datasets_show = pd.concat([fq_datasets, fq_metadata], axis=1)
 
 # Render UI
-uimain(fq_datasets_show, my_projects, reference_project_names_df, reference_dataset_names)
+uimain(fq_datasets_show, fq_metadata, my_projects, reference_project_names_df, reference_dataset_names)
 
