@@ -7,33 +7,19 @@ import pandas as pd
 import numpy as np
 import os
 import st_yled
-from streamlit_split_button import split_button
+from st_yled import split_button
 
 import extensions
 import datamanager
 import styles
 import uiconfig
 
+st_yled.init()
+
 if not extensions.user_auth_status():
     st.cache_data.clear()
     st.session_state.clear()
     st.rerun()
-
-colh1, colh2 = st.columns([11,1], vertical_alignment='top')
-
-# Add username info top right
-# with colh1:
-#     st.markdown(
-#         """
-#         <div style="text-align: right;">
-#             <b>Username</b> {username}
-#         </div>
-#         """.format(username=st.session_state['username']),
-#         unsafe_allow_html=True
-#     )
-# with colh2:
-#     st.page_link('app_pages/settings.py', label='', icon=':material/settings:')
-
 
 # Session state for showing archived processed data
 if not 'pro_data_show_archived_versions' in st.session_state:
@@ -140,7 +126,7 @@ def create_pro_data(ref_dataset_projects_df: pd.DataFrame,
         # pass
         name = st_yled.text_input("ProData Name",
                             max_chars=150,
-                            help = 'Name must only contain [0-9][a-z][A-Z][.-_@] (no spaces).',
+                            help = 'Name must only contain [0-9][a-z][A-Z][.-_@ ]',
                             width = 400,
                             border_style='none',
                             border_width='0px',
@@ -264,6 +250,8 @@ def create_pro_data(ref_dataset_projects_df: pd.DataFrame,
                 (ref_name_dataset_df['fq_dataset'] == dataset_id) & 
                 (ref_name_dataset_df['name'] == name)]
             
+            name = name.strip()
+
             if name == '':
                 st.session_state['error_cache'] = "Please enter a ProData Name."
             elif not extensions.validate_charset(name):
@@ -291,11 +279,12 @@ def create_pro_data(ref_dataset_projects_df: pd.DataFrame,
                 # Validate ProData Metadata
                 pro_metadata_keys = metadata_df['key'].tolist()
                 pro_metadata_values = metadata_df['value'].tolist()
-                pro_metadata_keys = [k.lower() for k in pro_metadata_keys]                  
+                pro_metadata_keys = [k.lower() for k in pro_metadata_keys]
+                pro_metadata_values = [v.strip() for v in pro_metadata_values]
                 
                 for k, v in zip(pro_metadata_keys, pro_metadata_values):                        
                     if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-                        st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces'
+                        st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] allowed. no whitespaces.'
                         break
                     if k in uiconfig.METADATA_RESERVED_KEYS:
                         st.session_state['error_cache'] = f'Metadata Key **{k}**: Reserved keyword, please choose another key'
@@ -416,11 +405,14 @@ def update_pro_data(pro_data_update: pd.Series,
             # Validate ProData Metadata
             pro_metadata_keys = metadata_df['key'].tolist()
             pro_metadata_values = metadata_df['value'].tolist()
-            pro_metadata_keys = [k.lower() for k in pro_metadata_keys]                  
+            pro_metadata_keys = [k.lower() for k in pro_metadata_keys]
+            pro_metadata_values = [v.strip() for v in pro_metadata_values]
+            
+            name = name.strip()
             
             for k, v in zip(pro_metadata_keys, pro_metadata_values):                        
                 if not set(k) <= set(string.digits + string.ascii_lowercase + '_-.'):
-                    st.session_state['error_cache'] = f'Key {k}: Only [0-9][a-z][.-_] characters allowed, no spaces'
+                    st.session_state['error_cache'] = f'Key **{k}**: Only [0-9][a-z][.-_] allowed. no whitespaces.'
                     break
                 if k in uiconfig.METADATA_RESERVED_KEYS:
                     st.session_state['error_cache'] = f'Metadata Key **{k}**: Reserved keyword, please choose another key'
@@ -973,7 +965,7 @@ def uimain(pro_data_show,
                                         width=400)
                         else:
                             st.dataframe(pro_data_metadata_detail,
-                                        use_container_width = True,
+                                        width = 'stretch',
                                         hide_index = True,
                                         column_config = {
                                             'key' : st.column_config.Column('Key'),
