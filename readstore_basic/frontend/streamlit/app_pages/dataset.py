@@ -51,8 +51,6 @@ if not 'selected_fq_attachments' in st.session_state:
 if not 'selected_fq_pro_data' in st.session_state:
     st.session_state['selected_fq_pro_data'] = None
 
-if not 'dataset_select_project_names' in st.session_state:
-    st.session_state['dataset_select_project_names'] = []
 
 # Session state for showing archived processed data
 if not 'pro_data_show_archived_versions' in st.session_state:
@@ -101,7 +99,7 @@ def update_selected_project_names():
     st.session_state['dataset_select_project_names'] = st.session_state['multiselect_dataset_project_names']
 
 def reset_selected_project_names():
-    st.session_state['dataset_select_project_names'] = []
+    del st.session_state['dataset_select_project_names']
 
 def reset_meta_filter_hash():
     """Reset dataset metadata filter hash to force re-rendering of metadata filter UI"""
@@ -137,6 +135,9 @@ def create_dataset(reference_fq_dataset_names: pd.Series,
     # Get reference dataset and project names
     reference_fq_dataset_names = reference_fq_dataset_names.str.lower()
     reference_fq_dataset_names = reference_fq_dataset_names.tolist()
+
+    if not 'dataset_select_project_names' in st.session_state:
+        st.session_state['dataset_select_project_names'] = []
 
     project_names_select = st.session_state['dataset_select_project_names']
 
@@ -511,6 +512,9 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
     fq_dataset_description_old = fq_dataset_input['description']
     fq_dataset_project_names = fq_dataset_input['project_names']
 
+    if not 'dataset_select_project_names' in st.session_state:
+        st.session_state['dataset_select_project_names'] = fq_dataset_project_names
+
     # # Map fq file ids to read types
     # if extensions.df_not_empty(fq_dataset_input['fq_file_r1']):
     #     read_file_file_map['R1'] = fq_dataset_input['fq_file_r1']
@@ -527,6 +531,7 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
         reference_fq_dataset_names != fq_dataset_name_old.lower()]
     reference_fq_dataset_names = reference_fq_dataset_names.tolist()
     
+    # TODO: Should be initialized by 
     project_names_select = st.session_state['dataset_select_project_names']
 
     # # Get fq for all read types
@@ -925,9 +930,9 @@ def update_dataset(selected_fq_dataset: pd.DataFrame,
                                                                 file_byte,
                                                                 fq_dataset_id)
                         
-                st.cache_data.clear()
-                reset_selected_project_names()
-                st.rerun()
+                    st.cache_data.clear()
+                    reset_selected_project_names()
+                    st.rerun()
 
     if st.session_state['error_cache']:
         st.error(st.session_state['error_cache'])
@@ -1092,7 +1097,7 @@ def detail_fq_file(fq_file_id: int):
         st_yled.code(fq_file_read.upload_path, font_size=14, width='content')
 
 # region Detail ProData
-@st.dialog('Processed Data', width='large')
+@st.dialog('Processed Data', width='large', on_dismiss='rerun')
 def detail_pro_data(pro_data_id: int):
     
     pro_data = datamanager.get_pro_data_detail(st.session_state["jwt_auth_header"],
@@ -1151,14 +1156,17 @@ def detail_pro_data(pro_data_id: int):
             st.dataframe(metadata_df,
                         width='stretch',
                         hide_index=True)
-            
+    
+    with st.container(horizontal=True, horizontal_alignment='right'):
+
+        if st.button('Close', key='close_pro_data_detail'):
+            st.rerun()
     
     # col1, col2 = st.columns([1, 1])
             
     # with col1:
         
     #     with st.container(border=True, height=400):
-
 
 
 #region Export Project
@@ -1810,7 +1818,7 @@ def uimain(fq_datasets_show,
 
             if show_project_details:
 
-                st_yled.space(72)
+                st_yled.space(48)
                 
                 segment_control_options = ['Features', 'Projects', 'Attachments', 'ProData']
                 segment_default = segment_control_options[st.session_state['fq_details_segment_ix']]
@@ -2132,6 +2140,9 @@ def uimain(fq_datasets_show,
                                         key='checkbox_pro_data_include_archive',
                                         value = st.session_state['pro_data_show_archived_versions'],
                                         on_change = update_pro_data_show_archived)
+
+            st.space(48)
+            
 
 #region DATA
 
