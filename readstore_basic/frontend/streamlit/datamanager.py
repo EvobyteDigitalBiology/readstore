@@ -15,6 +15,7 @@ import datetime
 
 import streamlit as st
 import pandas as pd
+import numpy as np
 import os
 import requests
 
@@ -758,6 +759,8 @@ def get_pro_data_meta_overview(headers: dict, include_archived = False) -> Tuple
     pro_data_owner_group = pro_data_owner_group.merge(fq_datasets, on='fq_dataset') 
     pro_data_owner_group = pro_data_owner_group[return_cols]
     
+    pro_data_owner_group['id'] = pro_data_owner_group['id'].astype(int)
+
     return pro_data_owner_group, metadata
 
 
