@@ -15,6 +15,7 @@ import argparse
 from typing import List
 from itertools import chain
 import string
+import sys
 
 assert os.getenv("DJANGO_SETTINGS_MODULE"), "DJANGO_SETTINGS_MODULE not set"
 
@@ -258,16 +259,14 @@ def setup_argument_parser():
     
     parser.add_argument(
         '--create-default-user-with-password',
-        type=str,
-        metavar='PASSWORD',
-        help='Create a default user with the specified password. Environment variable DEFAULT_USER_PWD overrides this.'
+        action='store_true',
+        help='Create a default user with the specified password in environment variable DEFAULT_USER_PWD.'
     )
     
     parser.add_argument(
         '--create-admin-user-with-password', 
-        type=str,
-        metavar='PASSWORD',
-        help='Create an admin user with the specified password. Environment variable ADMIN_USER_PWD overrides this.'
+        action='store_true',
+        help='Create an admin user with the specified passwor in environment variable ADMIN_USER_PWD.'
     )
     
     parser.add_argument(
@@ -342,7 +341,12 @@ if __name__ == '__main__':
     # Create admin user if requested
     if args.create_admin_user_with_password:
         # Check for environment variable override
-        admin_password = os.getenv('ADMIN_USER_PWD', args.create_admin_user_with_password)
+        if 'ADMIN_USER_PWD' not in os.environ:
+            print('ERROR: Failed to detect ADMIN_USER_PWD!')
+            sys.exit(1)
+
+        admin_password = os.getenv('ADMIN_USER_PWD')
+        del os.environ['ADMIN_USER_PWD']
         
         admin_user, created = create_admin_user('admin', admin_password, admin_group)
         if created:
@@ -355,8 +359,14 @@ if __name__ == '__main__':
         print("Setup default user....")
         
         # Check for environment variable override
-        default_password = os.getenv('DEFAULT_USER_PWD', args.create_default_user_with_password)
-        
+        if 'DEFAULT_USER_PWD' not in os.environ:
+            # Stop with error
+            print('ERROR: Failed to detect DEFAULT_USER_PWD!')
+            sys.exit(1)
+
+        default_password = os.getenv('DEFAULT_USER_PWD')
+        del os.environ['DEFAULT_USER_PWD']
+
         default_user, created_default_user = create_default_user(default_password, appuser_group, staging_group)
         if created_default_user:
             print("Default user created.")
