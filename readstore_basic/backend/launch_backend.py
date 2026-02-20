@@ -26,16 +26,14 @@ def setup_argument_parser():
     
     parser.add_argument(
         '--create-default-user-with-password',
-        type=str,
-        metavar='PASSWORD',
-        help='Create a default user with the specified password. Environment variable DEFAULT_USER_PWD overrides this.'
+        action='store_true',
+        help='Create a default user with specified password in environment variable DEFAULT_USER_PWD.'
     )
     
     parser.add_argument(
         '--create-admin-user-with-password', 
-        type=str,
-        metavar='PASSWORD',
-        help='Create an admin user with the specified password. Environment variable ADMIN_USER_PWD overrides this.'
+        action='store_true',
+        help='Create an admin user with the specified password in environment variable ADMIN_USER_PWD.'
     )
     
     parser.add_argument(
@@ -117,21 +115,24 @@ if args.create_default_user_with_password or args.create_admin_user_with_passwor
     if args.create_default_user_with_password:
         # Check if DEFAULT_USER_PWD environment variable is not set
         if 'DEFAULT_USER_PWD' not in os.environ:
-            default_password = args.create_default_user_with_password
-            setup_user_cmd.extend(['--create-default-user-with-password', default_password])
-            print('Adding --create-default-user-with-password to setup_user.py command')
+            # Stop with error
+            print('ERROR: Failed to detect DEFAULT_USER_PWD!')
+            sys.exit(1)
         else:
             print('DEFAULT_USER_PWD environment variable found - setup_user.py will use it')
+            setup_user_cmd.extend(['--create-default-user-with-password'])
+            print('Adding --create-default-user-with-password to setup_user.py command')
     
     # Add admin user creation if requested  
     if args.create_admin_user_with_password:
         # Check if ADMIN_USER_PWD environment variable is not set
         if 'ADMIN_USER_PWD' not in os.environ:
-            admin_password = args.create_admin_user_with_password
-            setup_user_cmd.extend(['--create-admin-user-with-password', admin_password])
-            print('Adding --create-admin-user-with-password to setup_user.py command')
+            print('ERROR: Failed to detect ADMIN_USER_PWD!')
+            sys.exit(1)
         else:
             print('ADMIN_USER_PWD environment variable found - setup_user.py will use it')
+            setup_user_cmd.extend(['--create-admin-user-with-password'])
+            print('Adding --create-admin-user-with-password to setup_user.py command')
     
     # Add examples creation if requested
     if args.create_examples_with_default_user:
