@@ -2,8 +2,6 @@
 
 This guide contains information how to setup and install ReadStore Basic along with potential errors and information on different Linux distributions.
 
-The full **ReadStore Basic documentation** is available [here](https://evobytedigitalbiology.github.io/readstore/).
-
 For general questions reach out to info@evo-byte.com or in case of technical problems to support@evo-byte.com
 
 
@@ -50,19 +48,59 @@ Validate the install by running
 
 This should print the ReadStore Basic version
 
+### Start the ReadStore Server
+
+You can start ReadStore Basic with default settings by simply running:
+
+`readstore-server`
+
+If you start the server without `--db-directory`, `--db-backup-directory` and `--log-directory`, ReadStore will automatically create (or reuse, if already present) the folders `readstore-db/`, `readstore-db-backup/` and `readstore-log/` in your current working directory.
+
+Configuration and secret files are stored in `~/.rs-server/` by default. You can change this location using `--config-directory`.
+
+If you want to explicitly set the folders, run:
+
+`readstore-server --db-directory /path/to/database_dir --db-backup-directory /path/to/backup_dir --log-directory /path/to/logs_dir`
+
+
+If you want to set a known password for the default user (still without interactive login), you can pass `--admin-password` without `--enable-login`:
+
+`readstore-server --admin-password <your_default_user_password>`
+
+
+#### Enable interactive login (Admin + User Management)
+
+By default, ReadStore starts with login disabled and automatically logs into the UI as the default user (`default`).
+
+To enable interactive login (creates an `admin` user on first start), run:
+
+`readstore-server --enable-login --admin-password <your_admin_password>
+
+Alternatively, you can provide the password via environment variable (takes precedence over the argument):
+
+`RS_ADMIN_PASSWORD=<your_admin_password> readstore-server --enable-login`
+
+##### Security note: reset the admin password on first login
+
+Because `--admin-password` is passed as a command-line argument, it may be visible in your shell history, terminal scrollback, logs, or process listings.
+
+Recommended practice: use `--admin-password` only to bootstrap the initial `admin` account, then **log in once and immediately change the `admin` password** using the web app’s password change/reset functionality.
+
+You must first log in to the `admin` account to create first users.
+
 ### Install from Source
 
 You can also download and install the `readstore-basic` package by downloading the source or built distribution after downloading the packages from [PyPI Repository](https://pypi.org/project/readstore-basic/#files).
 
 More information on how to install source packages can be found [here](https://packaging.python.org/en/latest/tutorials/installing-packages/).
 
-## 2. Update<a id="update"></a>
+## 2. Update ReadStore Basic<a id="update"></a>
 
 If you already have a running ReadStore Server and want to upgrade to a new version, follow these simple steps:
 
 **0. Backup Validation**
 
-Ensure that ReadStore database backups are in place and up-to-date (located in the --db-directory folder). Optionally, copy the latest backup file (.sqlite3) to a secure location for potential rollback.
+Ensure that ReadStore database backups are in place and up-to-date (located in the `--db-backup-directory` folder; defaults to `./readstore-db-backup/` if you started the server without explicit directory arguments). Optionally, copy the latest backup file (`.sqlite3`) to a secure location for potential rollback.
 
 **1. Stop the Running Server**
 
@@ -88,7 +126,8 @@ Restart the ReadStore Server with the same folder directories and settings as be
 
 ### Python version
 
-ReadStore Basic strictly requires **Python version 3.10** or above for installation. If your current Python version does not fulfill those requiements, you will receive an error like:
+ReadStore Basic strictly requires **Python version 3.10** or above for installation. If your current Python version does not fulfill those requirements, you will receive an error like:
+
 
 ```
 ERROR: Could not find a version that satisfies the requirement readstore-basic (from versions: none)
@@ -97,11 +136,11 @@ ERROR: No matching distribution found for readstore-basic
 
 ### Managing multiple Python versions
 
-It is possible that multiple Python version are installed at the same time on your system. This can cause issues in managing a valid Python environment with correct dependencies and lead to unexpected errors.
+It is possible that multiple Python versions are installed at the same time on your system. This can cause issues in managing a valid Python environment with correct dependencies and lead to unexpected errors.
 
 It is highly recommended to operate in **virtual environments** using the Python `venv` module or a [conda environment](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html). This will help managing consistent dependencies, also in cases that multiple Python versions are installed.
 
-In any cases you need to ensure that the `python3` command is available on you system before starting the ReadStore server.
+In any case you need to ensure that the `python3` command is available on your system before starting the ReadStore server.
 
 `python3 --version`
 
@@ -160,7 +199,10 @@ source .venv/bin/activate
 
 pip3 install readstore-basic
 
-readstore-server --db-directory readstore_dir --db-backup-directory readstore_backup_dir --log-directory readstore_log_dir
+readstore-server
+
+# Or explicitly set directories
+# readstore-server --db-directory readstore_dir --db-backup-directory readstore_backup_dir --log-directory readstore_log_dir
 ```
 
 ### Debian 12
@@ -181,7 +223,10 @@ source .venv/bin/activate
 
 pip3 install readstore-basic
 
-readstore-server --db-directory readstore_dir --db-backup-directory readstore_backup_dir --log-directory readstore_log_dir
+readstore-server
+
+# Or explicitly set directories
+# readstore-server --db-directory readstore_dir --db-backup-directory readstore_backup_dir --log-directory readstore_log_dir
 ```
 
 ### Amazon Linux 2023
@@ -201,5 +246,8 @@ source .venv/bin/activate
 
 pip3 install readstore-basic
 
-readstore-server --db-directory readstore_dir --db-backup-directory readstore_backup_dir --log-directory readstore_log_dir
+readstore-server
+
+# Or explicitly set directories
+# readstore-server --db-directory readstore_dir --db-backup-directory readstore_backup_dir --log-directory readstore_log_dir
 ```

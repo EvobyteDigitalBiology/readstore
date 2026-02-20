@@ -1,8 +1,15 @@
+
+<img style="width:60%; background-color: #1D959B;; padding: 8px;" src="assets/img_01_welcome_readstore.webp" alt="Welcome to ReadStore">
+
+
 # ReadStore Basic
 
 The Lean Solution for Managing NGS and Omics Data
 <br>
-<br>
+
+- **Database** for FASTQ, analysis and metadata files
+- **Project management** and collaborative workspace
+- **APIs** for Terminal, Python and R for automation of data analysis
 
 ReadStore is a platform for storing, managing, and integrating omics data. It speeds up analysis and offers a simple way of managing and sharing NGS omics datasets, metadata and processed data (Processed Data). Built-in project and metadata management structures your workflows and a collaborative user interface enhances teamwork — so you can focus on generating insights.
 
@@ -10,33 +17,76 @@ The integrated API enables you to directly retrieve data from ReadStore via the 
 
 The ReadStore Basic version offers a local web server with simple user management. If you need organization-wide deployment, advanced user and group management, or cloud integration, please check the ReadStore Advanced versions and reach out to <a href="mailto:info@evo-byte.com">info@evo-byte.com</a>.
 
-Find more information on <a href=https://www.evo-byte.com/readstore>www.evo-byte.com/readstore</a>
+Find more information on <a href="https://www.evo-byte.com/readstore">www.evo-byte.com/readstore</a>
 
-## Getting started
+## Quickstart
 
-The easiest way to get started with ReadStore is through the **free 30-day trial version**, which you can install on your local Linux server or PC via PyPI, the Python package repository, using pip, the Python package manager.
+ReadStore Basic allows you to manage NGS and omics data through a web interface and command-line tools. Follow these steps to get started:
 
-#### Prerequisite
+1.**Install ReadStore Basic**
 
-Before proceeding, you need to obtain a <a href=https://evo-byte.com/readstore-free-trial>free trial license key</a>, which will be sent to you via email.
+  `pip3 install readstore-basic`
 
-#### Installation
-Follow the installation steps described in the README section. Make sure to review and follow the points related to security and permissions management.
+<br>
 
-For technical questions or problems with the install please contact <a href="mailto:support@evo-byte.com">support@evo-byte.com</a>
+2.**Start the server**: 
 
+  `readstore-server`
+
+<br>
+
+3.**Access the web app**
+
+  Open your browser and navigate to `http://localhost:8501`
+
+<br>
+
+4.**Upload FASTQ datasets**
+
+  In the UI, navigate to the *Upload Page* and click Import to ingest FASTQ files.
+
+  Check In datasets after QC is completed. 
+
+<br>
+
+5.**Install the CLI** (optional)
+
+  `pip3 install readstore-cli`
+
+<br>
+
+6.**Configure the CLI**
+
+  Run `readstore configure` and enter your username and token
+
+<br>
+
+7.**Upload FASTQ files**
+
+  Use `readstore upload myfile_r1.fastq` to upload sequencing data
+
+<br>
+
+<!-- 
 ## Tutorials & How-Tos
 
-We support you getting started with ReadStore with a YouTube playlist containing easy-to-follow examples for the basic functionalities, blog posts with step-by-step instructions and more in-depth information in the Readme files.
+Here you can find more information how to setup and work with ReadStore
 
-#### Video Tutorials
+### ReadStore Blog
 
-Here is a full <a href=https://youtube.com/playlist?list=PLk-WMGySW9ySUfZU25NyA5YgzmHQ7yquv&si=C2fHJSW1IVxbavQw>playlist</a> which provides tutorials and explains different features of ReadStore. 
+#### 1. Upload and Check In FASTQ files
 
-<div class="video-wrapper">
-  <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/wJ3Gl1pFko0?si=k3SoiLWiy3JOH6yI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-</div>
+Learn how to upload or import FASTQ files, and check in datasets. [Read more](https://evo-byte.com/readstore-tutorial-uploading-staging-fastq-files/)
 
-#### Blog
+#### 2. Upload and Check In FASTQ files
 
+Learn how to upload or import FASTQ files, and check in datasets. [Read more](https://evo-byte.com/readstore-tutorial-uploading-staging-fastq-files/)
 
+#### 3. Upload and Check In FASTQ files
+
+Learn how to upload or import FASTQ files, and check in datasets. [Read more](https://evo-byte.com/readstore-tutorial-uploading-staging-fastq-files/)
+
+#### 4. Upload and Check In FASTQ files
+
+Learn how to upload or import FASTQ files, and check in datasets. [Read more](https://evo-byte.com/readstore-tutorial-uploading-staging-fastq-files/)
+ -->
