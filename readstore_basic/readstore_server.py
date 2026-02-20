@@ -240,11 +240,11 @@ def run_rs_server(db_directory: str,
     # Check permissions for db_directory and db_backup_directory
     assert os.path.isdir(db_directory), f'ERROR: db_directory {db_directory} does not exist!'
     assert os.path.isdir(db_backup_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
-    assert os.path.isdir(log_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
+    assert os.path.isdir(log_directory), f'ERROR: log_directory {log_directory} does not exist!'
     
     assert os.access(db_directory, os.W_OK), f'ERROR: db_directory {db_directory} is not writable!'
     assert os.access(db_backup_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
-    assert os.access(log_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
+    assert os.access(log_directory, os.W_OK), f'ERROR: log_directory {log_directory} is not writable!'
     assert os.access(config_directory, os.W_OK), f'ERROR: config_directory {config_directory} is not writable!'
     
     assert os.access(db_directory, os.R_OK), f'ERROR: db_directory {db_directory} is not readable!'
@@ -328,7 +328,7 @@ def run_rs_server(db_directory: str,
     logger.info(f'Prepare ReadStore Server Config')
     
     config_path = os.path.join(config_directory, 'readstore_server_config.yaml')
-            
+
     # Check if config file exists
     if not os.path.exists(config_path):    
         # Copy over config file from readstore directory
@@ -403,6 +403,8 @@ def run_rs_server(db_directory: str,
 
         logger.info(f'Prepare Default User Key for Login')
         
+        # if admin password is provided, use it
+        # else create random string 
         secret_default_user_key_path = os.path.join(config_directory, 'secret_default_user_key')
         if not os.path.exists(secret_default_user_key_path):
             
@@ -463,12 +465,18 @@ def run_rs_server(db_directory: str,
     # Add user creation arguments if login is enabled
     if enable_login:
         logger.info('Login enabled - creating admin')
-        launch_backend_cmd.extend(['--create-admin-user-with-password', admin_password])
+        launch_backend_cmd.extend(['--create-admin-user-with-password'])
     else:
         logger.info('Login disabled - creating default user')
-        launch_backend_cmd.extend(['--create-default-user-with-password', default_user_password, '--create-examples-with-default-user'])
-    
-    launch_backend_process = subprocess.Popen(launch_backend_cmd)
+        launch_backend_cmd.extend(['--create-default-user-with-password', '--create-examples-with-default-user'])
+
+    launch_backend_env = os.environ.copy()
+    if enable_login:
+        launch_backend_env['ADMIN_USER_PWD'] = admin_password
+    else:
+        launch_backend_env['DEFAULT_USER_PWD'] = default_user_password
+
+    launch_backend_process = subprocess.Popen(launch_backend_cmd, env=launch_backend_env)
     launch_backend_process.wait()
     
     logger.info('Setup Backup')
@@ -746,6 +754,10 @@ def main():
         if 'RS_STREAMLIT_PORT' in os.environ:
             streamlit_port = int(os.environ['RS_STREAMLIT_PORT'])
             print('Found RS_STREAMLIT_PORT in Environment Variables')
+
+        if 'RS_ADMIN_PASSWORD' in os.environ:
+            print('Found RS_ADMIN_PASSWORD in Environment Variables')
+            admin_password = os.environ['RS_ADMIN_PASSWORD']
         
         # Handle case where no directory arguments are provided
         if db_directory is None and db_backup_directory is None and log_directory is None:
