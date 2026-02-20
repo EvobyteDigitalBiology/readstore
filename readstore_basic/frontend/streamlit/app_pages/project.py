@@ -273,8 +273,10 @@ def create_project(reference_project_names: pd.Series,
         
         if 'available' not in st.session_state:
             st.session_state['available'] = reference_fq_datasets[['id', 'name']]
+            st.session_state['available_input'] = reference_fq_datasets['id'].tolist()
         if 'selected' not in st.session_state:
             st.session_state['selected'] = pd.DataFrame(columns=['id', 'name'])
+            st.session_state['selected_input'] = []
 
         @st.fragment
         def select_form_fq_datasets():
@@ -301,17 +303,17 @@ def create_project(reference_project_names: pd.Series,
                 with st.container(height=475, key=''):
                     
                     st.write('Available Datasets')
-                                
+
                     datasets_available = st.session_state['available']
-                    
+
                     search_value_fq_ds = st.text_input("Search Datasets",
                                     help = 'Search in available Datasets',
                                     placeholder='Search Available Datasets',
                                     key = 'create_search_fq_datasets',
                                     label_visibility = 'collapsed')
-                    
+
                     datasets_available['id_str'] = datasets_available['id'].astype(str)
-                    
+
                     fq_datasets_show = datasets_available.loc[
                         (datasets_available['name'].str.contains(search_value_fq_ds, case=False) | 
                          datasets_available['id_str'].str.contains(search_value_fq_ds, case=False)),:
@@ -1433,7 +1435,7 @@ def uimain(projects_show, my_owner_group_name, fq_dataset_og, fq_dataset_collab)
 
             if show_project_details:
                 
-                st_yled.space(72)
+                st_yled.space(48)
                 
                 # detail_tab_names = [":blue-background[**Features**]",
                 #                     ":blue-background[**Datasets**]",
@@ -1660,6 +1662,8 @@ def uimain(projects_show, my_owner_group_name, fq_dataset_og, fq_dataset_collab)
                                             key='attachment_details_df',
                                             height = max_df_height)
                             
+        st.space(48)
+
 
 #region Data
 
