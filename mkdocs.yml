@@ -38,8 +38,8 @@ plugins:
 
 nav:
   - Home: index.md
-  - Readme: readme.md
   - Installation: installation.md
+  - Readme: readme.md
   - Changelog: CHANGELOG.md
   - API Reference: rest_api.md
 
@@ -53,4 +53,4 @@ extra:
       link: https://github.com/EvobyteDigitalBiology/readstore
   homepage: https://evo-byte.com/readstore
 
-copyright: Copyright &copy; 2024-2025 EVOBYTE Digital Biology Dr. Jonathan Alles
+copyright: Copyright &copy; 2024-2026 EVOBYTE Digital Biology Dr. Jonathan Alles
