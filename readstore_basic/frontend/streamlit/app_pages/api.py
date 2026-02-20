@@ -169,7 +169,7 @@ Interact with ReadStore from R code or R Studio using the **ReadStore R SDK**.
             st_yled.markdown("Example: Load a dataset by ID", font_weight=500)
             st.code("dataset_25 <- get_dataset(client, dataset_id = 25)", language='r')
 
-        st.space(32)
+            st.space(96)
 
 # region DATA
 uimain()
