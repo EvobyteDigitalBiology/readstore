@@ -31,8 +31,8 @@ if not extensions.user_auth_status():
 
 st_yled.init()
 
-if not 'dataset_select_project_names' in st.session_state:
-    st.session_state['dataset_select_project_names'] = []
+if not 'staging_dataset_select_project_names' in st.session_state:
+    st.session_state['staging_dataset_select_project_names'] = []
 
 if not 'dataset_name_active' in st.session_state:
     st.session_state['dataset_name_active'] = (None, None)  # (dataset_name, is_preexist)
@@ -141,14 +141,14 @@ def remove_selected_datasets(fq_datasets, selected_rows):
             ~st.session_state['selected_staging']['name'].isin(select_dataset_r['name']),:]
 
 def update_selected_project_names():
-    st.session_state['dataset_select_project_names'] = st.session_state['multiselect_staging_project_names']
+    st.session_state['staging_dataset_select_project_names'] = st.session_state['multiselect_staging_project_names']
 
 def reset_selected_project_names():
-    st.session_state['dataset_select_project_names'] = []
+    st.session_state['staging_dataset_select_project_names'] = []
 
 
 # region Check In
-@st.dialog('Check In Dataset', width='large', on_dismiss='rerun')
+@st.dialog('Check In Dataset', width='large', on_dismiss=reset_selected_project_names)
 def checkin_df(fq_file_df: pd.DataFrame,
                projects_owner_group: pd.DataFrame,
                fq_datasets_empty: pd.DataFrame,
@@ -159,7 +159,7 @@ def checkin_df(fq_file_df: pd.DataFrame,
     
     empty_dataset_names = fq_datasets_empty['name'].tolist()
     
-    project_names_select = st.session_state['dataset_select_project_names']
+    project_names_select = st.session_state['staging_dataset_select_project_names']
 
     read_long_map = {
         'R1' : 'Read 1',
@@ -242,7 +242,8 @@ def checkin_df(fq_file_df: pd.DataFrame,
                     fq_datasets_empty['name'] == display_name,'description'].iloc[0]
             else:
                 description_template = ''
-
+            
+            # Take metadata keys from all selected projects
             metadata_keys = projects_owner_group.loc[
                 projects_owner_group['name'].isin(project_names_select),'dataset_metadata_keys'].to_list()
             metadata_keys = [list(m.keys()) for m in metadata_keys]
@@ -298,6 +299,7 @@ def checkin_df(fq_file_df: pd.DataFrame,
                     width=400
                 )
 
+        # Tab For Projects
         with tabs[1]:
             
             # Input is disabled when checking in to existing dataset
@@ -671,6 +673,7 @@ def checkin_df(fq_file_df: pd.DataFrame,
                         checkin_complete = True
                     
                 if checkin_complete:
+                    reset_selected_project_names()
                     del st.session_state['fq_data_staging']
                     del st.session_state['staging_dataset_preexist']
                     del st.session_state['staging_dataset_name']
@@ -678,9 +681,9 @@ def checkin_df(fq_file_df: pd.DataFrame,
                     st.cache_data.clear()
                     st.rerun()
             
-        if st.session_state['error_cache'] is not None:
-            st.error(st.session_state['error_cache'])
-            st.session_state['error_cache'] = None
+    if st.session_state['error_cache'] is not None:
+        st.error(st.session_state['error_cache'])
+        st.session_state['error_cache'] = None
         
 # region Batch Check In
 @st.dialog('Check In All Datasets', width='small', on_dismiss='rerun')
@@ -1108,7 +1111,9 @@ def import_from_file():
         # Import Instructions
         with st_yled.container(key='import-instructions', gap='xsmall'):
             st_yled.markdown('Imported FASTQ files from a filled Excel or .csv template', font_size=12, color='#808495')
-            st_yled.markdown('Download template below. [How to fill a Template file?](https://www.google.de)', font_size=12, color='#808495')
+            # TODO Add back in
+            #st_yled.markdown('Download template below. [How to fill a Template file?](https://www.google.de)', font_size=12, color='#808495')
+            st_yled.markdown('Download template below.', font_size=12, color='#808495')
 
         # Upload File
         upload_template = st.file_uploader("**Upload template for FASTQ import**",
@@ -1564,7 +1569,8 @@ def uimain(fq_files_staging: pd.DataFrame,
                 
                 st_yled.code("readstore upload dataset_1_R1.fastq dataset_1_R2.fastq", language="bash", key='staging-no-fq-cont-cli-code')
 
-                st_yled.markdown("More information here", font_size=12, font_weight="medium", color="#808495", key='staging-no-fq-cont-more-info')
+                # TODO Add back in
+                #st_yled.markdown("More information [here](/getting_started?page=file-upload)", font_size=12, font_weight="medium", color="#808495", key='staging-no-fq-cont-more-info')
                 
 
 
