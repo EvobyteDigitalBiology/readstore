@@ -227,8 +227,9 @@ def create_pro_data(ref_dataset_projects_df: pd.DataFrame,
                                         width = 420)
             
             if dataset_select:
-
-                select_name = dataset_select.split(' ')[1]
+                
+                # TODO: Handle Case Where dataset name contains spaces -> split only on first space to get id and name
+                select_name = ' '.join(dataset_select.split(' ')[1:])
 
                 dataset_id = ref_dataset_projects_df.loc[
                     ref_dataset_projects_df['dataset_name'] == select_name,'dataset_id'].values[0]
@@ -445,8 +446,11 @@ def delete_pro_data(pro_data_select_df: pd.DataFrame):
     """
     
     pro_data_ids = pro_data_select_df['id']
+    
     if isinstance(pro_data_ids, int):
         pro_data_ids = [pro_data_ids]
+    elif isinstance(pro_data_ids, np.int64):
+        pro_data_ids = [int(pro_data_ids)]
     else:
         pro_data_ids = pro_data_ids.tolist()
 
@@ -593,14 +597,11 @@ def uimain(pro_data_show,
                         st.session_state['pro_data_split_but_hash'] = str(uuid.uuid4())
 
                         if st.session_state['selected_pro_data_enable_delete']:
-                        
                             delete_pro_data(st.session_state['selected_pro_data'])
 
                         else:
                             st.session_state['toast_cache'] = 'Select one or more ProData entries to Delete'
                             st.rerun()
-
-
 
 
                 search_value = st_yled.text_input("Search ProData",
@@ -615,6 +616,7 @@ def uimain(pro_data_show,
                 mask = pro_data_show.astype(str).apply(lambda x: x.str.contains(search_value, case=False)).any(axis=1)
                 pro_data_show = pro_data_show[mask]
 
+                # Generate a list of projects for filtering // Example ['No Project', 'master_blaster']
                 pro_data_project_filter = extensions.project_filter_from_df(pro_data_show)
                 pro_data_project_filter = [proj for proj in pro_data_project_filter if proj in project_datasets['project_name'].tolist()]
                 pro_data_project_filter.insert(0, 'No Project')
@@ -671,9 +673,10 @@ def uimain(pro_data_show,
                         
                         st.multiselect(label = f'Filter {k}',
                                         options = options,
-                                        key = f'pro_data_meta_filter_{k}-{st.session_state["pro_data_meta_filter_hash"]}',
+                                        key = f'pro_data_meta_filter_{st.session_state["pro_data_meta_filter_hash"]}_{k}',
                                         placeholder="")
 
+            # Table Header Buttons Right Aligned
             with st_yled.container(key='prodata-header-right-container',
                                     horizontal=True,
                                     vertical_alignment='center',
@@ -766,7 +769,7 @@ def uimain(pro_data_show,
             'id_str' : None
         }
 
-        projects_filter = []
+        projects_filter = st.session_state.get(f'pro_data_project_filter_{st.session_state["pro_data_meta_filter_hash"]}', None)
         
         # Project filter
         if projects_filter:
@@ -783,7 +786,7 @@ def uimain(pro_data_show,
 
         # Filter by metadata
         pro_data_show = extensions.filter_df_by_metadata_filter(pro_data_show,
-                                                                filter_session_prefix = 'pro_data_meta_filter_')
+                                                                filter_session_prefix = f'pro_data_meta_filter_{st.session_state["pro_data_meta_filter_hash"]}_')
 
         # Remove meta cols that are all None
         pro_meta_cols_all_none = pro_data_show.loc[:,pro_data_metadata.columns].isna().all()
@@ -906,7 +909,7 @@ def uimain(pro_data_show,
 
             if show_project_details:
                 
-                st_yled.space(72)
+                st_yled.space(48)
 
                 # segment_control_options = ['Features', 'Projects']
                 # segment_default = segment_control_options[st.session_state['pro_details_segment_ix']]
@@ -999,6 +1002,7 @@ def uimain(pro_data_show,
                 #                     },
                 #                     height = max_df_height)
 
+            st.space(48)
 
 #region DATA
 
