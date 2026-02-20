@@ -55,8 +55,8 @@ tutorial_json = {
             "Upload files via Command Line Interface, or import directly on from the **Upload Page**. During the upload, a QC step is run which can take some time."
         ],
         "content_small_md": [
-            "More on ReadStore Command Line Interface TODO: ADD LINK",
-            "More on Import from a Template File TODO: ADD LINK"
+#            "More on ReadStore Command Line Interface TODO: ADD LINK",
+#            "More on Import from a Template File TODO: ADD LINK"
         ],
         "image_url": "static/tutorial/img_03_tutorial_import_dataset.png",
         "prev_link_page": "data-structure",
@@ -94,7 +94,9 @@ tutorial_json = {
             "The Dataset page lists all datasets and allows creating new Datasets and updating descriptions or metadata.",
             "Click on a Dataset to get a detail view below the table.",
         ],
-        "content_small_md": ["More on metadata key-value pairs TODO: ADD LINK"],
+        "content_small_md": [
+#            "More on metadata key-value pairs TODO: ADD LINK"
+            ],
         "image_url": "static/tutorial/img_06_datasets_overview.png",
         "prev_link_page": "check-in-form",
         "next_link_page": "pro-data",
@@ -107,7 +109,7 @@ tutorial_json = {
             "Each Dataset can have several ProData entries attached. Entries can be versioned and point to a file on disk.",
         ],
         "content_small_md": [
-            "More on working with ProData TODO: ADD LINK"
+#            "More on working with ProData TODO: ADD LINK"
         ],
         "image_url": "static/tutorial/img_07_pro_data.png",
         "prev_link_page": "datasets",
@@ -121,6 +123,7 @@ tutorial_json = {
             "Through the API, all project assets can be readily loaded for analysis.",
         ],
         "content_small_md": [
+#            "More on working with Projects TODO: ADD LINK"
         ],
         "image_url": "static/tutorial/img_08_projects.png",
         "prev_link_page": "pro-data",
