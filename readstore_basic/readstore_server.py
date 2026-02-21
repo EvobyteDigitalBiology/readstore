@@ -176,20 +176,21 @@ def validate_requirements():
                 requirements.append((package.lower(), version))
     
     # List of installed packages
-    distributions = importlib.metadata.distributions()
-    
-    installed_versions = {}
-    for dist in distributions:
-        pkg_name = dist.metadata['Name'].lower()
-        pkg_version = dist.version
+    # distributions = importlib.metadata.distributions()
+
+    # installed_versions = {}
+    # for dist in distributions:
+    #     pkg_name = dist.metadata['Name'].lower()
+    #     pkg_version = dist.version
         
-        installed_versions[pkg_name] = pkg_version
+    #     installed_versions[pkg_name] = pkg_version
     
     # Check if all requirements are installed
     for package, version in requirements:
-        if package in installed_versions:
-            pkg_version = installed_versions[package]
-            
+        
+        try:
+            pkg_version = importlib.metadata.version(package)
+        
             pkg_version_split = pkg_version.split('.')
             req_version_split = version.split('.')
             
@@ -205,8 +206,9 @@ def validate_requirements():
                     break
                 # Case that both versions are equal, continue loop, if loop ends, package version is equal to required version, OK
                 else:
-                    continue    
-        else:
+                    continue
+
+        except importlib.metadata.PackageNotFoundError:
             sys.stderr.write(f'ERROR: Package {package} not found in current Python environment!\n')
             return False
 
@@ -313,6 +315,19 @@ def run_rs_server(db_directory: str,
     # Check python availability
     try:
         subprocess.check_call([python_exec, '--version'])
+
+        # Check python version >= 3.12
+        version_output = subprocess.check_output([python_exec, '--version'], stderr=subprocess.STDOUT)
+
+        print("Detected Python Version:", version_output.decode().strip())
+
+        version_str = version_output.decode().strip().split()[1]
+        major_version = int(version_str.split('.')[0])
+        minor_version = int(version_str.split('.')[1])
+        if major_version < 3 or (major_version == 3 and minor_version < 12):
+            print(f'ERROR: Python version {version_str} is lower than required version 3.12!')
+            return
+
     except:
         logger.error(f'ERROR: Python not found in PATH!')
         return
@@ -575,6 +590,19 @@ def run_db_export(config_directory: str,
     # Check python availability
     try:
         subprocess.check_call([python_exec, '--version'])
+
+        # Check python version >= 3.12
+        version_output = subprocess.check_output([python_exec, '--version'], stderr=subprocess.STDOUT)
+
+        print("Detected Python Version:", version_output.decode().strip())
+
+        version_str = version_output.decode().strip().split()[1]
+        major_version = int(version_str.split('.')[0])
+        minor_version = int(version_str.split('.')[1])
+        if major_version < 3 or (major_version == 3 and minor_version < 12):
+            print(f'ERROR: Python version {version_str} is lower than required version 3.12!')
+            return
+
     except:
         print(f'ERROR: Python not found in PATH!')
         return
