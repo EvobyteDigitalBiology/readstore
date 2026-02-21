@@ -220,7 +220,7 @@ pg.run()
 # region SIDEBAR FOOTER
 
 version_info_md = f"""
-**ReadStore Basic Free Edition**
+**ReadStore Basic**
 
 v{uiconfig.__version__} (c) 2024-2026
 """
