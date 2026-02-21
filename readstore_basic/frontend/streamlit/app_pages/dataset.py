@@ -1717,7 +1717,7 @@ def uimain(fq_datasets_show,
                 selection = row_from_cells
 
             # Define selected dataset(s)
-            if len(selection) == 1:
+            if (len(selection) == 1) and (selection[0] < fq_datasets_show.shape[0]):
                 
                 # Subset projects and metadata to feed into update/details
                 # Get index from selection
@@ -1768,6 +1768,9 @@ def uimain(fq_datasets_show,
             elif len(selection) > 1:
                 select_row = selection
                 
+                # Select select_row entries which are all in projects_show
+                select_row = [r for r in select_row if r < fq_datasets_show.shape[0]]
+
                 # Get original index from projects overview before subset
                 selected_fq_dataset_ix = fq_datasets_show.iloc[select_row, :].index
                 
