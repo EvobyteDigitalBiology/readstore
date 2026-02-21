@@ -849,7 +849,7 @@ def uimain(pro_data_show,
                 selection = row_from_cells
 
             # Define selected dataset(s)
-            if len(selection) == 1:
+            if (len(selection) == 1) and (selection[0] < pro_data_show.shape[0]): # Check if selection is within the displayed dataframe
                 
                 select_row = selection[0]   
                 selected_ix = pro_data_show.iloc[[select_row],:].index[0]
@@ -878,7 +878,10 @@ def uimain(pro_data_show,
                 st.session_state['selected_pro_data_export'] = pro_data_export_select
 
             elif len(selection) > 1:
+                
                 select_row = selection
+                select_row = [r for r in select_row if r < pro_data_show.shape[0]]
+
                 selected_ix = pro_data_show.iloc[select_row,:].index
 
                 pro_data_detail = pro_data_overview.loc[selected_ix,:]
