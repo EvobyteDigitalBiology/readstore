@@ -19,7 +19,7 @@ It is recommended to use ReadStore Basic using the Python package manager `pip`.
 Make sure that pip is installed and available by running
 `pip --version`.
 
-You need **Python version 3.10 or higher** to install ReadStore.
+You need **Python version 3.12 or higher** to install ReadStore.
 
 You can perform the install in a conda or venv virtual environment to simplify package management.
 This is recommended to avoid potential conflicts in the required Python dependencies.
@@ -126,7 +126,7 @@ Restart the ReadStore Server with the same folder directories and settings as be
 
 ### Python version
 
-ReadStore Basic strictly requires **Python version 3.10** or above for installation. If your current Python version does not fulfill those requirements, you will receive an error like:
+ReadStore Basic strictly requires **Python version 3.12** or above for installation. If your current Python version does not fulfill those requirements, you will receive an error like:
 
 
 ```
@@ -150,7 +150,7 @@ Run the version command and make sure you see the right Python version. If your 
 
 ###  Wrong Python version
 
-Your current Python version is below Python 3.10, which will lead to an error like:
+Your current Python version is below Python 3.12, which will lead to an error like:
 
 ```
 ERROR: Could not find a version that satisfies the requirement readstore-basic (from versions: none)
@@ -238,9 +238,9 @@ sudo yum update
 
 sudo yum upgrade -y
 
-sudo yum install python3.11
+sudo yum install python3.12
 
-python3.11 -m venv .venv
+python3.12 -m venv .venv
 
 source .venv/bin/activate
 

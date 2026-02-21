@@ -165,7 +165,7 @@ More information on [updating](#update) a running ReadStore server can be found 
 
 ### 1. Install the ReadStore Basic Server
 
-You need **Python version 3.10 or higher** to install ReadStore.
+You need **Python version 3.12 or higher** to install ReadStore.
 
 You can perform the install in a conda or venv virtual environment to simplify package management.
 This is recommended to avoid potential conflicts in the required Python dependencies.
