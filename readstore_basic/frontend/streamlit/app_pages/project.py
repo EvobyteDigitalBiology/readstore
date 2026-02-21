@@ -1309,12 +1309,18 @@ def uimain(projects_show, my_owner_group_name, fq_dataset_og, fq_dataset_collab)
             else:
                 selection = row_from_cells
 
-            if len(selection) == 1:
+            # Make sure selection is still valid after filtering
+            if (len(selection) == 1) and (selection[0] < projects_show.shape[0]):
                 
                 # Subset projects and metadata to feed into update/details
                 # Get index from selection
                 select_row = selection[0]
                 
+                # Issue: what if selected select row is not anymore in projects_show
+                if select_row >= projects_show.shape[0]:
+                    st.session_state['error_cache'] = "Selected project is no longer available."
+                    return
+
                 # Get original index from projects overview before subset
                 selected_project_ix = projects_show.iloc[[select_row],:].index[0]
                 
@@ -1364,6 +1370,9 @@ def uimain(projects_show, my_owner_group_name, fq_dataset_og, fq_dataset_collab)
                 
                 select_row = selection
                 
+                # Select select_row entries which are all in projects_show
+                select_row = [r for r in select_row if r < projects_show.shape[0]]
+
                 # Get original index from projects overview before subset
                 selected_project_ix = projects_show.iloc[select_row,:].index # Refers to original index
                 selected_project = projects.loc[selected_project_ix,:]
