@@ -237,6 +237,9 @@ def checkin_df(fq_file_df: pd.DataFrame,
                                     key='staging_dataset_preexist',
                                     on_change = update_active_dataset_name)
 
+                else:
+                    st.session_state['staging_dataset_preexist'] = None
+
             if st.session_state['dataset_name_active'][1] == 'preexist':
                 description_template = fq_datasets_empty.loc[
                     fq_datasets_empty['name'] == display_name,'description'].iloc[0]
