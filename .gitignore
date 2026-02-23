@@ -191,3 +191,8 @@ rs/*
 run*.sh
 
 .flake8
+
+readstore_basic/.rs-server
+.readstore
+
+settings.json
