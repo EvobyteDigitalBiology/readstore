@@ -262,9 +262,9 @@ def create_pro_data(ref_dataset_projects_df: pd.DataFrame,
             elif not extensions.validate_charset(data_type):
                 st.session_state['error_cache'] = 'ProData Data Type: Only [0-9][a-z][A-Z][.-_@] characters allowed, no spaces.'
             elif data_path == '':
-                st.session_state['error_cache'] = "Enter an upload path"
+                st.session_state['error_cache'] = "Please enter an file path"
             elif not os.path.isfile(data_path):
-                st.session_state['error_cache'] = "Upload path for ProData File not found"
+                st.session_state['error_cache'] = "Entered path for ProData File not found"
             elif dataset_id is None:
                 st.session_state['error_cache'] = "Please select a dataset to attach ProData entry to."
             # Test dataset_id name combination exists
