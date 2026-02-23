@@ -11,11 +11,11 @@ Test datasets can be added as well to django DB
 
 import os
 import django
+import argparse
 from typing import List
 from itertools import chain
 import string
-
-
+import sys
 
 assert os.getenv("DJANGO_SETTINGS_MODULE"), "DJANGO_SETTINGS_MODULE not set"
 
@@ -29,14 +29,7 @@ from django.contrib.auth.hashers import make_password
 from app.models import AppUser
 from app.models import OwnerGroup
 from app.models import Project
-
-
-def validate_charset(query_str: str):
-    
-    allowed = string.digits + string.ascii_lowercase + string.ascii_uppercase + '_-.@'
-    allowed = set(allowed)
-    
-    return set(query_str) <= allowed
+from app.models import FqDataset
 
 # Permission Management
 
@@ -141,9 +134,19 @@ class ViewPermissionManager():
         permissions = list(chain(*permissions))
         return permissions
     
-def create_admin_user(name: str, password: str):
+def create_admin_user(name: str, password: str, admin_group):
+    """Create admin user with specified name and password.
+    
+    Args:
+        name (str): Username for the admin user
+        password (str): Password for the admin user
+        admin_group (Group): Admin group to assign to user
+        
+    Returns:
+        tuple: (User object or None, bool indicating if user was created)
+    """
     if User.objects.filter(username=name).exists():
-        return False
+        return User.objects.get(username=name), False
     else:
         admin = User.objects.create(username=name,
                                     password=make_password(password),
@@ -151,10 +154,135 @@ def create_admin_user(name: str, password: str):
                 
         admin.groups.set([admin_group])
         admin.save()
-        return True
+        return admin, True
+
+
+def create_default_user(password: str, appuser_group, staging_group):
+    """Create default user with specified password.
+    
+    Args:
+        password (str): Password for the default user
+        appuser_group (Group): AppUser group to assign to user
+        staging_group (Group): Staging group to assign to user
+        
+    Returns:
+        tuple: (User object, bool indicating if user was created)
+    """
+    if User.objects.filter(username='default').exists():
+        user = User.objects.get(username='default')
+        # Ensure AppUser instance exists
+        if not hasattr(user, 'appuser'):
+            AppUser.objects.create(user=user)
+        return user, False
+    else:
+        default_user = User.objects.create(username='default',
+                                          password=make_password(password),
+                                          is_staff=False)
+                
+        default_user.groups.set([appuser_group, staging_group])
+        default_user.save()
+        
+        # Create AppUser instance
+        AppUser.objects.create(user=default_user)
+        
+        return default_user, True
+
+
+def create_default_owner_group(owner_user):
+    """Create default OwnerGroup with specified owner.
+    
+    Args:
+        owner_user (User): User who will be the owner of the default group
+        
+    Returns:
+        OwnerGroup: Created or existing default OwnerGroup
+    """
+    if not OwnerGroup.objects.filter(name='default').exists():
+        owner_group = OwnerGroup.objects.create(name='default', owner=owner_user)
+        print("Default owner group created.")
+        return owner_group
+    else:
+        print("Default owner group already exists.")
+        return OwnerGroup.objects.get(name='default')
+
+
+def create_examples(owner_group):
+    """Create example project and dataset.
+    
+    Args:
+        owner_group (OwnerGroup): Owner group to assign to project and dataset
+    """
+    # Create example project
+    if not Project.objects.filter(name='hello_readstore_project').exists():
+        project = Project.objects.create(
+            name='hello_readstore_project',
+            description='This is you first ReadStore Project',
+            metadata={"project_owner": "John Doe", "project_start": "2025-05-05"},
+            dataset_metadata_keys={"species": "", "assay": ""},
+            owner_group=owner_group,
+            owner=owner_group.owner
+        )
+        print("Example project 'hello_readstore_project' created.")
+    else:
+        project = Project.objects.get(name='hello_readstore_project')
+        print("Example project 'hello_readstore_project' already exists.")
+    
+    # Create example dataset
+    if not FqDataset.objects.filter(name='hello_dataset').exists():
+        dataset = FqDataset.objects.create(
+            name='hello_dataset',
+            description='This is your first ReadStore dataset. It is part of the hello_readstore_project project and has no FASTQ files attached',
+            qc_passed=False,
+            paired_end=False,
+            index_read=False,
+            owner_group=owner_group,
+            owner=owner_group.owner,
+            metadata={"species": "mus musculus", "assay": "RNA-Seq"}
+        )
+        dataset.project.add(project)
+        dataset.save()
+        print("Example dataset 'hello_dataset' created.")
+    else:
+        print("Example dataset 'hello_dataset' already exists.")
+
+
+def setup_argument_parser():
+    """Set up argument parser for the script.
+    
+    Returns:
+        argparse.ArgumentParser: Configured argument parser
+    """
+    parser = argparse.ArgumentParser(
+        description='Setup ReadStore users and permissions',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    
+    parser.add_argument(
+        '--create-default-user-with-password',
+        action='store_true',
+        help='Create a default user with the specified password in environment variable DEFAULT_USER_PWD.'
+    )
+    
+    parser.add_argument(
+        '--create-admin-user-with-password', 
+        action='store_true',
+        help='Create an admin user with the specified passwor in environment variable ADMIN_USER_PWD.'
+    )
+    
+    parser.add_argument(
+        '--create-examples-with-default-user',
+        action='store_true',
+        help='Create example project and dataset.'
+    )
+    
+    return parser
 
 
 if __name__ == '__main__':
+    
+    # Parse command line arguments
+    parser = setup_argument_parser()
+    args = parser.parse_args()
 
     print("Setup permissions....")
     
@@ -206,23 +334,70 @@ if __name__ == '__main__':
     # Create admin user
     print("Setup admin user....")
 
-    if User.objects.filter(username='admin').exists():
-        print("Admin user already exists.")
-        admin = User.objects.get(username='admin')
-    else:
-        print('\n')
-        print('Set ReadStore ADMIN Account')
-        
-        admin = User.objects.create(username='admin',
-                                    password=make_password('readstore'),
-                                    is_staff=True)
-                
-        admin.groups.set([admin_group])
-        admin.save()
-        print("Admin user created.")
+    # Handle user creation based on arguments
+    admin_user = None
+    default_user = None
+    
+    # Create admin user if requested
+    if args.create_admin_user_with_password:
+        # Check for environment variable override
+        if 'ADMIN_USER_PWD' not in os.environ:
+            print('ERROR: Failed to detect ADMIN_USER_PWD!')
+            sys.exit(1)
 
-    # Create default owner group
-    print("Setup default owner group....")
-    if not OwnerGroup.objects.filter(name='default').exists():
-        OwnerGroup.objects.create(name='default', owner=admin)
-        print("Default owner group created.")
+        admin_password = os.getenv('ADMIN_USER_PWD')
+        del os.environ['ADMIN_USER_PWD']
+        
+        admin_user, created = create_admin_user('admin', admin_password, admin_group)
+        if created:
+            print("Admin user created.")
+        else:
+            print("Admin user already exists.")
+    
+    # Create default user if requested
+    if args.create_default_user_with_password:
+        print("Setup default user....")
+        
+        # Check for environment variable override
+        if 'DEFAULT_USER_PWD' not in os.environ:
+            # Stop with error
+            print('ERROR: Failed to detect DEFAULT_USER_PWD!')
+            sys.exit(1)
+
+        default_password = os.getenv('DEFAULT_USER_PWD')
+        del os.environ['DEFAULT_USER_PWD']
+
+        default_user, created_default_user = create_default_user(default_password, appuser_group, staging_group)
+        if created_default_user:
+            print("Default user created.")
+
+            # Create Example Data
+            print("Creating examples....")
+
+        else:
+            print("Default user already exists.")
+    
+    # Create default owner group if users were created
+    owner_group = None
+    if admin_user or default_user:
+        print("Setup default owner group....")
+        
+        # Determine owner: admin takes precedence, then default user
+        owner = admin_user if admin_user else default_user
+        owner_group = create_default_owner_group(owner)
+        
+        # Set owner_group for default user's AppUser if default user was created
+        if default_user and hasattr(default_user, 'appuser'):
+            default_user.appuser.owner_group = owner_group
+            default_user.appuser.save()
+            print(f"Set owner_group for default user's AppUser to '{owner_group.name}'.")
+    else:
+        print("No users created. Skipping OwnerGroup creation.")
+    
+    # Create examples if requested
+    if args.create_examples_with_default_user:
+        if owner_group and default_user and created_default_user:
+            print("Creating examples....")
+            create_examples(owner_group)
+        else:
+            print("ERROR: Cannot create examples without an owner group, new default user. Create a user first.")

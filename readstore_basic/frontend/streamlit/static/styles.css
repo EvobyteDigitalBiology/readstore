@@ -1,0 +1,22 @@
+header[data-testid='stHeader'] {
+    display: none;
+}
+
+section[data-testid='stSidebar'] {
+    width: 150px;
+    min-width: 150px;
+}
+
+div[data-testid='stSidebarHeader'] img {
+    width: 200px;
+    max-width: 114px !important;
+}
+
+div[data-testid='stSidebarCollapseButton'] {
+    display: none;
+}
+
+div .stMainBlockContainer {
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+}

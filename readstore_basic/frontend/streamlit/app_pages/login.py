@@ -37,14 +37,21 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+st.space(128)
 
-col2a, col2, _ = st.columns([4, 4, 4], vertical_alignment="center")
+login_cont = st.container(horizontal_alignment="center")
 
-with col2:
+with login_cont:
     
-    st.image(os.path.join(uiconfig.STATIC_PATH_PREFIX, "static/BannerLargeLightBlueBackground.png"), use_container_width = True)
-    
-    login_form = st.form("Login")
+    #
+    st.html("""
+        <div style="gap: 0px;">
+        <span style="color: #2A4159; font-size: 28px; font-weight: 700;">READ</span><span style="color: #2A4159; font-size: 28px;">STORE</span>
+        </div>
+        """,
+        width='content')
+
+    login_form = st.form("Login", width=312)
 
     username = login_form.text_input("**Username**").lower()
     password = login_form.text_input("**Password**", type="password")
@@ -55,20 +62,8 @@ with col2:
 
         if uiconfig.AUTH_METHOD == uiconfig.AUTH_METHOD.JWT:
             try:
-                access_token, refresh_token = extensions.get_jwt_token(username, password)
-
-                st.session_state["access_token"] = access_token
-                st.session_state["refresh_token"] = refresh_token
-                st.session_state["jwt_auth_header"] = {"Authorization": "JWT " + access_token}
-                
-                st.write()
-                
-                extensions.validate_endpoints(uiconfig.ENDPOINT_CONFIG,
-                                headers = st.session_state["jwt_auth_header"])
-                
-                extensions.start_token_refresh_thread()
-                
+                extensions.perform_login(username, password)
                 st.rerun()
                 
             except exceptions.UIAppError as e:
-                st.error(e.message)
+                st.error(e.message, width=312)

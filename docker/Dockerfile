@@ -25,12 +25,12 @@ USER nonroot
 WORKDIR $WORKDIR
 
 COPY --chown=nonroot:nonroot requirements.txt requirements.txt
-COPY --chown=nonroot:nonroot rs_config.yaml rs_config.yaml
-COPY --chown=nonroot:nonroot __version__.py __version__.py
-COPY --chown=nonroot:nonroot readstore_server.py readstore_server.py
+COPY --chown=nonroot:nonroot readstore_basic/readstore_server_config.yaml readstore_server_config.yaml
+COPY --chown=nonroot:nonroot readstore_basic/__version__.py __version__.py
+COPY --chown=nonroot:nonroot readstore_basic/readstore_server.py readstore_server.py
 
-COPY --chown=nonroot:nonroot backend backend
-COPY --chown=nonroot:nonroot frontend frontend
+COPY --chown=nonroot:nonroot readstore_basic/backend backend
+COPY --chown=nonroot:nonroot readstore_basic/frontend frontend
 
 # Requirements for pipeline
 RUN pip3 install --user -r requirements.txt
@@ -42,5 +42,3 @@ ENV PATH="${WORKDIR}/.local/bin:${PATH}"
 
 EXPOSE 8501
 EXPOSE 8000
-
-#ENTRYPOINT [ "python3", "launch_backend.py" ]

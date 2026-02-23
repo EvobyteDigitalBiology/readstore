@@ -11,25 +11,26 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/EvobyteDigitalBiology/readstore",
     packages=find_packages(exclude=["readstore_basic.backend.app.migrations"]),
-    license="Commercial",
+    license="Apache Software License 2.0",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: Other/Proprietary License",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.10',
     install_requires=[
-        'Django>=5.1.6',
-        'djangorestframework>=3.15.2',
-        'djangorestframework_simplejwt>=5.4.0',
-        'requests>=2.32.3',
+        'Django>=5.2.11',
+        'djangorestframework>=3.16.1',
+        'djangorestframework_simplejwt>=5.5.1',
+        'requests>=2.32.4',
         'gunicorn>=23.0.0',
-        'pysam>=0.22.1',
+        'pysam>=0.23.3',
         'pyyaml>=6.0.2',
-        'streamlit>=1.42.0',
-        'pydantic>=2.10.6',
-        'pandas>=2.2.3',
-        'openpyxl>=3.1.5'
+        'streamlit>=1.54.0',
+        'pydantic>=2.11.7',
+        'pandas>=2.3.1',
+        'openpyxl>=3.1.5',
+        'st-styled>=0.3.0'
     ],
     entry_points={
         'console_scripts': [

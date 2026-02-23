@@ -1,4 +1,5 @@
 django:
+  python_exec: python3
   access_token_lifetime: 660
   allowed_hosts: localhost,127.0.0.1,*
   api_version: api_v1
@@ -24,6 +25,8 @@ global:
   valid_read2_suffix: R2_001,R2,Read2,r2_001,r2,read2
   valid_read_type: R1,R2,I1,I2
   readstore_version: 1.4.0
+  enable_login: false
+  config_dir: ~/.rs-server
   metadata_reserved_keys: id,name,project,project_ids,project_names,owner_group_name,qc_passed,paired_end,index_read,created,description,owner_username,fq_file_r1,fq_file_r2,fq_file_i1,fq_file_i2,id_project,name_project,name_og,archived,collaborators,dataset_metadata_keys,data_type,version,valid_to,upload_path,owner_username,fq_dataset,id_fq_dataset,name_fq_dataset
 streamlit:
   access_token_refresh_seconds: 600

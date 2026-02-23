@@ -2,23 +2,66 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/readstore-basic)
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 
+<br>
+
+![ReadStore Workspace](../readstore_basic/frontend/streamlit/static/tutorial/img_01_welcome_readstore.webp)
+
+<br>
+
 # ReadStore Basic
 
-This README introduces ReadStore Data Platform, the lean solution for managing NGS and omics data.
+ReadStore is the lean data platform for managing NGS and Omics data and automating data analysis.
 
-The full **ReadStore Basic documentation** is available [here](https://evobytedigitalbiology.github.io/readstore/) 
+- **Database** for FASTQ, analysis and metadata files
+- **Project management** and collaborative workspace
+- **APIs** for Terminal, Python and R for automation of data analysis
+
+<br>
+
+The full documentation is available as [GitHub Page](https://evobytedigitalbiology.github.io/readstore/) 
 
 **Please read and follow the instructions carefully**. In particular the [Security, Permissions and Backup](#backup) section contains important information related to data security and backup. In case of problems with the install or information on different Linux distributions, please check the separate [Installation Guide](installation.md).
-
-You need a license key for using ReadStore Basic, please check the [ReadStore website](https://evo-byte.com/readstore-get-started/) for more information or reach out to license@evo-byte.com
-
-Start with the ReadStore Intro and **Tutorials**: https://www.youtube.com/@evobytedigitalbio
-
-Blog posts and How-Tos: https://evo-byte.com/blog/
 
 For general questions reach out to info@evo-byte.com or in case of technical problems to support@evo-byte.com
 
 Happy analysis :)
+
+## Quickstart
+
+ReadStore Basic allows you to manage NGS and omics data through a web interface and command-line tools. Follow these steps to get started:
+
+1. **Install ReadStore Basic**
+
+    `pip3 install readstore-basic`
+
+2. **Start the server**: 
+
+    `readstore-server`
+
+3. **Access the web app**
+
+    Open your browser and navigate to `http://localhost:8501`
+
+4. **Upload FASTQ datasets**
+
+    In the UI, navigate to the *Upload Page* and click Import to ingest FASTQ files.
+
+    Check In datasets after QC is completed. 
+
+5. **Install the CLI** (optional)
+
+    `pip3 install readstore-cli`
+
+6. **Configure the CLI**
+
+    Run `readstore configure` and enter your username and token
+
+7. **Upload FASTQ files**
+
+    Use `readstore upload myfile_r1.fastq` to upload sequencing data
+
+
+For detailed instructions how to enable user management, setup APIs and more, see the [Installation](#installation) and [Usage](#usage) sections below.
 
 ## Table of Contents
 - [Description](#description)
@@ -41,7 +84,7 @@ Happy analysis :)
 
 ## The Lean Solution for Managing NGS and Omics Data
 
-ReadStore is a platform for storing, managing, and integrating omics data. It speeds up analysis and offers a simple way of managing and sharing NGS omics datasets, metadata and processed data (**Pro**cessed **Data**).
+ReadStore is a platform for storing, managing, and integrating omics data. It speeds up analysis and offers a simple way of managing and sharing NGS omics datasets, metadata and processed data (ProData).
 Built-in project and metadata management structures your workflows and a collaborative user interface enhances teamwork — so you can focus on generating insights.
 
 The integrated Webservice enables you to directly retrieve data from ReadStore via the terminal [Command-Line Interface (CLI)](#https://github.com/EvobyteDigitalBiology/readstore-cli) or [Python](#https://github.com/EvobyteDigitalBiology/pyreadstore) / [R](#https://github.com/EvobyteDigitalBiology/r-readstore) SDKs.
@@ -50,7 +93,7 @@ The ReadStore Basic version offered here provides a local web server with simple
 
 ## Description
 
-ReadStore facilitates managing FASTQ files, NGS and Omics data, along with experimental (meta)data and **Pro**cessed **Dataset**. It provides a database and a web app with a simple user interface to create and edit datasets and projects. You can create your own structure using metadata key-value pairs (e.g., replicate: 1 or condition: control) or attach files as additional information.
+ReadStore facilitates managing FASTQ files, NGS and Omics data, along with experimental (meta)data and Processed Datasets. It provides a database and a web app with a simple user interface to create and edit datasets and projects. You can create your own structure using metadata key-value pairs (e.g., replicate: 1 or condition: control) or attach files as additional information.
 
 Metadata, file attachments and processed datasets (ProData) can be accessed along with your NGS datasets from analysis scripts or data pipelines, providing consistent workflow automation.
 
@@ -58,9 +101,7 @@ ReadStore Basic enables you to manage NGS data from your local Linux environment
 
 To upload FASTQ files and Processed Data from the command line into the ReadStore database, you’ll also need to install the ReadStore CLI.
 
-Logging into the ReadStore web app via the browser requires a user account. User accounts are created from the Admin account, which is setup by default.
-
-ReadStore Basic provides a shared work environment for all registered users. Users can collaborate on editing datasets, projects, metadata, and attachments, with shared access to all resources. This facilitates cross-functional projects, connecting data analysts and experimental researchers.
+ReadStore Basic provides a shared work environment. Users can collaborate on editing datasets, projects, metadata, and attachments, with shared access to all resources. This facilitates cross-functional projects, connecting data analysts and experimental researchers.
 
 The ReadStore database can be accessed programmatically using the [Command-Line Interface (CLI)](#https://github.com/EvobyteDigitalBiology/readstore-cli) or [Python](#https://github.com/EvobyteDigitalBiology/pyreadstore) & [R](#https://github.com/EvobyteDigitalBiology/r-readstore) SDKs. This facilitates easy integration into bioinformatics pipelines and downstream analysis workflows.
 
@@ -78,13 +119,16 @@ The Linux user running the `readstore-server` is, by default, the **Data Owner**
 
 The **Data Owner** must ensure that access rights to these files remain restricted to prevent unauthorized access to the ReadStore database (see [Installation](#installation)). By default, the secret key and configuration files are stored in your home directory (`~/.rs-server/`), but you can change the `--config-directory` to specify a different folder path.
 
-The ReadStore secret key is located in your `--config-dir` (default `~/.rs-server/secret_key`). It is recommended to **keep a secured copy of the secret key** to allow access to backups or restore the database in case of an incident.
+The ReadStore secret key is located in your `--config-directory` (default `~/.rs-server/secret_key`). It is recommended to **keep a secured copy of the secret key** to allow access to backups or restore the database in case of an incident.
+
+If you run ReadStore without `--enable-login` (default), ReadStore creates a `secret_default_user_key` file in your `--config-directory` (default `~/.rs-server/secret_default_user_key`). The Streamlit app uses this key to automatically log in as the default user (`default`). Treat this file like a password and keep it protected with restrictive permissions. You can also set an custom default user key with the `--admin-password` parameter.
 
 ### Admin Account
 
-Upon the first launch of the ReadStore Basic web server, the Admin account is created with a password provided along with your license key.
+ReadStore can be started in two modes:
 
-The **Admin must change the Admin password immediately** upon the first login.
+- **Login enabled** (`--enable-login`): upon first launch, an Admin account (`admin`) is created using the password provided via `--admin-password`. Login to the admin account is required to create users and manage permissions.
+- **Login disabled** (default): no interactive login is shown in the browser. The app automatically logs in as the default user (`default`) using the `secret_default_user_key` in your `--config-directory`.
 
 
 ### User Account Passwords and Tokens
@@ -93,9 +137,13 @@ To log in to the ReadStore web app via a web browser, each **User** needs a user
 
 Each **User** has a unique **Token** assigned, which is required to connect to ReadStore via the Command-Line Interface (CLI) or through the Python and R SDKs. This token should not be shared. Tokens can be easily regenerated from the Settings page in the ReadStore CLI.
 
-A **User** is required to have **staging permissions** to upload FASTQ files into the ReadStore database.
+A **User** is required to have **upload permissions** to upload FASTQ files into the ReadStore database.
 
 See [Installation](#installation) for instructions how to setup Users
+
+#### What about user groups?
+
+Group management to handle access permissions is available in the advanced versions of ReadStore. If you would like to learn more, reach out to info@evo-byte.com. 
 
 ### Backups
 
@@ -117,7 +165,7 @@ More information on [updating](#update) a running ReadStore server can be found 
 
 ### 1. Install the ReadStore Basic Server
 
-You need **Python version 3.10 or higher** to install ReadStore.
+You need **Python version 3.12 or higher** to install ReadStore.
 
 You can perform the install in a conda or venv virtual environment to simplify package management.
 This is recommended to avoid potential conflicts in the required Python dependencies.
@@ -150,7 +198,10 @@ This should print the ReadStore Basic version
 
 #### Prepare Output Folders 
 
-Create output folders for the ReadStore database files (`db-directory`), the backups (`db-backup-directory`) and log files (`log-directory`).
+ReadStore stores the database, backups and logs in separate folders.
+
+- You can **explicitly create folders** for the ReadStore database files (`db-directory`), the backups (`db-backup-directory`) and log files (`log-directory`) and pass them as arguments.
+- If you start `readstore-server` **without providing any of these three directory arguments**, it will automatically create (or reuse, if already present) the folders `readstore-db/`, `readstore-db-backup/` and `readstore-log/` in your current working directory.
 
 All ReadStore database, backup and log files are created with user-exclusive read/write permissions (`chmod 600`) when starting the ReadStore server for the first time. Make sure that restricted permissions are maintained to avoid unwanted access to database files.
 
@@ -158,9 +209,29 @@ The readstore configuration files and secret key are by default written to you h
 
 #### Start the Server
 
+`readstore-server`
+
+or run
+
 `readstore-server --db-directory /path/to/database_dir --db-backup-directory /path/to/backup_dir --log-directory /path/to/logs_dir`
 
-ReadStore Server requires ports 8000 and 8501. See [below](#advancedconfig) if there is a problem with blocked ports.
+If you want to define database and log data path by yourself. ReadStore Server requires ports 8000 and 8501. See [below](#advancedconfig) if there is a problem with blocked ports.
+
+#### User Management
+
+To enable set the **interactive login** (creates `admin` user on first start):
+
+Make sure to store the `admin-password` at a secure location.
+
+##### Security note: reset the admin password on first login
+
+When you start ReadStore with `--admin-password`, the password is part of the command you type. Depending on your environment, that can be exposed via your terminal scrollback, shell history, logs, or process listings.
+
+To reduce the risk of accidental disclosure, use `--admin-password` only to bootstrap the initial `admin` account, then **log in once and immediately change the `admin` password** using the web app’s password change/reset functionality.
+
+`readstore-server --enable-login --admin-password <your_admin_password> --db-directory /path/to/database_dir --db-backup-directory /path/to/backup_dir --log-directory /path/to/logs_dir`
+
+#### How can I persist the server sesstion?
 
 The command will run the server in your current terminal session, but you probably want to keep your server running after closing the terminal.
 There are different options
@@ -184,7 +255,10 @@ You can simply restart the `readstore-server` with the same directories, and you
 
 After the launch of the webserver you should to be able to connect to the ReadStore web app from your browser.
 
-The ReadStore web app should be available via your browser under localhost port 8501 (`http://127.0.0.1:8501` or `http://localhost:8501/`). You should see a login screen.
+The ReadStore web app should be available via your browser under localhost port 8501 (`http://127.0.0.1:8501` or `http://localhost:8501/`).
+
+- With `--enable-login`, you should see a login screen.
+- Without `--enable-login` (default), the app automatically logs in as the default user (`default`).
 
 If you you want to connect to the ReadStore Web App from a remote connection, e.g. from you local PC via the browser, you may need to open the corresponing server ports or setup a SSH tunnel (s. below)
 
@@ -194,50 +268,39 @@ If you you want to connect to the ReadStore Web App from a remote connection, e.
 
 If you run ReadStore Basic on a Linux server that you connect to via SSH, consider using SSH tunneling / port forwarding to access the server port 8501 from your local machine's browser (Check this [Tutorial](#https://linuxize.com/post/how-to-setup-ssh-tunneling/)). Tools like [PuTTY](#https://www.putty.org/) help Windows users to easily set up SSH tunnels.
 
-In any case make sure that server connections are established *in agreement with your organizations IT security guidelines* or ask your IT admins for support. 
+In any case make sure that server connections are established in agreement with your organizations IT security guidelines or ask your IT admins for support. 
 
 If you need support in making ReadStore available for users in your organization, reach out to info@evo-byte.com. We will find a solution for you!
 
 ### 4. Setup Admin Account and First Users
 
-#### Change your Admin password IMMEDIATELY!
-
-Together with you ReadStore License Key you should have received a the login password for the Admin account.
-
-1. Log into the web app with the username `admin` and the received admin password
-2. Move to the `Settings` page and click the `Reset Password` button
-3. Enter a new password and `Confirm`
-4. Login out and into the admin account again to validate the new password
-
-#### Enter your License Key
-
-You need to enter your license key before you can create users.
-
-1. Log into the Admin account
-2. Move to the `Settings` page
-3. Click the `License Key` button. You should see information on the current status of you license
-4. Click `Enter New Key` and enter you license key and `Confirm`
-
-This activates your license and you should see an expiration date and the maximum number of user/seats in the `License Key` overview.
+**NOTE** This section applies when you start the server with `--enable-login`.
 
 #### Create new User(s)
 
-1. Log into the Admin account, move to the `Admin` page
-2. Click the `Create` button to create a new user
-3. Add name, email and password. If the user should be allowed to upload FASTQ files you must enable `Staging Permissions`
-4. Click `Confirm`. You should see the new user in the overview
+1. Open the webapp under `http://127.0.0.1:8501`
+2. Log into the Admin account, move to the `Admin` page
+3. Click the `Create` button to create a new user
+4. Add name, email and password. If the user should be allowed to upload FASTQ files you must enable `Upload Permissions`
+5. Click `Confirm`. You should see the new user in the overview
 
-Users can change their password in their `Settings` page. The number of users is limited by the seats of your license.
+Users can change their password in their `Settings` page after login. The number of users is limited by the seats of your license.
 
-### 5. Install the ReadStore Command Line Interface (CLI)
+#### Login with User Account
+
+1. Open the webapp under `http://127.0.0.1:8501`
+2. Login with the created user name and password
+3. Get started creating project and datasets
+
+### 5. Install the ReadStore Command Line Interface (CLI) (optional)
 
 You need to install the ReadStore CLI if you want to upload FASTQ files and access ReadStore data from the CLI.
 
 For more information check the [ReadStore CLI GitHub Repository](https://github.com/EvobyteDigitalBiology/readstore-cli)
 
-**NOTE** Uploading FASTQ files requires users to have `staging permission` set in their account.  
+**NOTE** Uploading FASTQ files requires users to have `Upload Permission` set in their account.  
 
-#### Install Command
+#### Install Command Line Interface
 
 `pip3 install readstore-cli`
 
@@ -304,15 +367,16 @@ Resume your work as usual. If you encounter any questions or issues, contact sup
 ReadStore Server
 
 options:
-  -h, --help            show this help message and exit
-  --db-directory        Directory for Storing ReadStore Database.
-  --db-backup-directory
-                        Directory for Storing ReadStore Database Backups
-  --log-directory       Directory for Storing ReadStore Logs
-  --config-directory    Directory for storing readstore_server_config.yaml (~/.rs-server)
-  --django-port         Port of Django Backend
-  --streamlit-port      Port of Streamlit Frontend
-  --debug               Run In Debug Mode
+  -h, --help             Show this help message and exit
+  --db-directory         Directory for Storing ReadStore Database  (default: ./readstore-db)
+  --db-backup-directory  Directory for Storing ReadStore Database Backups   (default: ./readstore-db-backup)
+  --log-directory        Directory for Storing ReadStore Logs   (default: ./readstore-log)
+  --config-directory     Directory for storing readstore_server_config.yaml (default: ~/.rs-server)
+  --django-port          Port of Django Backend (default: 8001)
+  --streamlit-port       Port of Streamlit Frontend (default: 8501)
+  --debug                Run In Debug Mode
+  --enable-login         Enable user authentication
+  --admin-password       Password for admin user. Required if --enable-login is set
 ```
 
 ReadStore requires different directories for storing the database file, backups, logs and configurations. It is important to make sure that the user launching the ReadStore server (**data owner**) has read and write permissions for each folder. The files created have user-exclusive read/write permissions (`chmod 600`) by default and it is important to ensure that permissions are kept restrictive.
@@ -338,6 +402,8 @@ RS_LOG_DIRECTORY        Corresponds to log-directory argument
 RS_CONFIG_DIRECTORY     Corresponds to config-directory argument
 RS_DJANGO_PORT          Corresponds to django-port argument
 RS_STREAMLIT_PORT       Corresponds to streamlit-port argument
+
+RS_ADMIN_PASSWORD       Admin password (overrides --admin-password)
 
 RS_PYTHON      Path to Python executable    (default: python3)
 RS_STREAMLIT   Path to Streamlit executable (default: streamlit)
@@ -405,7 +471,7 @@ options:
   --export_directory   Directory for storing exported ReadStore Database files (required)
 ```
 
-Example `readstore export --config-directory /path/to/config --export_directory /path/to/export_files`
+Example `readstore-server export --config-directory /path/to/config --export_directory /path/to/export_files`
 
 The tables are exported as `.csv` and `.json` files. Project and Datasets attachment files are exported in their original file format, each in a separate folder for each Project or Dataset.
 
@@ -451,8 +517,6 @@ Comprehensive [API documentation](https://evobytedigitalbiology.github.io/readst
 
 ## Usage
 
-Detailed tutorials, videos and explanations are found on [YouTube](https://www.youtube.com/playlist?list=PLk-WMGySW9ySUfZU25NyA5YgzmHQ7yquv) or on the [**EVO**BYTE blog](https://evo-byte.com/blog).
-
 ### Quickstart
 
 Let's upload some FASTQ files.
@@ -465,7 +529,7 @@ Run the command to check if your configuration is in place.
 
 `readstore configure list`
 
-For uploading FASTQ files your User Account needs to have `Staging Permission`. Check this in the `Settings` page of your account. If you do not have `Staging Permission`, ask the Admin to grant you permission.
+For uploading FASTQ files your User Account needs to have `Upload Permission`. Check this in the `Settings` page of your account. If you do not have `Upload Permission`, ask the Admin to grant you permission.
 
 #### 2. Upload Files<a id="upload_files"></a>
 
@@ -479,7 +543,7 @@ You can also upload multiple FASTQ files at once using the import function or pe
 
 #### 3. Stage Files<a id="stage_files"></a>
 
-Login to the User Interface on your browser and move to the `Staging` page. Here you find a list of all FASTQ files you just upload.
+Login to the User Interface on your browser and move to the `Upload` page. Here you find a list of all FASTQ files you just upload.
 
 For large files the QC step can take a while to complete. FASTQ files are grouped in Datasets which you can `Check In`. Then they appear in the `Datasets` page.
 
@@ -518,7 +582,7 @@ their path are stored in the database and validated.
 
 Here's an example how to upload, retrieve and delete a processed file.
 
-**NOTE** Your user account is required to have `Staging Permissions` to upload and delete ProData files:
+**NOTE** Your user account is required to have `Upload Permissions` to upload and delete ProData files:
 
 `readstore pro-data upload -d test_dataset_1 -n test_dataset_count_matrix -t count_matrix test_count_matrix.h5`  
 Upload count matrix test_count_matrix.h5 with name "test_dataset_count_matrix" for dataset with name "test_dataset_1"
@@ -537,12 +601,7 @@ Please feel free to create an issue for problems with the software or feature su
 
 ## License
 
-ReadStore Basic Server is distributed under a commercial/proprietary license.
-Details are found in the LICENSE file.
-
-You need a license key for using ReadStore Basic, please check the ReadStore website for more information or reach out to license@evo-byte.com. Using ReadStore Basic without a valid license key is not permitted.
-
-ReadStore CLI is distributed under an Open Source Apache 2.0 License.
+ReadStore Basic is distributed under an Open Source Apache 2.0 License.
 
 ## Credits and Acknowledgments<a id="acknowledgments"></a>
 

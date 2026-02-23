@@ -15,6 +15,7 @@ import datetime
 
 import streamlit as st
 import pandas as pd
+import numpy as np
 import os
 import requests
 
@@ -39,10 +40,13 @@ from uidataclasses import FqFileUploadApp
 from uidataclasses import InvalidPath
 from uidataclasses import ProData
 from uidataclasses import TransferOwner
+from uidataclasses import UserDataStats
+from uidataclasses import UserRecentActivity
+
 
 #region basic functions
 @st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
-def get_my_user(headers: dict) -> pd.DataFrame:
+def get_my_user(headers: dict) -> User:
     
     endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['user'], 'my_user/')
     df = extensions.detail_request_to_model(endpoint, User, headers=headers)
@@ -376,6 +380,31 @@ def get_pro_data_invalid_upload_paths(headers: dict) -> List[dict]:
     
     return df
 
+def get_recent_activity(headers: dict) -> pd.DataFrame:
+    
+    endpoint = os.path.join(uiconfig.BACKEND_API_ENDPOINT, 'recent_activity/')
+    df = extensions.get_request_to_df(endpoint, UserRecentActivity, headers=headers)
+    
+    return df
+
+
+@st.cache_data(ttl=uiconfig.CACHE_TTL_SECONDS, show_spinner='Loading data...')
+def get_user_data_stats(headers: dict) -> UserDataStats:
+    """
+    Retrieve user data statistics from the backend API.
+    
+    Args:
+        headers: Authentication headers for the request
+        
+    Returns:
+        UserDataStats: User data statistics model containing storage and usage info
+    """
+
+    endpoint = os.path.join(uiconfig.ENDPOINT_CONFIG['user_data_stats'])
+    user_data_stats = extensions.detail_request_to_model(endpoint, UserDataStats, headers=headers)
+    
+    return user_data_stats
+
 #region COMBINED
 
 # ADMIN
@@ -576,8 +605,6 @@ def get_project_datasets_overview(headers: dict) -> pd.DataFrame:
     
     fq_datasets = fq_datasets[['id', 'name', 'project']]
     
-    print(fq_datasets)
-    
     fq_datasets.columns = ['dataset_id', 'dataset_name', 'project_id']
     fq_datasets = fq_datasets.explode('project_id')
     datasets_projects = fq_datasets.merge(projects, on='project_id', how='left')
@@ -732,6 +759,8 @@ def get_pro_data_meta_overview(headers: dict, include_archived = False) -> Tuple
     pro_data_owner_group = pro_data_owner_group.merge(fq_datasets, on='fq_dataset') 
     pro_data_owner_group = pro_data_owner_group[return_cols]
     
+    pro_data_owner_group['id'] = pro_data_owner_group['id'].astype(int)
+
     return pro_data_owner_group, metadata
 
 

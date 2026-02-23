@@ -15,13 +15,15 @@ Example:
 
 import base64
 from typing_extensions import Annotated
-from typing import Optional
+from typing import Optional, Literal
 import datetime
 
 from pydantic import BaseModel
 from pydantic import EncoderProtocol
 from pydantic import EncodedBytes
 from pydantic import Base64Bytes
+
+
 
 # ENCODERS
 
@@ -220,3 +222,17 @@ class ProData(BaseModel):
 class TransferOwner(BaseModel):
     source_owner_id: int
     dest_owner_id: int
+
+class UserDataStats(BaseModel):
+    num_projects: int
+    num_fq_datasets: int
+    num_fq_files: int
+    num_pro_data: int
+    total_num_reads: int
+
+class UserRecentActivity(BaseModel):
+    id: int
+    name: str
+    type: str
+    updated: datetime.datetime
+    action: Literal['created', 'updated']

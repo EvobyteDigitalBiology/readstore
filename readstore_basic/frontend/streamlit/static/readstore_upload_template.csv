@@ -1,1 +1,3 @@
-FASTQFileName,ReadType,UploadPath
+Dataset,ReadType,FilePath
+ExampleDataset,R1,/home/user/example_R1_001.fastq.gz
+ExampleDataset,R2,/home/user/example_R2_001.fastq.gz

@@ -25,11 +25,19 @@ try:
 except ModuleNotFoundError:
     from __version__ import __version__
 
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RS_CONFIG_PATH = os.path.join(BASE_DIR, 'readstore_server_config.yaml')
 
-parser = argparse.ArgumentParser(
+class ReadStoreArgumentParser(argparse.ArgumentParser):
+    """Custom ArgumentParser that shows help on error."""
+    
+    def error(self, message: str) -> None:
+        """Override error method to show help when invalid arguments are provided."""
+        sys.stderr.write(f'error: {message}\n')
+        self.print_help()
+        sys.exit(2)
+
+parser = ReadStoreArgumentParser(
     prog='readstore-server',
     usage='%(prog)s <command> [options]',
     description="ReadStore Server",
@@ -38,23 +46,29 @@ parser = argparse.ArgumentParser(
 subparsers = parser.add_subparsers(title="Commands")
 
 parser.add_argument(
-    '--db-directory', type=str, help='Directory for Storing ReadStore Database (required)', metavar='')
+    '--db-directory', type=str, help='Directory for Storing ReadStore Database (optional - defaults to readstore-db)', metavar='')
 
 parser.add_argument(
-    '--db-backup-directory', type=str, help='Directory for Storing ReadStore Database Backups (required)', metavar='')
+    '--db-backup-directory', type=str, help='Directory for Storing ReadStore Database Backups (optional - defaults to readstore-db-backup)', metavar='')
 
 parser.add_argument(
-    '--log-directory', type=str, help='Directory for Storing ReadStore Logs (required)', metavar='')
+    '--log-directory', type=str, help='Directory for Storing ReadStore Logs (optional - defaults to readstore-log)', metavar='')
 
 parser.add_argument(
     '--config-directory', type=str, help='Directory for storing readstore_server_config.yaml (~/.rs-server)', metavar='', default='~/.rs-server')
 
 parser.add_argument(
-    '--django-port', type=int, default=8000, help='Port of Django Backend', metavar='')
+    '--django-port', type=int, default=8000, help='Port of Django Backend (default 8000)', metavar='')
 parser.add_argument(
-    '--streamlit-port', type=int, default=8501, help='Port of Streamlit Frontend', metavar='')
+    '--streamlit-port', type=int, default=8501, help='Port of Streamlit Frontend (default 8501)', metavar='')
 parser.add_argument(
     '--debug', action='store_true', help='Run In Debug Mode')
+
+parser.add_argument(
+    '--enable-login', action='store_true', help='Enable user authentication')
+
+parser.add_argument(
+    '--admin-password', type=str, help='Password for admin user. Required if --enable-login is set', metavar='')
 
 parser.add_argument(
     '-v', '--version', action='store_true', help='Show Version Information')
@@ -80,6 +94,58 @@ def _get_path(path: str):
 def _is_port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('localhost', port)) == 0
+
+def create_default_directories() -> tuple[str, str, str]:
+    """Create default directories with readstore- prefix.
+    
+    If directories already exist, use them instead of creating new ones.
+    
+    Returns:
+        tuple: (db_directory, db_backup_directory, log_directory)
+    """
+    current_dir = os.getcwd()
+    
+    default_db_dir = os.path.join(current_dir, 'readstore-db')
+    default_backup_dir = os.path.join(current_dir, 'readstore-db-backup')
+    default_log_dir = os.path.join(current_dir, 'readstore-log')
+    
+    # Check if any of the directories already exist
+    existing_dirs = []
+    if os.path.exists(default_db_dir):
+        existing_dirs.append(default_db_dir)
+    if os.path.exists(default_backup_dir):
+        existing_dirs.append(default_backup_dir)
+    if os.path.exists(default_log_dir):
+        existing_dirs.append(default_log_dir)
+    
+    if existing_dirs:
+        print("\nUsing existing default directories:")
+        for dir_path in existing_dirs:
+            print(f"  - {dir_path}")
+    
+    # Create directories if they don't exist
+    dirs_created = []
+    try:
+        if not os.path.exists(default_db_dir):
+            os.makedirs(default_db_dir, exist_ok=True)
+            dirs_created.append(default_db_dir)
+        if not os.path.exists(default_backup_dir):
+            os.makedirs(default_backup_dir, exist_ok=True)
+            dirs_created.append(default_backup_dir)
+        if not os.path.exists(default_log_dir):
+            os.makedirs(default_log_dir, exist_ok=True)
+            dirs_created.append(default_log_dir)
+        
+        if dirs_created:
+            print("\nSuccessfully created default directories:")
+            for dir_path in dirs_created:
+                print(f"  - {dir_path}")
+        
+        return default_db_dir, default_backup_dir, default_log_dir
+        
+    except OSError as e:
+        print(f"ERROR: Failed to create default directories: {e}")
+        sys.exit(1)
 
 def validate_requirements():
     """Validate package requirements
@@ -110,20 +176,21 @@ def validate_requirements():
                 requirements.append((package.lower(), version))
     
     # List of installed packages
-    distributions = importlib.metadata.distributions()
-    
-    installed_versions = {}
-    for dist in distributions:
-        pkg_name = dist.metadata['Name'].lower()
-        pkg_version = dist.version
+    # distributions = importlib.metadata.distributions()
+
+    # installed_versions = {}
+    # for dist in distributions:
+    #     pkg_name = dist.metadata['Name'].lower()
+    #     pkg_version = dist.version
         
-        installed_versions[pkg_name] = pkg_version
+    #     installed_versions[pkg_name] = pkg_version
     
     # Check if all requirements are installed
     for package, version in requirements:
-        if package in installed_versions:
-            pkg_version = installed_versions[package]
-            
+        
+        try:
+            pkg_version = importlib.metadata.version(package)
+        
             pkg_version_split = pkg_version.split('.')
             req_version_split = version.split('.')
             
@@ -139,8 +206,9 @@ def validate_requirements():
                     break
                 # Case that both versions are equal, continue loop, if loop ends, package version is equal to required version, OK
                 else:
-                    continue    
-        else:
+                    continue
+
+        except importlib.metadata.PackageNotFoundError:
             sys.stderr.write(f'ERROR: Package {package} not found in current Python environment!\n')
             return False
 
@@ -155,7 +223,9 @@ def run_rs_server(db_directory: str,
                   config_directory: str,
                   django_port: int,
                   streamlit_port: int,
-                  debug: bool):
+                  debug: bool,
+                  enable_login: bool,
+                  admin_password: str):
     """
         Run ReadStore Server
     """
@@ -172,17 +242,19 @@ def run_rs_server(db_directory: str,
     # Check permissions for db_directory and db_backup_directory
     assert os.path.isdir(db_directory), f'ERROR: db_directory {db_directory} does not exist!'
     assert os.path.isdir(db_backup_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
-    assert os.path.isdir(log_directory), f'ERROR: db_backup_directory {db_backup_directory} does not exist!'
+    assert os.path.isdir(log_directory), f'ERROR: log_directory {log_directory} does not exist!'
     
     assert os.access(db_directory, os.W_OK), f'ERROR: db_directory {db_directory} is not writable!'
     assert os.access(db_backup_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
-    assert os.access(log_directory, os.W_OK), f'ERROR: db_backup_directory {db_backup_directory} is not writable!'
+    assert os.access(log_directory, os.W_OK), f'ERROR: log_directory {log_directory} is not writable!'
     assert os.access(config_directory, os.W_OK), f'ERROR: config_directory {config_directory} is not writable!'
     
     assert os.access(db_directory, os.R_OK), f'ERROR: db_directory {db_directory} is not readable!'
     assert os.access(db_backup_directory, os.R_OK), f'ERROR: db_backup_directory {db_backup_directory} is not readable!'
     assert os.access(config_directory, os.R_OK), f'ERROR: config_directory {config_directory} is not writable!'
     
+    assert not enable_login or (enable_login and admin_password is not None), 'ERROR: --admin-password is required if --enable-login is set!'
+
     rs_log_path = os.path.join(log_directory, 'readstore_server.log')
     
     file_handler = logging.FileHandler(filename=rs_log_path)
@@ -208,10 +280,10 @@ def run_rs_server(db_directory: str,
     logger.info('Check Available Ports\n')
     
     if _is_port_in_use(django_port):
-        logger.error(f'ERROR: Port {django_port} is already in use!')
+        logger.error(f'ERROR: Django Port {django_port} is already in use!')
         return
     if _is_port_in_use(streamlit_port):
-        logger.error(f'ERROR: Port {streamlit_port} is already in use!')
+        logger.error(f'ERROR: Streamlit Port {streamlit_port} is already in use!')
         return
     
         # Check if st is set as ENV variable
@@ -243,6 +315,19 @@ def run_rs_server(db_directory: str,
     # Check python availability
     try:
         subprocess.check_call([python_exec, '--version'])
+
+        # Check python version >= 3.12
+        version_output = subprocess.check_output([python_exec, '--version'], stderr=subprocess.STDOUT)
+
+        print("Detected Python Version:", version_output.decode().strip())
+
+        version_str = version_output.decode().strip().split()[1]
+        major_version = int(version_str.split('.')[0])
+        minor_version = int(version_str.split('.')[1])
+        if major_version < 3 or (major_version == 3 and minor_version < 12):
+            print(f'ERROR: Python version {version_str} is lower than required version 3.12!')
+            return
+
     except:
         logger.error(f'ERROR: Python not found in PATH!')
         return
@@ -258,7 +343,7 @@ def run_rs_server(db_directory: str,
     logger.info(f'Prepare ReadStore Server Config')
     
     config_path = os.path.join(config_directory, 'readstore_server_config.yaml')
-            
+
     # Check if config file exists
     if not os.path.exists(config_path):    
         # Copy over config file from readstore directory
@@ -307,6 +392,10 @@ def run_rs_server(db_directory: str,
         rs_config['django']['django_settings_module'] = 'settings.production'
         rs_config['django']['gunicorn_run'] = True
     
+    # Handle enable_login configuration
+    rs_config['global']['enable_login'] = enable_login
+    rs_config['global']['config_dir'] = config_directory
+    
     with open(config_path, "w") as f:
         yaml.dump(rs_config, f)
 
@@ -314,18 +403,51 @@ def run_rs_server(db_directory: str,
 
     secret_key_path = os.path.join(config_directory, 'secret_key')
     if not os.path.exists(secret_key_path):
+        
         logger.info(f'Create Secret Key')
         key = ''.join(random.sample(string.ascii_letters + string.digits, 50))
+           
         with open(secret_key_path, 'w') as f:
             f.write(key)
         os.chmod(secret_key_path, 0o600)
     else:
         logger.info(f'Secret Key already exists at {secret_key_path}')
     
+    # Handle default user creation if login is disabled
+    if not enable_login:
+
+        logger.info(f'Prepare Default User Key for Login')
+        
+        # if admin password is provided, use it
+        # else create random string 
+        secret_default_user_key_path = os.path.join(config_directory, 'secret_default_user_key')
+        if not os.path.exists(secret_default_user_key_path):
+            
+            if admin_password is not None:
+                logger.info(f'Admin password provided - using it for default user key')
+                default_user_password = admin_password
+            else:
+                logger.info(f'Create Default User Key')
+                # Generate random password for default user
+                default_user_password = ''.join(random.sample(string.ascii_letters + string.digits, 16))
+            
+            with open(secret_default_user_key_path, 'w') as f:
+                f.write(default_user_password)
+            os.chmod(secret_default_user_key_path, 0o600)
+        else:
+            logger.info(f'Default User Key already exists at {secret_default_user_key_path}')
+            # Read existing password
+            with open(secret_default_user_key_path, 'r') as f:
+                default_user_password = f.read().strip()
+    
     # Export DJANGO_SETTINGS_MODULE
     os.environ['DJANGO_SETTINGS_MODULE'] = rs_config['django']['django_settings_module']
     os.environ['RS_CONFIG_PATH'] = config_path
     os.environ['RS_KEY_PATH'] = secret_key_path
+    
+    # Set default user key path environment variable if login is enabled
+    if not enable_login:
+        os.environ['RS_DEFAULT_USER_KEY_PATH'] = secret_default_user_key_path
     
     logger.info('Start Streamlit Frontend')
     
@@ -353,9 +475,23 @@ def run_rs_server(db_directory: str,
     # Start Django Backend
     
     logger.info('Setup Django Backend')
-    launch_backend_cmd = [python_exec,os.path.join('launch_backend.py')]
-    launch_backend_process = subprocess.Popen(launch_backend_cmd, )
+    launch_backend_cmd = [python_exec, os.path.join('launch_backend.py')]
     
+    # Add user creation arguments if login is enabled
+    if enable_login:
+        logger.info('Login enabled - creating admin')
+        launch_backend_cmd.extend(['--create-admin-user-with-password'])
+    else:
+        logger.info('Login disabled - creating default user')
+        launch_backend_cmd.extend(['--create-default-user-with-password', '--create-examples-with-default-user'])
+
+    launch_backend_env = os.environ.copy()
+    if enable_login:
+        launch_backend_env['ADMIN_USER_PWD'] = admin_password
+    else:
+        launch_backend_env['DEFAULT_USER_PWD'] = default_user_password
+
+    launch_backend_process = subprocess.Popen(launch_backend_cmd, env=launch_backend_env)
     launch_backend_process.wait()
     
     logger.info('Setup Backup')
@@ -395,6 +531,15 @@ def run_rs_server(db_directory: str,
 
     os.chdir(BASE_DIR)
     
+    print('#'*50)
+    print('#'*50)
+    print('#')
+    print('#      Open ReadStore App in your Browser')
+    print(f'#      http://localhost:{streamlit_port}')
+    print('#')
+    print('#'*50)
+    print('#'*50)
+    
     try:
         backup_process.wait()
         st_process.wait()
@@ -403,13 +548,19 @@ def run_rs_server(db_directory: str,
         os.environ['RS_CONFIG_PATH'] = ''
         os.environ['RS_KEY_PATH'] = ''
         
+        if not enable_login:
+            os.environ['RS_DEFAULT_USER_KEY_PATH'] = ''
+        
     except KeyboardInterrupt:
-        st_process.terminate()
         backup_process.terminate()
+        st_process.terminate()
         django_process.terminate()
         
         os.environ['RS_CONFIG_PATH'] = ''
         os.environ['RS_KEY_PATH'] = ''
+        
+        if not enable_login:
+            os.environ['RS_DEFAULT_USER_KEY_PATH'] = ''
         
         
 def run_db_export(config_directory: str,
@@ -439,6 +590,19 @@ def run_db_export(config_directory: str,
     # Check python availability
     try:
         subprocess.check_call([python_exec, '--version'])
+
+        # Check python version >= 3.12
+        version_output = subprocess.check_output([python_exec, '--version'], stderr=subprocess.STDOUT)
+
+        print("Detected Python Version:", version_output.decode().strip())
+
+        version_str = version_output.decode().strip().split()[1]
+        major_version = int(version_str.split('.')[0])
+        minor_version = int(version_str.split('.')[1])
+        if major_version < 3 or (major_version == 3 and minor_version < 12):
+            print(f'ERROR: Python version {version_str} is lower than required version 3.12!')
+            return
+
     except:
         print(f'ERROR: Python not found in PATH!')
         return
@@ -456,7 +620,6 @@ def run_db_export(config_directory: str,
     os.environ['RS_KEY_PATH'] = secret_key_path
     
     # Dump files to json
-
     dump_table_names = ['app.project',
                         'app.fqdataset',
                         'app.fqfile',
@@ -564,6 +727,8 @@ def main():
     django_port = args.django_port
     streamlit_port = args.streamlit_port
     debug = args.debug
+    enable_login = args.enable_login
+    admin_password = args.admin_password
 
     version = args.version
     
@@ -617,20 +782,34 @@ def main():
         if 'RS_STREAMLIT_PORT' in os.environ:
             streamlit_port = int(os.environ['RS_STREAMLIT_PORT'])
             print('Found RS_STREAMLIT_PORT in Environment Variables')
+
+        if 'RS_ADMIN_PASSWORD' in os.environ:
+            print('Found RS_ADMIN_PASSWORD in Environment Variables')
+            admin_password = os.environ['RS_ADMIN_PASSWORD']
         
+        # Handle case where no directory arguments are provided
+        if db_directory is None and db_backup_directory is None and log_directory is None:
+            # Create or use existing default directories
+            db_directory, db_backup_directory, log_directory = create_default_directories()
+        
+        # Validate that all required directories are specified
         if db_directory is None:
             parser.print_help()
             print('ERROR: --db-directory is required')
             return
         if db_backup_directory is None:
             parser.print_help()
-            print('ERROR: --db_backup_directory is required')
+            print('ERROR: --db-backup-directory is required')
             return
         if log_directory is None:
             parser.print_help()
-            print('ERROR: --log_directory is required')
+            print('ERROR: --log-directory is required')
             return
-        
+        if enable_login and admin_password is None:
+            parser.print_help()
+            print('ERROR: --admin-password is required when --enable-login is set')
+            return
+
         #Define logger    
         run_rs_server(db_directory,
                     db_backup_directory,
@@ -638,7 +817,9 @@ def main():
                     config_directory,
                     django_port,
                     streamlit_port,
-                    debug)
+                    debug,
+                    enable_login,
+                    admin_password)
 
 
 if __name__ == '__main__':

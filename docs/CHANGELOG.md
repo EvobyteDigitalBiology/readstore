@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.5.0 - 2026-02-06
+
+**Added**
+
+- Dashboard home page with activities, statistics and links
+- Dashboard and API endpoint to get dataset statistics
+- Help page for ReadStore API
+- Getting started page with main functions
+- Dataset Page UI Update
+- Project Page UI Update
+- Upload Page UI Update
+
+**Changed**
+
+- Rename Staging to Upload Page
+- Allow spaced in dataset and project names
+- Login process is optional
+
+**Bugfix**
+
+
 ## v1.4.1 - 2025-02-11
 
 **Bugfix**

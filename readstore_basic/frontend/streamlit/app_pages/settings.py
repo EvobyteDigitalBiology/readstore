@@ -2,22 +2,25 @@
 
 import time
 
+import st_yled
 import streamlit as st
 
 import extensions
 import datamanager
 import styles
-import live
 import datetime
 import numpy as np
-                
+
+from uidataclasses import User
+
 if not extensions.user_auth_status():
     st.cache_data.clear()
     st.session_state.clear()
     st.rerun()
 
-# Change Button Height
-styles.adjust_button_height(25)
+
+st_yled.init()
+
 
 @st.dialog('Reset Password', width='medium')
 def reset_password():
@@ -53,92 +56,97 @@ def reset_password():
             except Exception as e:
                 st.error(str(e))
 
-@st.dialog('Enter License Key', width='medium')
-def enter_license_key():
+# @st.dialog('Enter License Key', width='medium')
+# def enter_license_key():
     
-    license_key = st.text_input('Enter License Key',
-                            help = 'Key Format: XXXXX-XXXXX-XXXXX-XXXXX')
+#     license_key = st.text_input('Enter License Key',
+#                             help = 'Key Format: XXXXX-XXXXX-XXXXX-XXXXX')
     
-    if st.button('Confirm', type='primary'):
-        valid, res, seats = live.vl(license_key)
-        if valid:
-            if res < datetime.datetime.now().date():
-                st.error('License Key Expired')
-            else:
-                st.success('License Key Valid')
-                res = datamanager.create_license_key(st.session_state["jwt_auth_header"], 
-                                                license_key,
-                                                seats,
-                                                res)
+#     if st.button('Confirm', type='primary'):
+#         valid, res, seats = live.vl(license_key)
+#         if valid:
+#             if res < datetime.datetime.now().date():
+#                 st.error('License Key Expired')
+#             else:
+#                 st.success('License Key Valid')
+#                 res = datamanager.create_license_key(st.session_state["jwt_auth_header"], 
+#                                                 license_key,
+#                                                 seats,
+#                                                 res)
                 
-                time.sleep(1)
-                st.cache_data.clear()
-                st.rerun()
-        else:
-            st.error('License Key Invalid')
+#                 time.sleep(1)
+#                 st.cache_data.clear()
+#                 st.rerun()
+#         else:
+#             st.error('License Key Invalid')
 
-@st.dialog('License Key', width='medium')
-def show_key(key):
-    st.text_input('License Key', key, disabled=False, label_visibility='collapsed')
+# @st.dialog('License Key', width='medium')
+# def show_key(key):
+#     st.text_input('License Key', key, disabled=False, label_visibility='collapsed')
     
     
 user_data = datamanager.get_my_user(st.session_state["jwt_auth_header"])
 user_groups = datamanager.get_user_groups(st.session_state["jwt_auth_header"])['name'].tolist()
 
-latest_license_key = datamanager.get_license_key(st.session_state["jwt_auth_header"])
+# latest_license_key = datamanager.get_license_key(st.session_state["jwt_auth_header"])
 
-if not datamanager.valid_license(st.session_state["jwt_auth_header"]):
-        st.warning('License Key invalid or expired. Please get in touch with support.')
+# if not datamanager.valid_license(st.session_state["jwt_auth_header"]):
+#    st.warning('License Key invalid or expired. Please get in touch with support.')
+
+def ui(user_data: User, user_groups: list[str]):
     
-col1, _ = st.columns([4,8])
+    with st_yled.container(key='work-ui'):
 
-with col1:
-    
-    st.write('**Username**', user_data.username)
-        
-    # Build page for appuser
-    if 'appuser' in user_groups:
+        st.space(32)
+        st.write('**Username**', user_data.username)
+            
+        # Build page for appuser
+        if 'appuser' in user_groups:
 
-        token = user_data.appuser['token']
+            token = user_data.appuser['token']
 
-        st.write('**Email**', user_data.email)
+            st.write('**Email**', user_data.email)
 
-        if 'staging' in user_groups:
-            st.checkbox('Staging', value=True, key='staging', disabled=True, help='User has Staging Permissions (e.g. for FASTQ Upload)')
-        else:
-            st.checkbox('Staging', value=False, key='staging', disabled=True, help='Staging Permissions disabled (e.g. for FASTQ Upload)')
-
-        with st.popover('Token', icon=":material/token:", use_container_width=True):
-            with st.container(border=True):
-                st.write(token)
-            if st.button("Reset", type='primary'):
-                datamanager.user_regenerate_token()
-                st.cache_data.clear()
-                st.rerun()
-    
-    if 'admin' in user_groups:
-        
-        with st.popover('License Key', icon=":material/key:", use_container_width=True):
-                    
-            if len(latest_license_key) == 0:
-                st.warning('No License Key Found. Enter New Key.')
-            elif len(latest_license_key) > 1:
-                st.warning('Multiple Active License Keys Found. Please contact Support.')
+            if 'staging' in user_groups:
+                st.checkbox('Upload Permissions', value=True, key='staging', disabled=True, help='User has Upload Permissions (e.g. for FASTQ Upload)')
             else:
-                license_key = latest_license_key['key'].values[0]
-                
-                expiration = latest_license_key['expiration_date'].values[0]
-                expiration = np.datetime_as_string(expiration, unit='D')
-                seats = str(latest_license_key['seats'].values[0])
-                
-                st.write('**Expiration Date**', expiration)
-                st.write('**Seats / Users**', seats)
-            
-                if st.button('Show License Key'):
-                    show_key(license_key)
-            
-            if st.button('Enter New Key'):
-                enter_license_key()
+                st.checkbox('Upload Permissions', value=False, key='staging', disabled=True, help='Upload Permissions disabled (e.g. for FASTQ Upload)')
 
-    if st.button('Reset Password', use_container_width=True):
-        reset_password()
+            with st.popover('Token', icon=":material/token:", width=300):
+                st_yled.code(token, font_size=14)
+                if st.button("Generate New Token", type='primary'):
+                    datamanager.user_regenerate_token()
+                    st.cache_data.clear()
+                    st.rerun()
+            
+            # if 'admin' in user_groups:
+                
+            #     with st.popover('License Key', icon=":material/key:", use_container_width=True):
+                            
+            #         if len(latest_license_key) == 0:
+            #             st.warning('No License Key Found. Enter New Key.')
+            #         elif len(latest_license_key) > 1:
+            #             st.warning('Multiple Active License Keys Found. Please contact Support.')
+            #         else:
+            #             license_key = latest_license_key['key'].values[0]
+                        
+            #             expiration = latest_license_key['expiration_date'].values[0]
+            #             expiration = np.datetime_as_string(expiration, unit='D')
+            #             seats = str(latest_license_key['seats'].values[0])
+                        
+            #             st.write('**Expiration Date**', expiration)
+            #             st.write('**Seats / Users**', seats)
+                    
+            #             if st.button('Show License Key'):
+            #                 show_key(license_key)
+                    
+            #         if st.button('Enter New Key'):
+            #             enter_license_key()
+
+            # If login enabled, allow password reset
+            if extensions.uiconfig.ENABLE_LOGIN:
+
+                if st.button('Reset Password', width=300):
+                    reset_password()
+
+ui(user_data, user_groups)
