@@ -1465,7 +1465,7 @@ def uimain(fq_datasets_show,
                                          reference_project_names_df)
                         
                         else:
-                            st.session_state['toast_cache'] = 'Select one or more Datasets to Update'
+                            st.session_state['toast_cache'] = 'Select one Dataset to Update'
                             st.rerun()
 
                     elif split_but == 'Export':
@@ -1818,7 +1818,7 @@ def uimain(fq_datasets_show,
 
                 st.session_state['selected_dataset_export'] = fq_export_select
 
-
+# region Details
             if show_project_details:
 
                 st_yled.space(48)
@@ -2091,15 +2091,18 @@ def uimain(fq_datasets_show,
                         
                             if fq_pro_data_select and len(fq_pro_data_select.selection['rows']) == 1:
                                 
+                                # Case that select_ix is not in index anymow
                                 select_ix = fq_pro_data_select.selection['rows'][0]
-                                select_pro_data = select_fq_dataset_pro_data.iloc[select_ix,:]
-                                select_pro_data_id = int(select_pro_data['id'])
+
+                                if select_ix < select_fq_dataset_pro_data.shape[0]:
+                                    select_pro_data = select_fq_dataset_pro_data.iloc[select_ix,:]
+                                    select_pro_data_id = int(select_pro_data['id'])
                                 
-                                st.button('Details',
-                                        key='download_pro_data',
-                                        help = 'Download ProData',
-                                        on_click = detail_pro_data,
-                                        args = (select_pro_data_id,))
+                                    st.button('Details',
+                                            key='download_pro_data',
+                                            help = 'Download ProData',
+                                            on_click = detail_pro_data,
+                                            args = (select_pro_data_id,))
                             
                             else:
                                 st.button('Details',
