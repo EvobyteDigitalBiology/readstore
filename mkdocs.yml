@@ -52,5 +52,8 @@ extra:
     - icon: fontawesome/brands/github-alt
       link: https://github.com/EvobyteDigitalBiology/readstore
   homepage: https://evo-byte.com/readstore
+  analytics:
+    provider: google
+    property: G-WBV6W4SKKT
 
 copyright: Copyright &copy; 2024-2026 EVOBYTE Digital Biology Dr. Jonathan Alles
