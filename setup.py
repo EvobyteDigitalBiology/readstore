@@ -17,7 +17,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.10',
+    python_requires='>=3.12',
     install_requires=[
         'Django>=5.2.11',
         'djangorestframework>=3.16.1',
@@ -26,7 +26,7 @@ setup(
         'gunicorn>=23.0.0',
         'pysam>=0.23.3',
         'pyyaml>=6.0.2',
-        'streamlit>=1.54.0',
+        'streamlit==1.54.0',
         'pydantic>=2.11.7',
         'pandas>=2.3.1',
         'openpyxl>=3.1.5',

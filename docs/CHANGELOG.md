@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.2 - 2026-03-11
+
+**Bugfix**
+
+- Fix Streamlit Version
+
 ## v1.5.0 - 2026-02-06
 
 **Added**
