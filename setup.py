@@ -26,7 +26,7 @@ setup(
         'gunicorn>=23.0.0',
         'pysam>=0.23.3',
         'pyyaml>=6.0.2',
-        'streamlit>=1.54.0',
+        'streamlit==1.54.0',
         'pydantic>=2.11.7',
         'pandas>=2.3.1',
         'openpyxl>=3.1.5',
