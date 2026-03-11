@@ -17,7 +17,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.10',
+    python_requires='>=3.12',
     install_requires=[
         'Django>=5.2.11',
         'djangorestframework>=3.16.1',
